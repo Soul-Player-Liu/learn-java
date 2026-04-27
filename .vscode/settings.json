@@ -1,0 +1,9 @@
+{
+    "chat.fontSize": 20,
+    "java.import.maven.enabled": true,
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.maven.downloadSources": true,
+    "java.jdt.ls.java.home": "/usr/lib/jvm/java-17-openjdk-amd64",
+    "java.compile.nullAnalysis.mode": "automatic",
+    "editor.formatOnSave": true
+}
