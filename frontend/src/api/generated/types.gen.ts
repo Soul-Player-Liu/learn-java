@@ -27,6 +27,19 @@ export type CreateLearningTaskRequest = {
     dueDate?: string;
 };
 
+export type ChangeTaskStatusRequest = {
+    status: 'TODO' | 'DOING' | 'DONE';
+};
+
+export type TaskStatisticsDto = {
+    total?: number;
+    todo?: number;
+    doing?: number;
+    done?: number;
+    overdue?: number;
+    dueSoon?: number;
+};
+
 export type DeleteTaskData = {
     body?: never;
     path: {
@@ -44,6 +57,24 @@ export type DeleteTaskResponses = {
 };
 
 export type DeleteTaskResponse = DeleteTaskResponses[keyof DeleteTaskResponses];
+
+export type GetTaskData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/tasks/{id}';
+};
+
+export type GetTaskResponses = {
+    /**
+     * OK
+     */
+    200: LearningTaskDto;
+};
+
+export type GetTaskResponse = GetTaskResponses[keyof GetTaskResponses];
 
 export type UpdateTaskData = {
     body: UpdateLearningTaskRequest;
@@ -66,7 +97,11 @@ export type UpdateTaskResponse = UpdateTaskResponses[keyof UpdateTaskResponses];
 export type ListTasksData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        status?: 'TODO' | 'DOING' | 'DONE';
+        keyword?: string;
+        overdueOnly?: boolean;
+    };
     url: '/api/tasks';
 };
 
@@ -94,3 +129,37 @@ export type CreateTaskResponses = {
 };
 
 export type CreateTaskResponse = CreateTaskResponses[keyof CreateTaskResponses];
+
+export type ChangeTaskStatusData = {
+    body: ChangeTaskStatusRequest;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/tasks/{id}/status';
+};
+
+export type ChangeTaskStatusResponses = {
+    /**
+     * OK
+     */
+    200: LearningTaskDto;
+};
+
+export type ChangeTaskStatusResponse = ChangeTaskStatusResponses[keyof ChangeTaskStatusResponses];
+
+export type GetTaskStatisticsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/tasks/statistics';
+};
+
+export type GetTaskStatisticsResponses = {
+    /**
+     * OK
+     */
+    200: TaskStatisticsDto;
+};
+
+export type GetTaskStatisticsResponse = GetTaskStatisticsResponses[keyof GetTaskStatisticsResponses];

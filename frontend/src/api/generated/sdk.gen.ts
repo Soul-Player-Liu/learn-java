@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { CreateTaskData, CreateTaskResponses, DeleteTaskData, DeleteTaskResponses, ListTasksData, ListTasksResponses, UpdateTaskData, UpdateTaskResponses } from './types.gen';
+import type { ChangeTaskStatusData, ChangeTaskStatusResponses, CreateTaskData, CreateTaskResponses, DeleteTaskData, DeleteTaskResponses, GetTaskData, GetTaskResponses, GetTaskStatisticsData, GetTaskStatisticsResponses, ListTasksData, ListTasksResponses, UpdateTaskData, UpdateTaskResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -19,6 +19,8 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 };
 
 export const deleteTask = <ThrowOnError extends boolean = false>(options: Options<DeleteTaskData, ThrowOnError>) => (options.client ?? client).delete<DeleteTaskResponses, unknown, ThrowOnError>({ url: '/api/tasks/{id}', ...options });
+
+export const getTask = <ThrowOnError extends boolean = false>(options: Options<GetTaskData, ThrowOnError>) => (options.client ?? client).get<GetTaskResponses, unknown, ThrowOnError>({ url: '/api/tasks/{id}', ...options });
 
 export const updateTask = <ThrowOnError extends boolean = false>(options: Options<UpdateTaskData, ThrowOnError>) => (options.client ?? client).put<UpdateTaskResponses, unknown, ThrowOnError>({
     url: '/api/tasks/{id}',
@@ -39,3 +41,14 @@ export const createTask = <ThrowOnError extends boolean = false>(options: Option
         ...options.headers
     }
 });
+
+export const changeTaskStatus = <ThrowOnError extends boolean = false>(options: Options<ChangeTaskStatusData, ThrowOnError>) => (options.client ?? client).patch<ChangeTaskStatusResponses, unknown, ThrowOnError>({
+    url: '/api/tasks/{id}/status',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const getTaskStatistics = <ThrowOnError extends boolean = false>(options?: Options<GetTaskStatisticsData, ThrowOnError>) => (options?.client ?? client).get<GetTaskStatisticsResponses, unknown, ThrowOnError>({ url: '/api/tasks/statistics', ...options });

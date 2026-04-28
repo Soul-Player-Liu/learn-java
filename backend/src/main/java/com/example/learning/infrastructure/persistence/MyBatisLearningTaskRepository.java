@@ -1,5 +1,6 @@
 package com.example.learning.infrastructure.persistence;
 
+import com.example.learning.application.command.ListLearningTasksQuery;
 import com.example.learning.domain.model.LearningTask;
 import com.example.learning.domain.repository.LearningTaskRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,9 +37,10 @@ public class MyBatisLearningTaskRepository implements LearningTaskRepository {
     }
 
     @Override
-    public List<LearningTask> findAll() {
-        log.debug("Finding all learning task records");
-        return mapper.findAll().stream()
+    public List<LearningTask> findAll(ListLearningTasksQuery query) {
+        log.debug("Finding learning task records by query status={} keyword={} overdueOnly={}",
+                query.status(), query.normalizedKeyword(), query.isOverdueOnly());
+        return mapper.findAll(query.status(), query.normalizedKeyword(), query.isOverdueOnly()).stream()
                 .map(MyBatisLearningTaskRecord::toDomain)
                 .toList();
     }

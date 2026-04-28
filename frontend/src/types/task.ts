@@ -1,6 +1,8 @@
 import type {
+  ChangeTaskStatusRequest as GeneratedChangeTaskStatusRequest,
   CreateLearningTaskRequest as GeneratedCreateLearningTaskRequest,
   LearningTaskDto,
+  TaskStatisticsDto,
   UpdateLearningTaskRequest as GeneratedUpdateLearningTaskRequest,
 } from '@/api/generated'
 
@@ -15,3 +17,13 @@ export interface LearningTask extends Omit<LearningTaskDto, 'id' | 'title' | 'st
 export type CreateLearningTaskRequest = GeneratedCreateLearningTaskRequest
 
 export type UpdateLearningTaskRequest = GeneratedUpdateLearningTaskRequest
+
+export type ChangeTaskStatusRequest = GeneratedChangeTaskStatusRequest
+
+export type TaskStatistics = Required<TaskStatisticsDto>
+
+export interface ListTaskParams {
+  status?: TaskStatus
+  keyword?: string
+  overdueOnly?: boolean
+}

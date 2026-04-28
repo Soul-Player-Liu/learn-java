@@ -1,5 +1,6 @@
 package com.example.learning.domain.repository;
 
+import com.example.learning.application.command.ListLearningTasksQuery;
 import com.example.learning.domain.model.LearningTask;
 
 import java.util.List;
@@ -11,7 +12,7 @@ public interface LearningTaskRepository {
 
     Optional<LearningTask> findById(Long id);
 
-    List<LearningTask> findAll();
+    List<LearningTask> findAll(ListLearningTasksQuery query);
 
     void deleteById(Long id);
 }

@@ -1,6 +1,8 @@
 package com.example.learning.infrastructure.persistence;
 
+import com.example.learning.domain.model.TaskStatus;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -13,7 +15,9 @@ public interface LearningTaskMapper {
 
     MyBatisLearningTaskRecord findById(Long id);
 
-    List<MyBatisLearningTaskRecord> findAll();
+    List<MyBatisLearningTaskRecord> findAll(@Param("status") TaskStatus status,
+                                            @Param("keyword") String keyword,
+                                            @Param("overdueOnly") boolean overdueOnly);
 
     int deleteById(Long id);
 }

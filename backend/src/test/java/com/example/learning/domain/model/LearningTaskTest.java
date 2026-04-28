@@ -21,4 +21,19 @@ class LearningTaskTest {
         assertThatThrownBy(() -> LearningTask.create(" ", null, null))
                 .isInstanceOf(IllegalArgumentException.class);
     }
+
+    @Test
+    void titleIsTrimmedWhenCreatingTask() {
+        LearningTask task = LearningTask.create("  Learn Java  ", null, null);
+
+        assertThat(task.getTitle()).isEqualTo("Learn Java");
+    }
+
+    @Test
+    void changeStatusRequiresNonNullStatus() {
+        LearningTask task = LearningTask.create("Learn Java", null, null);
+
+        assertThatThrownBy(() -> task.changeStatus(null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }

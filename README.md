@@ -84,20 +84,68 @@ npm run generate:sdk
 - 数据库表结构使用 Flyway 管理。
 - 前端使用 Vue Router 和 Pinia。
 - 前端 SDK 从后端 OpenAPI 自动生成。
-- 暂不做用户登录、测试扩展和 CI。
+- 暂不做用户登录和 CI。
+- 后端测试分为快测和 MySQL 集成测试两层。
 
 ## 后续待设计
 
-- 是否增加分页、搜索、状态筛选。
+- 是否增加分页。
 - 是否增加统一响应格式和错误码。
 - 是否把后端 DTO、命令对象和 OpenAPI schema 做得更规范。
-- 是否加入 MyBatis 动态 SQL 或更复杂的查询示例。
+- 是否加入更复杂的 MyBatis 多表查询示例。
+
+## 后端测试体系
+
+测试分两类：
+
+- `*Test`：默认单元测试，不依赖 Spring 和 MySQL。当前覆盖领域对象和应用服务，应用服务用内存版 Repository 隔离数据库。
+- `*IT`：集成测试，需要本机 MySQL。测试会为每个集成测试类创建随机 schema，启动 Spring/Flyway/MyBatis 后执行真实数据库测试，结束后删除 schema。
+
+普通开发优先跑快测：
+
+```bash
+cd backend
+JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH ./mvnw test
+```
+
+需要验证 Flyway、MyBatis XML、Controller 到数据库完整链路时，先启动 MySQL，再跑集成测试：
+
+```bash
+docker compose up -d mysql
+
+cd backend
+JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH ./mvnw verify -Pintegration-test
+```
+
+集成测试默认连接本地 Docker MySQL：
+
+```text
+host: localhost
+port: 3306
+admin user: root / root123456
+app user: learn / learn123456
+```
+
+如果要连别的本机持久 MySQL，可以用环境变量覆盖：
+
+```bash
+TEST_MYSQL_HOST=localhost \
+TEST_MYSQL_PORT=3306 \
+TEST_MYSQL_ADMIN_USERNAME=root \
+TEST_MYSQL_ADMIN_PASSWORD=root123456 \
+TEST_MYSQL_APP_USERNAME=learn \
+TEST_MYSQL_APP_PASSWORD=learn123456 \
+JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 \
+PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH \
+./mvnw verify -Pintegration-test
+```
 
 ## 验证命令
 
 ```bash
 cd backend
 JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH ./mvnw test
+JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH ./mvnw verify -Pintegration-test
 
 cd ../frontend
 npm run generate:sdk
