@@ -2,7 +2,6 @@ package com.example.learning.infrastructure.persistence;
 
 import com.example.learning.domain.model.TaskStatus;
 import com.example.learning.support.MysqlTestSchema;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
@@ -22,16 +21,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class LearningTaskMapperIT {
 
-    private static final MysqlTestSchema MYSQL = MysqlTestSchema.create("mapper");
+    private static final MysqlTestSchema MYSQL = MysqlTestSchema.shared();
 
     @DynamicPropertySource
     static void mysqlProperties(DynamicPropertyRegistry registry) {
         MYSQL.register(registry);
-    }
-
-    @AfterAll
-    static void dropSchema() {
-        MYSQL.drop();
     }
 
     @Autowired

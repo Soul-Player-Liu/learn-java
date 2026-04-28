@@ -4,7 +4,6 @@ import com.example.learning.application.dto.LearningTaskDto;
 import com.example.learning.application.dto.TaskStatisticsDto;
 import com.example.learning.domain.model.TaskStatus;
 import com.example.learning.support.MysqlTestSchema;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,16 +25,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class LearningTaskControllerIT {
 
-    private static final MysqlTestSchema MYSQL = MysqlTestSchema.create("controller");
+    private static final MysqlTestSchema MYSQL = MysqlTestSchema.shared();
 
     @DynamicPropertySource
     static void mysqlProperties(DynamicPropertyRegistry registry) {
         MYSQL.register(registry);
-    }
-
-    @AfterAll
-    static void dropSchema() {
-        MYSQL.drop();
     }
 
     @Autowired

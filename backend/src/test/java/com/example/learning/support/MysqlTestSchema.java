@@ -24,6 +24,10 @@ public final class MysqlTestSchema {
     private boolean created;
     private boolean dropped;
 
+    private static final class SharedSchemaHolder {
+        private static final MysqlTestSchema INSTANCE = create(sharedNameHint());
+    }
+
     private MysqlTestSchema(String schemaName) {
         this.schemaName = schemaName;
         this.host = value("TEST_MYSQL_HOST", "test.mysql.host", "localhost");
@@ -32,6 +36,10 @@ public final class MysqlTestSchema {
         this.adminPassword = value("TEST_MYSQL_ADMIN_PASSWORD", "test.mysql.admin-password", "root123456");
         this.appUsername = value("TEST_MYSQL_APP_USERNAME", "test.mysql.app-username", "learn");
         this.appPassword = value("TEST_MYSQL_APP_PASSWORD", "test.mysql.app-password", "learn123456");
+    }
+
+    public static MysqlTestSchema shared() {
+        return SharedSchemaHolder.INSTANCE;
     }
 
     public static MysqlTestSchema create(String nameHint) {
@@ -96,5 +104,13 @@ public final class MysqlTestSchema {
             return envValue;
         }
         return defaultValue;
+    }
+
+    private static String sharedNameHint() {
+        String configuredHint = value("TEST_MYSQL_SCHEMA_HINT", "test.mysql.schema-hint", null);
+        if (configuredHint != null && !configuredHint.isBlank()) {
+            return configuredHint;
+        }
+        return "worker_" + ProcessHandle.current().pid();
     }
 }

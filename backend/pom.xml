@@ -21,6 +21,8 @@
         <java.version>17</java.version>
         <mybatis-spring-boot.version>3.0.5</mybatis-spring-boot.version>
         <springdoc-openapi.version>2.8.17</springdoc-openapi.version>
+        <unit.test.parallelism>4</unit.test.parallelism>
+        <integration.test.fork.count>2</integration.test.fork.count>
     </properties>
 
     <dependencies>
@@ -87,6 +89,22 @@
                     </excludes>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>**/*IT.java</exclude>
+                    </excludes>
+                    <systemPropertyVariables>
+                        <junit.jupiter.execution.parallel.enabled>true</junit.jupiter.execution.parallel.enabled>
+                        <junit.jupiter.execution.parallel.mode.default>concurrent</junit.jupiter.execution.parallel.mode.default>
+                        <junit.jupiter.execution.parallel.mode.classes.default>concurrent</junit.jupiter.execution.parallel.mode.classes.default>
+                        <junit.jupiter.execution.parallel.config.strategy>fixed</junit.jupiter.execution.parallel.config.strategy>
+                        <junit.jupiter.execution.parallel.config.fixed.parallelism>${unit.test.parallelism}</junit.jupiter.execution.parallel.config.fixed.parallelism>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 
@@ -110,6 +128,12 @@
                             <includes>
                                 <include>**/*IT.java</include>
                             </includes>
+                            <forkCount>${integration.test.fork.count}</forkCount>
+                            <reuseForks>true</reuseForks>
+                            <systemPropertyVariables>
+                                <junit.jupiter.execution.parallel.enabled>false</junit.jupiter.execution.parallel.enabled>
+                                <test.mysql.schema-hint>worker_${surefire.forkNumber}</test.mysql.schema-hint>
+                            </systemPropertyVariables>
                         </configuration>
                     </plugin>
                 </plugins>

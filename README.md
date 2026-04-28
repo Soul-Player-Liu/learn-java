@@ -96,16 +96,25 @@ npm run generate:sdk
 
 ## 后端测试体系
 
-测试分两类：
+测试分两类，并且按不同层级采用不同并行策略：
 
 - `*Test`：默认单元测试，不依赖 Spring 和 MySQL。当前覆盖领域对象和应用服务，应用服务用内存版 Repository 隔离数据库。
-- `*IT`：集成测试，需要本机 MySQL。测试会为每个集成测试类创建随机 schema，启动 Spring/Flyway/MyBatis 后执行真实数据库测试，结束后删除 schema。
+- `*IT`：集成测试，需要本机 MySQL。测试会为每个 Failsafe fork JVM 创建一个共享随机 schema，启动 Spring/Flyway/MyBatis 后执行真实数据库测试，进程退出时删除 schema。
+- `mvnw test` 由 Surefire 执行，只跑 `*Test`，并开启 JUnit 线程并行。默认并行度是 `4`，可以用 `-Dunit.test.parallelism=8` 覆盖。
+- `mvnw verify -Pintegration-test` 由 Failsafe 执行 `*IT`，默认开 `2` 个 fork JVM。每个 fork JVM 共享一个随机 MySQL schema，schema 名里带 `worker_${surefire.forkNumber}`，避免并行 worker 之间互相清表。
 
 普通开发优先跑快测：
 
 ```bash
 cd backend
 JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH ./mvnw test
+```
+
+调整单元测试并行度：
+
+```bash
+cd backend
+JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH ./mvnw test -Dunit.test.parallelism=8
 ```
 
 需要验证 Flyway、MyBatis XML、Controller 到数据库完整链路时，先启动 MySQL，再跑集成测试：
@@ -115,6 +124,13 @@ docker compose up -d mysql
 
 cd backend
 JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH ./mvnw verify -Pintegration-test
+```
+
+调整集成测试 fork 数：
+
+```bash
+cd backend
+JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH ./mvnw verify -Pintegration-test -Dintegration.test.fork.count=4
 ```
 
 集成测试默认连接本地 Docker MySQL：
