@@ -20,7 +20,9 @@ const statusOptions: Array<{ label: string; value: TaskStatus }> = [
   { label: '已完成', value: 'DONE' },
 ]
 
-const statusText = computed(() => statusOptions.find((item) => item.value === selectedTask.value?.status)?.label ?? '-')
+const statusText = computed(
+  () => statusOptions.find((item) => item.value === selectedTask.value?.status)?.label ?? '-',
+)
 
 async function loadTask() {
   try {

@@ -5,24 +5,43 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc -b && vite build",
+    "typecheck": "vue-tsc -b",
+    "build": "npm-run-all typecheck build:only",
+    "build:only": "vite build",
+    "lint": "eslint .",
+    "format:check": "prettier . --check",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "check": "npm-run-all lint format:check typecheck test:unit build:only",
     "preview": "vite preview",
-    "generate:sdk": "openapi-ts -i http://localhost:8080/v3/api-docs -o src/api/generated -c @hey-api/client-fetch"
+    "generate:sdk": "openapi-ts -i http://localhost:8080/v3/api-docs -o src/api/generated -c @hey-api/client-fetch",
+    "sdk:check": "npm run generate:sdk && git diff --exit-code src/api/generated"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
     "element-plus": "^2.11.5",
     "pinia": "^3.0.4",
-    "vue-router": "^4.6.4",
-    "vue": "^3.5.22"
+    "vue": "^3.5.22",
+    "vue-router": "^4.6.4"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@hey-api/openapi-ts": "^0.96.1",
+    "@playwright/test": "^1.59.1",
     "@types/node": "^25.6.0",
     "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/test-utils": "^2.4.9",
     "@vue/tsconfig": "^0.8.1",
+    "eslint": "^10.2.1",
+    "eslint-plugin-vue": "^10.9.0",
+    "jsdom": "^29.1.0",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.8.3",
     "typescript": "~5.8.3",
+    "typescript-eslint": "^8.59.1",
     "vite": "^7.1.7",
+    "vitest": "^4.1.5",
     "vue-tsc": "^3.2.7"
   }
 }

@@ -62,6 +62,25 @@ npm run generate:sdk
 
 生成目录是 `frontend/src/api/generated/`。这个目录是机器生成代码；手写封装放在 `frontend/src/api/tasks.ts` 和 `frontend/src/api/runtime/`。
 
+## 前端测试体系
+
+前端测试分四层：
+
+- 静态检查：`npm run lint`、`npm run format:check`、`npm run typecheck`。
+- 单元测试：`npm run test:unit`，使用 Vitest，当前覆盖 API wrapper 和 Pinia store。
+- 端到端测试：`npm run test:e2e`，使用 Playwright，当前覆盖创建任务、修改状态、查询和删除的完整用户路径。
+- SDK 一致性检查：`npm run sdk:check`，重新从后端 OpenAPI 生成 SDK，并检查 `src/api/generated` 是否有未提交变化。
+
+常用命令：
+
+```bash
+cd frontend
+npm run check
+npm run test:e2e
+```
+
+`npm run test:e2e` 会通过 Playwright 自动启动后端和前端；仍然需要先确保本地 MySQL 正在运行。
+
 ## 后端阅读路线
 
 建议按这个顺序读：
