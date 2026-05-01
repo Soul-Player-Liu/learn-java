@@ -69,7 +69,7 @@ cd frontend
 npm run dev:mock
 ```
 
-这会启动完整 Vue 应用，页面仍然走 Router、Pinia 和生成的 SDK，但 `/api/tasks` 等请求会被 `src/mocks/handlers.ts` 拦截并返回模拟数据。适合产品或业务人员离线点完整流程。
+这会启动完整 Vue 应用，页面仍然走 Router、Pinia 和生成的 SDK，但 `/api/tasks`、`/api/projects`、`/api/tags` 等请求会被 `src/mocks/handlers.ts` 拦截并返回模拟数据。适合产品或业务人员离线点完整流程。
 
 如果要看单个页面的不同状态，可以使用 Storybook：
 
@@ -78,7 +78,7 @@ cd frontend
 npm run storybook
 ```
 
-当前 stories 覆盖了 `DashboardView`、`TaskBoard`、`TaskDetailView`，并复用同一套 MSW handlers 展示正常、空数据、逾期、多数据和找不到详情等状态。
+当前 stories 覆盖了 `DashboardView`、`ProjectListView`、`TaskBoard`、`TaskDetailView`，并复用同一套 MSW handlers 展示正常、空数据、逾期、多数据和找不到详情等状态。
 
 ## 生成前端 SDK
 
@@ -97,8 +97,9 @@ npm run generate:sdk
 
 - 静态检查：`npm run lint`、`npm run format:check`、`npm run typecheck`。
 - 单元测试：`npm run test:unit`，使用 Vitest，当前覆盖 API wrapper 和 Pinia store。
-- 端到端测试：`npm run test:e2e`，使用 Playwright，当前覆盖创建任务、修改状态、查询和删除的完整用户路径。脚本会用 MySQL admin 账号直连数据库，为每次运行创建随机 MySQL database，测试结束后删除，避免污染 `learn_java`。
+- 端到端测试：`npm run test:e2e`，使用 Playwright，当前覆盖创建项目、创建带项目和标签的任务、评论、活动日志、状态流转、标签筛选和删除的完整用户路径。脚本会用 MySQL admin 账号直连数据库，为每次运行创建随机 MySQL database，测试结束后删除，避免污染 `learn_java`。
 - SDK 一致性检查：`npm run sdk:check`，重新从后端 OpenAPI 生成 SDK，并检查 `src/api/generated` 是否有未提交变化。
+- 离线页面构建：`npm run build:mock` 和 `npm run build:storybook`，用于确认 MSW mock mode 和 Storybook 不是只能在开发机临时启动。
 
 常用命令：
 
@@ -132,13 +133,15 @@ npm run test:e2e
 - 数据库表结构使用 Flyway 管理。
 - 前端使用 Vue Router 和 Pinia。
 - 前端 SDK 从后端 OpenAPI 自动生成。
-- 暂不做用户登录和 CI。
+- 暂不做用户登录。
+- 仓库根目录的 `ci.sh` 会串起后端单测、后端 MySQL 集成测试、前端 check、mock build、Storybook build、SDK 一致性检查和 Playwright E2E。
 - 后端测试分为快测和 MySQL 集成测试两层。
 
 ## 后续待设计
 
 - 是否增加分页。
 - 是否增加统一响应格式和错误码。
+- 是否增加真实 CI 平台配置，例如 GitHub Actions，并上传 Playwright report、JUnit XML 和 Storybook 静态产物。
 - 是否把后端 DTO、命令对象和 OpenAPI schema 做得更规范。
 - 是否加入更复杂的 MyBatis 多表查询示例。
 
@@ -213,5 +216,8 @@ JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 PATH=/usr/lib/jvm/java-17-openjdk-a
 
 cd ../frontend
 npm run generate:sdk
-npm run build
+npm run check
+npm run build:mock
+npm run build:storybook
+npm run test:e2e
 ```

@@ -54,6 +54,8 @@ cd frontend
 npm ci
 npx playwright install chromium
 npm run check
+npm run build:mock
+npm run build:storybook
 npm run sdk:check
 stop_backend
 npm run test:e2e

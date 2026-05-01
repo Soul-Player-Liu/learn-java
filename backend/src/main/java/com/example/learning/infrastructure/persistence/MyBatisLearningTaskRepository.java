@@ -40,7 +40,8 @@ public class MyBatisLearningTaskRepository implements LearningTaskRepository {
     public List<LearningTask> findAll(ListLearningTasksQuery query) {
         log.debug("Finding learning task records by query status={} keyword={} overdueOnly={}",
                 query.status(), query.normalizedKeyword(), query.isOverdueOnly());
-        return mapper.findAll(query.status(), query.normalizedKeyword(), query.isOverdueOnly()).stream()
+        return mapper.findAll(query.status(), query.projectId(), query.normalizedKeyword(), query.isOverdueOnly(),
+                        query.normalizedTag()).stream()
                 .map(MyBatisLearningTaskRecord::toDomain)
                 .toList();
     }

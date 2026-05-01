@@ -90,7 +90,7 @@ body {
   border-radius: 8px;
   display: grid;
   gap: 12px;
-  grid-template-columns: minmax(220px, 1fr) 160px auto auto auto;
+  grid-template-columns: minmax(220px, 1fr) 150px 180px 160px auto auto auto;
   margin-bottom: 16px;
   padding: 12px;
 }
@@ -171,9 +171,38 @@ body {
   grid-template-columns: minmax(0, 1fr) 280px;
 }
 
+.dashboard-section {
+  margin-top: 20px;
+}
+
 .detail-panel,
-.action-panel {
+.action-panel,
+.comment-panel,
+.activity-panel {
   min-height: 180px;
+}
+
+.comment-panel {
+  grid-column: 1;
+}
+
+.activity-panel {
+  grid-column: 2;
+}
+
+.comment-form {
+  margin-bottom: 18px;
+}
+
+.tag-list {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.timeline {
+  padding-left: 0;
 }
 
 .status-tag {
@@ -214,5 +243,10 @@ body {
   .metric-grid,
   .detail-layout {
     grid-template-columns: 1fr;
+  }
+
+  .comment-panel,
+  .activity-panel {
+    grid-column: auto;
   }
 }

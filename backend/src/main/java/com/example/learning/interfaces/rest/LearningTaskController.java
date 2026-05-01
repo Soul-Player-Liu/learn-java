@@ -3,9 +3,12 @@ package com.example.learning.interfaces.rest;
 import com.example.learning.application.command.ChangeTaskStatusCommand;
 import com.example.learning.application.LearningTaskApplicationService;
 import com.example.learning.application.command.CreateLearningTaskCommand;
+import com.example.learning.application.command.CreateTaskCommentCommand;
 import com.example.learning.application.command.ListLearningTasksQuery;
 import com.example.learning.application.command.UpdateLearningTaskCommand;
 import com.example.learning.application.dto.LearningTaskDto;
+import com.example.learning.application.dto.TaskActivityDto;
+import com.example.learning.application.dto.TaskCommentDto;
 import com.example.learning.application.dto.TaskStatisticsDto;
 import com.example.learning.domain.model.TaskStatus;
 import lombok.RequiredArgsConstructor;
@@ -36,10 +39,13 @@ public class LearningTaskController {
 
     @GetMapping
     public List<LearningTaskDto> listTasks(@RequestParam(required = false) TaskStatus status,
+                                           @RequestParam(required = false) Long projectId,
                                            @RequestParam(required = false) String keyword,
-                                           @RequestParam(required = false) Boolean overdueOnly) {
-        log.debug("HTTP GET /api/tasks status={} keyword={} overdueOnly={}", status, keyword, overdueOnly);
-        return taskService.listTasks(new ListLearningTasksQuery(status, keyword, overdueOnly));
+                                           @RequestParam(required = false) Boolean overdueOnly,
+                                           @RequestParam(required = false) String tag) {
+        log.debug("HTTP GET /api/tasks status={} projectId={} keyword={} overdueOnly={} tag={}",
+                status, projectId, keyword, overdueOnly, tag);
+        return taskService.listTasks(new ListLearningTasksQuery(status, projectId, keyword, overdueOnly, tag));
     }
 
     @GetMapping("/{id}")
@@ -59,9 +65,11 @@ public class LearningTaskController {
     public LearningTaskDto createTask(@Valid @RequestBody CreateLearningTaskRequest request) {
         log.debug("HTTP POST /api/tasks title={}", request.title());
         return taskService.createTask(new CreateLearningTaskCommand(
+                request.projectId(),
                 request.title(),
                 request.description(),
-                request.dueDate()
+                request.dueDate(),
+                request.tagNames()
         ));
     }
 
@@ -69,10 +77,12 @@ public class LearningTaskController {
     public LearningTaskDto updateTask(@PathVariable Long id, @Valid @RequestBody UpdateLearningTaskRequest request) {
         log.debug("HTTP PUT /api/tasks/{} status={}", id, request.status());
         return taskService.updateTask(id, new UpdateLearningTaskCommand(
+                request.projectId(),
                 request.title(),
                 request.description(),
                 request.status(),
-                request.dueDate()
+                request.dueDate(),
+                request.tagNames()
         ));
     }
 
@@ -87,5 +97,24 @@ public class LearningTaskController {
     public void deleteTask(@PathVariable Long id) {
         log.debug("HTTP DELETE /api/tasks/{}", id);
         taskService.deleteTask(id);
+    }
+
+    @GetMapping("/{id}/comments")
+    public List<TaskCommentDto> listComments(@PathVariable Long id) {
+        log.debug("HTTP GET /api/tasks/{}/comments", id);
+        return taskService.listComments(id);
+    }
+
+    @PostMapping("/{id}/comments")
+    @ResponseStatus(HttpStatus.CREATED)
+    public TaskCommentDto addComment(@PathVariable Long id, @Valid @RequestBody CreateTaskCommentRequest request) {
+        log.debug("HTTP POST /api/tasks/{}/comments", id);
+        return taskService.addComment(id, new CreateTaskCommentCommand(request.content(), request.author()));
+    }
+
+    @GetMapping("/{id}/activities")
+    public List<TaskActivityDto> listActivities(@PathVariable Long id) {
+        log.debug("HTTP GET /api/tasks/{}/activities", id);
+        return taskService.listActivities(id);
     }
 }

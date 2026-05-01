@@ -6,6 +6,7 @@
 
     <resultMap id="LearningTaskMap" type="com.example.learning.infrastructure.persistence.MyBatisLearningTaskRecord">
         <id property="id" column="id"/>
+        <result property="projectId" column="project_id"/>
         <result property="title" column="title"/>
         <result property="description" column="description"/>
         <result property="status" column="status"/>
@@ -15,18 +16,19 @@
     </resultMap>
 
     <sql id="BaseColumns">
-        id, title, description, status, due_date, created_at, updated_at
+        id, project_id, title, description, status, due_date, created_at, updated_at
     </sql>
 
     <insert id="insert" parameterType="com.example.learning.infrastructure.persistence.MyBatisLearningTaskRecord"
             useGeneratedKeys="true" keyProperty="id">
-        insert into learning_task (title, description, status, due_date, created_at, updated_at)
-        values (#{title}, #{description}, #{status}, #{dueDate}, #{createdAt}, #{updatedAt})
+        insert into learning_task (project_id, title, description, status, due_date, created_at, updated_at)
+        values (#{projectId}, #{title}, #{description}, #{status}, #{dueDate}, #{createdAt}, #{updatedAt})
     </insert>
 
     <update id="update" parameterType="com.example.learning.infrastructure.persistence.MyBatisLearningTaskRecord">
         update learning_task
-        set title = #{title},
+        set project_id = #{projectId},
+            title = #{title},
             description = #{description},
             status = #{status},
             due_date = #{dueDate},
@@ -47,9 +49,21 @@
             <if test="status != null">
                 and status = #{status}
             </if>
+            <if test="projectId != null">
+                and project_id = #{projectId}
+            </if>
             <if test="keyword != null">
                 and (title like concat('%', #{keyword}, '%')
                     or description like concat('%', #{keyword}, '%'))
+            </if>
+            <if test="tag != null">
+                and exists (
+                    select 1
+                    from learning_task_tag ltt
+                    join learning_tag lt on lt.id = ltt.tag_id
+                    where ltt.task_id = learning_task.id
+                      and lt.name = #{tag}
+                )
             </if>
             <if test="overdueOnly">
                 and status != 'DONE'

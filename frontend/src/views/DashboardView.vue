@@ -6,12 +6,12 @@ import { Check, Clock, List, Warning } from '@element-plus/icons-vue'
 import { useTaskStore } from '@/stores/taskStore'
 
 const taskStore = useTaskStore()
-const { statistics, tasks, loading } = storeToRefs(taskStore)
+const { statistics, tasks, projects, loading } = storeToRefs(taskStore)
 
 const recentTasks = computed(() => tasks.value.slice(0, 5))
 
 async function loadDashboard() {
-  await Promise.all([taskStore.loadStatistics(), taskStore.loadTasks()])
+  await Promise.all([taskStore.loadStatistics(), taskStore.loadTasks(), taskStore.loadProjects()])
 }
 
 onMounted(loadDashboard)
@@ -25,6 +25,7 @@ onMounted(loadDashboard)
         <p>从统计、列表、详情和接口调用几个角度观察同一组数据。</p>
       </div>
       <div class="toolbar-actions">
+        <el-button @click="$router.push('/projects')">进入项目</el-button>
         <el-button type="primary" @click="$router.push('/tasks')">进入任务</el-button>
       </div>
     </section>
@@ -64,6 +65,24 @@ onMounted(loadDashboard)
         <el-table-column label="详情" width="100">
           <template #default="{ row }">
             <el-button link type="primary" @click="$router.push(`/tasks/${row.id}`)">查看</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </section>
+
+    <section class="content dashboard-section">
+      <div class="section-title">
+        <h2>项目进度</h2>
+      </div>
+      <el-table :data="projects" row-key="id">
+        <el-table-column prop="name" label="项目" min-width="180" />
+        <el-table-column prop="taskCount" label="任务数" width="100" />
+        <el-table-column prop="doneTaskCount" label="已完成" width="100" />
+        <el-table-column label="详情" width="100">
+          <template #default="{ row }">
+            <el-button link type="primary" @click="$router.push(`/tasks?projectId=${row.id}`)">
+              查看
+            </el-button>
           </template>
         </el-table-column>
       </el-table>

@@ -3,28 +3,33 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { Delete, Edit, Plus, Refresh, Search, View } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import { useTaskStore } from '@/stores/taskStore'
 import type { LearningTask, TaskStatus } from '@/types/task'
 
 const taskStore = useTaskStore()
 const router = useRouter()
-const { tasks, loading } = storeToRefs(taskStore)
+const route = useRoute()
+const { tasks, loading, projects, tags } = storeToRefs(taskStore)
 const dialogVisible = ref(false)
 const editingTask = ref<LearningTask | null>(null)
 
 const form = reactive({
+  projectId: undefined as number | undefined,
   title: '',
   description: '',
   status: 'TODO' as TaskStatus,
   dueDate: '',
+  tagInput: '',
 })
 
 const filters = reactive({
   keyword: '',
   status: undefined as TaskStatus | undefined,
+  projectId: undefined as number | undefined,
   overdueOnly: false,
+  tag: undefined as string | undefined,
 })
 
 const statusOptions: Array<{ label: string; value: TaskStatus; type: 'info' | 'warning' | 'success' }> = [
@@ -49,6 +54,8 @@ function resetForm() {
   form.description = ''
   form.status = 'TODO'
   form.dueDate = ''
+  form.projectId = filters.projectId
+  form.tagInput = filters.tag ?? ''
 }
 
 async function loadTasks() {
@@ -56,7 +63,9 @@ async function loadTasks() {
     await taskStore.loadTasks({
       keyword: filters.keyword.trim() || undefined,
       status: filters.status,
+      projectId: filters.projectId,
       overdueOnly: filters.overdueOnly,
+      tag: filters.tag,
     })
   } catch (error) {
     ElMessage.error(error instanceof Error ? error.message : '加载失败')
@@ -66,7 +75,9 @@ async function loadTasks() {
 async function resetFilters() {
   filters.keyword = ''
   filters.status = undefined
+  filters.projectId = undefined
   filters.overdueOnly = false
+  filters.tag = undefined
   await loadTasks()
 }
 
@@ -81,6 +92,8 @@ function openEditDialog(task: LearningTask) {
   form.description = task.description ?? ''
   form.status = task.status
   form.dueDate = task.dueDate ?? ''
+  form.projectId = task.projectId
+  form.tagInput = task.tagNames.join(', ')
   dialogVisible.value = true
 }
 
@@ -90,19 +103,26 @@ async function submitForm() {
     return
   }
 
-  const payload = {
+  const commonPayload = {
+    projectId: form.projectId,
     title: form.title.trim(),
     description: form.description.trim() || undefined,
-    status: form.status,
     dueDate: form.dueDate || undefined,
+    tagNames: form.tagInput
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter(Boolean),
   }
 
   try {
     if (editingTask.value) {
-      await taskStore.updateTask(editingTask.value.id, payload)
+      await taskStore.updateTask(editingTask.value.id, {
+        ...commonPayload,
+        status: form.status,
+      })
       ElMessage.success('任务已更新')
     } else {
-      await taskStore.createTask(payload)
+      await taskStore.createTask(commonPayload)
       ElMessage.success('任务已创建')
     }
     dialogVisible.value = false
@@ -140,7 +160,13 @@ async function handleStatusCommand(command: { task: LearningTask; status: TaskSt
   await changeStatus(command.task, command.status)
 }
 
-onMounted(loadTasks)
+onMounted(async () => {
+  const routeProjectId = Number(route.query.projectId)
+  if (routeProjectId) {
+    filters.projectId = routeProjectId
+  }
+  await Promise.all([taskStore.loadProjects(), taskStore.loadTags(), loadTasks()])
+})
 </script>
 
 <template>
@@ -167,6 +193,12 @@ onMounted(loadTasks)
       <el-select v-model="filters.status" clearable placeholder="状态">
         <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
       </el-select>
+      <el-select v-model="filters.projectId" clearable placeholder="项目">
+        <el-option v-for="project in projects" :key="project.id" :label="project.name" :value="project.id" />
+      </el-select>
+      <el-select v-model="filters.tag" clearable filterable placeholder="标签">
+        <el-option v-for="tag in tags" :key="tag.id" :label="tag.name" :value="tag.name" />
+      </el-select>
       <el-checkbox v-model="filters.overdueOnly">只看逾期</el-checkbox>
       <el-button type="primary" @click="loadTasks">查询</el-button>
       <el-button @click="resetFilters">重置</el-button>
@@ -175,7 +207,20 @@ onMounted(loadTasks)
     <section class="content">
       <el-table v-loading="loading" :data="tasks" row-key="id" height="calc(100vh - 210px)">
         <el-table-column prop="title" label="任务" min-width="180" />
+        <el-table-column prop="projectName" label="项目" min-width="150">
+          <template #default="{ row }">
+            {{ row.projectName || '-' }}
+          </template>
+        </el-table-column>
         <el-table-column prop="description" label="说明" min-width="240" show-overflow-tooltip />
+        <el-table-column label="标签" min-width="180">
+          <template #default="{ row }">
+            <div class="tag-list">
+              <el-tag v-for="tag in row.tagNames" :key="tag" size="small" effect="plain">{{ tag }}</el-tag>
+              <span v-if="!row.tagNames.length">-</span>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column label="状态" width="110">
           <template #default="{ row }">
             <el-dropdown trigger="click" @command="handleStatusCommand">
@@ -207,6 +252,16 @@ onMounted(loadTasks)
 
     <el-dialog v-model="dialogVisible" :title="title" width="520px" @closed="resetForm">
       <el-form label-position="top">
+        <el-form-item label="项目">
+          <el-select v-model="form.projectId" clearable filterable placeholder="未归属项目">
+            <el-option
+              v-for="project in projects"
+              :key="project.id"
+              :label="project.name"
+              :value="project.id"
+            />
+          </el-select>
+        </el-form-item>
         <el-form-item label="标题" required>
           <el-input v-model="form.title" maxlength="100" show-word-limit />
         </el-form-item>
@@ -221,6 +276,9 @@ onMounted(loadTasks)
         </el-form-item>
         <el-form-item label="截止日期">
           <el-date-picker v-model="form.dueDate" value-format="YYYY-MM-DD" type="date" />
+        </el-form-item>
+        <el-form-item label="标签">
+          <el-input v-model="form.tagInput" placeholder="多个标签用逗号分隔" maxlength="120" />
         </el-form-item>
       </el-form>
       <template #footer>

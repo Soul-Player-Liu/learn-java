@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 public class MyBatisLearningTaskRecord {
 
     private Long id;
+    private Long projectId;
     private String title;
     private String description;
     private TaskStatus status;
@@ -23,6 +24,7 @@ public class MyBatisLearningTaskRecord {
     public static MyBatisLearningTaskRecord fromDomain(LearningTask task) {
         MyBatisLearningTaskRecord record = new MyBatisLearningTaskRecord();
         record.id = task.getId();
+        record.projectId = task.getProjectId();
         record.title = task.getTitle();
         record.description = task.getDescription();
         record.status = task.getStatus();
@@ -33,6 +35,6 @@ public class MyBatisLearningTaskRecord {
     }
 
     public LearningTask toDomain() {
-        return LearningTask.restore(id, title, description, status, dueDate, createdAt, updatedAt);
+        return LearningTask.restore(id, projectId, title, description, status, dueDate, createdAt, updatedAt);
     }
 }

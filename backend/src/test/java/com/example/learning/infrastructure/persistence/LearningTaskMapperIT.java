@@ -32,11 +32,19 @@ class LearningTaskMapperIT {
     private LearningTaskMapper mapper;
 
     @Autowired
+    private LearningWorkspaceMapper workspaceMapper;
+
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     @BeforeEach
     void cleanDatabase() {
+        jdbcTemplate.update("delete from task_activity");
+        jdbcTemplate.update("delete from task_comment");
+        jdbcTemplate.update("delete from learning_task_tag");
         jdbcTemplate.update("delete from learning_task");
+        jdbcTemplate.update("delete from learning_tag");
+        jdbcTemplate.update("delete from learning_project");
     }
 
     @Test
@@ -57,8 +65,8 @@ class LearningTaskMapperIT {
         mapper.insert(task("Learn Vue", "Build pages", TaskStatus.DOING, LocalDate.now().plusDays(1)));
         mapper.insert(task("Write notes", "Java review", TaskStatus.DONE, LocalDate.now().minusDays(2)));
 
-        List<MyBatisLearningTaskRecord> javaTodoTasks = mapper.findAll(TaskStatus.TODO, "Java", false);
-        List<MyBatisLearningTaskRecord> overdueTasks = mapper.findAll(null, null, true);
+        List<MyBatisLearningTaskRecord> javaTodoTasks = mapper.findAll(TaskStatus.TODO, null, "Java", false, null);
+        List<MyBatisLearningTaskRecord> overdueTasks = mapper.findAll(null, null, null, true, null);
 
         assertThat(javaTodoTasks)
                 .extracting(MyBatisLearningTaskRecord::getTitle)
@@ -66,6 +74,63 @@ class LearningTaskMapperIT {
         assertThat(overdueTasks)
                 .extracting(MyBatisLearningTaskRecord::getTitle)
                 .containsExactly("Learn Java");
+    }
+
+    @Test
+    void findAllAppliesProjectAndTagFilters() {
+        LearningProjectRecord project = project("Backend");
+        workspaceMapper.insertProject(project);
+
+        MyBatisLearningTaskRecord taggedTask = task(
+                "Design persistence", "Project scoped", TaskStatus.TODO, LocalDate.now().plusDays(1));
+        taggedTask.setProjectId(project.getId());
+        mapper.insert(taggedTask);
+        mapper.insert(task("Build frontend", "Unscoped", TaskStatus.TODO, LocalDate.now().plusDays(1)));
+
+        LearningTagRecord tag = tag("sql");
+        workspaceMapper.insertTag(tag);
+        workspaceMapper.insertTaskTag(taggedTask.getId(), tag.getId());
+
+        List<MyBatisLearningTaskRecord> projectTasks = mapper.findAll(null, project.getId(), null, false, null);
+        List<MyBatisLearningTaskRecord> sqlTasks = mapper.findAll(null, null, null, false, "sql");
+
+        assertThat(projectTasks)
+                .extracting(MyBatisLearningTaskRecord::getTitle)
+                .containsExactly("Design persistence");
+        assertThat(sqlTasks)
+                .extracting(MyBatisLearningTaskRecord::getTitle)
+                .containsExactly("Design persistence");
+    }
+
+    @Test
+    void workspaceMapperRoundTripsProjectsTagsCommentsAndActivities() {
+        LearningProjectRecord project = project("Release Plan");
+        workspaceMapper.insertProject(project);
+
+        MyBatisLearningTaskRecord task = task("Ship milestone", "Coordinate work", TaskStatus.DONE, LocalDate.now());
+        task.setProjectId(project.getId());
+        mapper.insert(task);
+
+        LearningTagRecord tag = tag("release");
+        workspaceMapper.insertTag(tag);
+        workspaceMapper.insertTaskTag(task.getId(), tag.getId());
+
+        TaskCommentRecord comment = comment(task.getId(), "Ready for review");
+        workspaceMapper.insertComment(comment);
+        TaskActivityRecord activity = activity(task.getId(), "COMMENT_ADDED", "Comment added");
+        workspaceMapper.insertActivity(activity);
+
+        LearningProjectRecord savedProject = workspaceMapper.findProjectById(project.getId());
+
+        assertThat(savedProject.getTaskCount()).isEqualTo(1);
+        assertThat(savedProject.getDoneTaskCount()).isEqualTo(1);
+        assertThat(workspaceMapper.findTagNamesByTaskId(task.getId())).containsExactly("release");
+        assertThat(workspaceMapper.findCommentsByTaskId(task.getId()))
+                .extracting(TaskCommentRecord::getContent)
+                .containsExactly("Ready for review");
+        assertThat(workspaceMapper.findActivitiesByTaskId(task.getId()))
+                .extracting(TaskActivityRecord::getType)
+                .containsExactly("COMMENT_ADDED");
     }
 
     private MyBatisLearningTaskRecord task(String title, String description, TaskStatus status, LocalDate dueDate) {
@@ -77,6 +142,42 @@ class LearningTaskMapperIT {
         record.setDueDate(dueDate);
         record.setCreatedAt(now);
         record.setUpdatedAt(now);
+        return record;
+    }
+
+    private LearningProjectRecord project(String name) {
+        LocalDateTime now = LocalDateTime.now();
+        LearningProjectRecord record = new LearningProjectRecord();
+        record.setName(name);
+        record.setDescription(name + " description");
+        record.setCreatedAt(now);
+        record.setUpdatedAt(now);
+        return record;
+    }
+
+    private LearningTagRecord tag(String name) {
+        LearningTagRecord record = new LearningTagRecord();
+        record.setName(name);
+        record.setColor("#2563eb");
+        record.setCreatedAt(LocalDateTime.now());
+        return record;
+    }
+
+    private TaskCommentRecord comment(Long taskId, String content) {
+        TaskCommentRecord record = new TaskCommentRecord();
+        record.setTaskId(taskId);
+        record.setContent(content);
+        record.setAuthor("integration-test");
+        record.setCreatedAt(LocalDateTime.now());
+        return record;
+    }
+
+    private TaskActivityRecord activity(Long taskId, String type, String message) {
+        TaskActivityRecord record = new TaskActivityRecord();
+        record.setTaskId(taskId);
+        record.setType(type);
+        record.setMessage(message);
+        record.setCreatedAt(LocalDateTime.now());
         return record;
     }
 }

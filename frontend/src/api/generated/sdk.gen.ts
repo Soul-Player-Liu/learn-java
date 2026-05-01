@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { ChangeTaskStatusData, ChangeTaskStatusResponses, CreateTaskData, CreateTaskResponses, DeleteTaskData, DeleteTaskResponses, GetTaskData, GetTaskResponses, GetTaskStatisticsData, GetTaskStatisticsResponses, ListTasksData, ListTasksResponses, UpdateTaskData, UpdateTaskResponses } from './types.gen';
+import type { AddCommentData, AddCommentResponses, ChangeTaskStatusData, ChangeTaskStatusResponses, CreateProjectData, CreateProjectResponses, CreateTaskData, CreateTaskResponses, DeleteTaskData, DeleteTaskResponses, GetProjectData, GetProjectResponses, GetTaskData, GetTaskResponses, GetTaskStatisticsData, GetTaskStatisticsResponses, ListActivitiesData, ListActivitiesResponses, ListCommentsData, ListCommentsResponses, ListProjectsData, ListProjectsResponses, ListTagsData, ListTagsResponses, ListTasksData, ListTasksResponses, UpdateTaskData, UpdateTaskResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -42,6 +42,28 @@ export const createTask = <ThrowOnError extends boolean = false>(options: Option
     }
 });
 
+export const listComments = <ThrowOnError extends boolean = false>(options: Options<ListCommentsData, ThrowOnError>) => (options.client ?? client).get<ListCommentsResponses, unknown, ThrowOnError>({ url: '/api/tasks/{id}/comments', ...options });
+
+export const addComment = <ThrowOnError extends boolean = false>(options: Options<AddCommentData, ThrowOnError>) => (options.client ?? client).post<AddCommentResponses, unknown, ThrowOnError>({
+    url: '/api/tasks/{id}/comments',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const listProjects = <ThrowOnError extends boolean = false>(options?: Options<ListProjectsData, ThrowOnError>) => (options?.client ?? client).get<ListProjectsResponses, unknown, ThrowOnError>({ url: '/api/projects', ...options });
+
+export const createProject = <ThrowOnError extends boolean = false>(options: Options<CreateProjectData, ThrowOnError>) => (options.client ?? client).post<CreateProjectResponses, unknown, ThrowOnError>({
+    url: '/api/projects',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
 export const changeTaskStatus = <ThrowOnError extends boolean = false>(options: Options<ChangeTaskStatusData, ThrowOnError>) => (options.client ?? client).patch<ChangeTaskStatusResponses, unknown, ThrowOnError>({
     url: '/api/tasks/{id}/status',
     ...options,
@@ -51,4 +73,10 @@ export const changeTaskStatus = <ThrowOnError extends boolean = false>(options: 
     }
 });
 
+export const listActivities = <ThrowOnError extends boolean = false>(options: Options<ListActivitiesData, ThrowOnError>) => (options.client ?? client).get<ListActivitiesResponses, unknown, ThrowOnError>({ url: '/api/tasks/{id}/activities', ...options });
+
 export const getTaskStatistics = <ThrowOnError extends boolean = false>(options?: Options<GetTaskStatisticsData, ThrowOnError>) => (options?.client ?? client).get<GetTaskStatisticsResponses, unknown, ThrowOnError>({ url: '/api/tasks/statistics', ...options });
+
+export const listTags = <ThrowOnError extends boolean = false>(options?: Options<ListTagsData, ThrowOnError>) => (options?.client ?? client).get<ListTagsResponses, unknown, ThrowOnError>({ url: '/api/tags', ...options });
+
+export const getProject = <ThrowOnError extends boolean = false>(options: Options<GetProjectData, ThrowOnError>) => (options.client ?? client).get<GetProjectResponses, unknown, ThrowOnError>({ url: '/api/projects/{id}', ...options });

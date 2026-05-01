@@ -21,7 +21,7 @@
     "check": "npm-run-all lint format:check typecheck test:unit build:only",
     "preview": "vite preview",
     "generate:sdk": "openapi-ts -i http://localhost:8080/v3/api-docs -o src/api/generated -c @hey-api/client-fetch",
-    "sdk:check": "npm run generate:sdk && git diff --exit-code src/api/generated"
+    "sdk:check": "node scripts/check-sdk.mjs"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",

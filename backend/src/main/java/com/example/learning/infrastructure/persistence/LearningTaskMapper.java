@@ -16,8 +16,10 @@ public interface LearningTaskMapper {
     MyBatisLearningTaskRecord findById(Long id);
 
     List<MyBatisLearningTaskRecord> findAll(@Param("status") TaskStatus status,
+                                            @Param("projectId") Long projectId,
                                             @Param("keyword") String keyword,
-                                            @Param("overdueOnly") boolean overdueOnly);
+                                            @Param("overdueOnly") boolean overdueOnly,
+                                            @Param("tag") String tag);
 
     int deleteById(Long id);
 }

@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.learning.infrastructure.persistence.LearningWorkspaceMapper">
+
+    <resultMap id="ProjectMap" type="com.example.learning.infrastructure.persistence.LearningProjectRecord">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="taskCount" column="task_count"/>
+        <result property="doneTaskCount" column="done_task_count"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <resultMap id="CommentMap" type="com.example.learning.infrastructure.persistence.TaskCommentRecord">
+        <id property="id" column="id"/>
+        <result property="taskId" column="task_id"/>
+        <result property="content" column="content"/>
+        <result property="author" column="author"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <resultMap id="ActivityMap" type="com.example.learning.infrastructure.persistence.TaskActivityRecord">
+        <id property="id" column="id"/>
+        <result property="taskId" column="task_id"/>
+        <result property="type" column="type"/>
+        <result property="message" column="message"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <resultMap id="TagMap" type="com.example.learning.infrastructure.persistence.LearningTagRecord">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="color" column="color"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <insert id="insertProject" parameterType="com.example.learning.infrastructure.persistence.LearningProjectRecord"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into learning_project (name, description, created_at, updated_at)
+        values (#{name}, #{description}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <select id="findProjectById" resultMap="ProjectMap">
+        select p.id,
+               p.name,
+               p.description,
+               p.created_at,
+               p.updated_at,
+               count(t.id) as task_count,
+               coalesce(sum(case when t.status = 'DONE' then 1 else 0 end), 0) as done_task_count
+        from learning_project p
+        left join learning_task t on t.project_id = p.id
+        where p.id = #{id}
+        group by p.id, p.name, p.description, p.created_at, p.updated_at
+    </select>
+
+    <select id="findAllProjects" resultMap="ProjectMap">
+        select p.id,
+               p.name,
+               p.description,
+               p.created_at,
+               p.updated_at,
+               count(t.id) as task_count,
+               coalesce(sum(case when t.status = 'DONE' then 1 else 0 end), 0) as done_task_count
+        from learning_project p
+        left join learning_task t on t.project_id = p.id
+        group by p.id, p.name, p.description, p.created_at, p.updated_at
+        order by p.created_at desc
+    </select>
+
+    <select id="findProjectNameById" resultType="string">
+        select name
+        from learning_project
+        where id = #{id}
+    </select>
+
+    <insert id="insertComment" parameterType="com.example.learning.infrastructure.persistence.TaskCommentRecord"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into task_comment (task_id, content, author, created_at)
+        values (#{taskId}, #{content}, #{author}, #{createdAt})
+    </insert>
+
+    <select id="findCommentsByTaskId" resultMap="CommentMap">
+        select id, task_id, content, author, created_at
+        from task_comment
+        where task_id = #{taskId}
+        order by created_at desc
+    </select>
+
+    <insert id="insertActivity" parameterType="com.example.learning.infrastructure.persistence.TaskActivityRecord"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into task_activity (task_id, type, message, created_at)
+        values (#{taskId}, #{type}, #{message}, #{createdAt})
+    </insert>
+
+    <select id="findActivitiesByTaskId" resultMap="ActivityMap">
+        select id, task_id, type, message, created_at
+        from task_activity
+        where task_id = #{taskId}
+        order by created_at desc
+    </select>
+
+    <select id="findTagByName" resultMap="TagMap">
+        select id, name, color, created_at
+        from learning_tag
+        where name = #{name}
+    </select>
+
+    <insert id="insertTag" parameterType="com.example.learning.infrastructure.persistence.LearningTagRecord"
+            useGeneratedKeys="true" keyProperty="id">
+        insert into learning_tag (name, color, created_at)
+        values (#{name}, #{color}, #{createdAt})
+    </insert>
+
+    <select id="findAllTags" resultMap="TagMap">
+        select id, name, color, created_at
+        from learning_tag
+        order by name asc
+    </select>
+
+    <select id="findTagNamesByTaskId" resultType="string">
+        select lt.name
+        from learning_task_tag ltt
+        join learning_tag lt on lt.id = ltt.tag_id
+        where ltt.task_id = #{taskId}
+        order by lt.name asc
+    </select>
+
+    <delete id="deleteTaskTags">
+        delete from learning_task_tag
+        where task_id = #{taskId}
+    </delete>
+
+    <insert id="insertTaskTag">
+        insert into learning_task_tag (task_id, tag_id)
+        values (#{taskId}, #{tagId})
+    </insert>
+</mapper>

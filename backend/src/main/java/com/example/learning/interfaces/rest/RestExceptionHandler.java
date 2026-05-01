@@ -1,6 +1,7 @@
 package com.example.learning.interfaces.rest;
 
 import com.example.learning.application.TaskNotFoundException;
+import com.example.learning.application.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class RestExceptionHandler {
 
-    @ExceptionHandler(TaskNotFoundException.class)
+    @ExceptionHandler({TaskNotFoundException.class, ResourceNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleNotFound(TaskNotFoundException ex) {
         log.warn("Request failed because task was not found: {}", ex.getMessage());
         return error(HttpStatus.NOT_FOUND, ex.getMessage());

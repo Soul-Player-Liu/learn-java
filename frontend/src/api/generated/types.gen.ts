@@ -5,30 +5,73 @@ export type ClientOptions = {
 };
 
 export type UpdateLearningTaskRequest = {
+    projectId?: number;
     title: string;
     description?: string;
     status: 'TODO' | 'DOING' | 'DONE';
     dueDate?: string;
+    tagNames?: Array<string>;
 };
 
 export type LearningTaskDto = {
     id?: number;
+    projectId?: number;
+    projectName?: string;
     title?: string;
     description?: string;
     status?: 'TODO' | 'DOING' | 'DONE';
     dueDate?: string;
+    tagNames?: Array<string>;
     createdAt?: string;
     updatedAt?: string;
 };
 
 export type CreateLearningTaskRequest = {
+    projectId?: number;
     title: string;
     description?: string;
     dueDate?: string;
+    tagNames?: Array<string>;
+};
+
+export type CreateTaskCommentRequest = {
+    content: string;
+    author?: string;
+};
+
+export type TaskCommentDto = {
+    id?: number;
+    taskId?: number;
+    content?: string;
+    author?: string;
+    createdAt?: string;
+};
+
+export type CreateLearningProjectRequest = {
+    name: string;
+    description?: string;
+};
+
+export type LearningProjectDto = {
+    id?: number;
+    name?: string;
+    description?: string;
+    taskCount?: number;
+    doneTaskCount?: number;
+    createdAt?: string;
+    updatedAt?: string;
 };
 
 export type ChangeTaskStatusRequest = {
     status: 'TODO' | 'DOING' | 'DONE';
+};
+
+export type TaskActivityDto = {
+    id?: number;
+    taskId?: number;
+    type?: string;
+    message?: string;
+    createdAt?: string;
 };
 
 export type TaskStatisticsDto = {
@@ -38,6 +81,12 @@ export type TaskStatisticsDto = {
     done?: number;
     overdue?: number;
     dueSoon?: number;
+};
+
+export type TaskTagDto = {
+    id?: number;
+    name?: string;
+    color?: string;
 };
 
 export type DeleteTaskData = {
@@ -99,8 +148,10 @@ export type ListTasksData = {
     path?: never;
     query?: {
         status?: 'TODO' | 'DOING' | 'DONE';
+        projectId?: number;
         keyword?: string;
         overdueOnly?: boolean;
+        tag?: string;
     };
     url: '/api/tasks';
 };
@@ -130,6 +181,74 @@ export type CreateTaskResponses = {
 
 export type CreateTaskResponse = CreateTaskResponses[keyof CreateTaskResponses];
 
+export type ListCommentsData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/tasks/{id}/comments';
+};
+
+export type ListCommentsResponses = {
+    /**
+     * OK
+     */
+    200: Array<TaskCommentDto>;
+};
+
+export type ListCommentsResponse = ListCommentsResponses[keyof ListCommentsResponses];
+
+export type AddCommentData = {
+    body: CreateTaskCommentRequest;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/tasks/{id}/comments';
+};
+
+export type AddCommentResponses = {
+    /**
+     * Created
+     */
+    201: TaskCommentDto;
+};
+
+export type AddCommentResponse = AddCommentResponses[keyof AddCommentResponses];
+
+export type ListProjectsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/projects';
+};
+
+export type ListProjectsResponses = {
+    /**
+     * OK
+     */
+    200: Array<LearningProjectDto>;
+};
+
+export type ListProjectsResponse = ListProjectsResponses[keyof ListProjectsResponses];
+
+export type CreateProjectData = {
+    body: CreateLearningProjectRequest;
+    path?: never;
+    query?: never;
+    url: '/api/projects';
+};
+
+export type CreateProjectResponses = {
+    /**
+     * Created
+     */
+    201: LearningProjectDto;
+};
+
+export type CreateProjectResponse = CreateProjectResponses[keyof CreateProjectResponses];
+
 export type ChangeTaskStatusData = {
     body: ChangeTaskStatusRequest;
     path: {
@@ -148,6 +267,24 @@ export type ChangeTaskStatusResponses = {
 
 export type ChangeTaskStatusResponse = ChangeTaskStatusResponses[keyof ChangeTaskStatusResponses];
 
+export type ListActivitiesData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/tasks/{id}/activities';
+};
+
+export type ListActivitiesResponses = {
+    /**
+     * OK
+     */
+    200: Array<TaskActivityDto>;
+};
+
+export type ListActivitiesResponse = ListActivitiesResponses[keyof ListActivitiesResponses];
+
 export type GetTaskStatisticsData = {
     body?: never;
     path?: never;
@@ -163,3 +300,37 @@ export type GetTaskStatisticsResponses = {
 };
 
 export type GetTaskStatisticsResponse = GetTaskStatisticsResponses[keyof GetTaskStatisticsResponses];
+
+export type ListTagsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/tags';
+};
+
+export type ListTagsResponses = {
+    /**
+     * OK
+     */
+    200: Array<TaskTagDto>;
+};
+
+export type ListTagsResponse = ListTagsResponses[keyof ListTagsResponses];
+
+export type GetProjectData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/projects/{id}';
+};
+
+export type GetProjectResponses = {
+    /**
+     * OK
+     */
+    200: LearningProjectDto;
+};
+
+export type GetProjectResponse = GetProjectResponses[keyof GetProjectResponses];

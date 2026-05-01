@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 public class LearningTask {
 
     private final Long id;
+    private Long projectId;
     private String title;
     private String description;
     private TaskStatus status;
@@ -16,9 +17,10 @@ public class LearningTask {
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    private LearningTask(Long id, String title, String description, TaskStatus status, LocalDate dueDate,
+    private LearningTask(Long id, Long projectId, String title, String description, TaskStatus status, LocalDate dueDate,
                          LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
+        this.projectId = projectId;
         this.title = requireTitle(title);
         this.description = description;
         this.status = status == null ? TaskStatus.TODO : status;
@@ -27,14 +29,28 @@ public class LearningTask {
         this.updatedAt = updatedAt == null ? this.createdAt : updatedAt;
     }
 
-    public static LearningTask create(String title, String description, LocalDate dueDate) {
+    public static LearningTask create(Long projectId, String title, String description, LocalDate dueDate) {
         LocalDateTime now = LocalDateTime.now();
-        return new LearningTask(null, title, description, TaskStatus.TODO, dueDate, now, now);
+        return new LearningTask(null, projectId, title, description, TaskStatus.TODO, dueDate, now, now);
+    }
+
+    public static LearningTask create(String title, String description, LocalDate dueDate) {
+        return create(null, title, description, dueDate);
+    }
+
+    public static LearningTask restore(Long id, Long projectId, String title, String description, TaskStatus status,
+                                       LocalDate dueDate, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        return new LearningTask(id, projectId, title, description, status, dueDate, createdAt, updatedAt);
     }
 
     public static LearningTask restore(Long id, String title, String description, TaskStatus status, LocalDate dueDate,
                                        LocalDateTime createdAt, LocalDateTime updatedAt) {
-        return new LearningTask(id, title, description, status, dueDate, createdAt, updatedAt);
+        return restore(id, null, title, description, status, dueDate, createdAt, updatedAt);
+    }
+
+    public void moveToProject(Long projectId) {
+        this.projectId = projectId;
+        touch();
     }
 
     public void rename(String title) {
