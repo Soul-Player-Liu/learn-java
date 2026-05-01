@@ -60,6 +60,26 @@ npm run dev
 
 启动日志和 pid 文件放在 `.dev/`，该目录不会提交到 Git。
 
+## 前端离线预览
+
+如果只想看前端页面，不启动 Java 后端，可以使用 MSW mock mode：
+
+```bash
+cd frontend
+npm run dev:mock
+```
+
+这会启动完整 Vue 应用，页面仍然走 Router、Pinia 和生成的 SDK，但 `/api/tasks` 等请求会被 `src/mocks/handlers.ts` 拦截并返回模拟数据。适合产品或业务人员离线点完整流程。
+
+如果要看单个页面的不同状态，可以使用 Storybook：
+
+```bash
+cd frontend
+npm run storybook
+```
+
+当前 stories 覆盖了 `DashboardView`、`TaskBoard`、`TaskDetailView`，并复用同一套 MSW handlers 展示正常、空数据、逾期、多数据和找不到详情等状态。
+
 ## 生成前端 SDK
 
 先启动后端，再运行：
