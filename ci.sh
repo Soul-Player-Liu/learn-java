@@ -7,10 +7,19 @@ export PATH="$JAVA_HOME/bin:$PATH"
 BACKEND_PID=""
 
 cleanup() {
+  rm -f backend-ci.log
   if [[ -n "$BACKEND_PID" ]] && kill -0 "$BACKEND_PID" 2>/dev/null; then
     kill "$BACKEND_PID"
     wait "$BACKEND_PID" 2>/dev/null || true
   fi
+}
+
+stop_backend() {
+  if [[ -n "$BACKEND_PID" ]] && kill -0 "$BACKEND_PID" 2>/dev/null; then
+    kill "$BACKEND_PID"
+    wait "$BACKEND_PID" 2>/dev/null || true
+  fi
+  BACKEND_PID=""
 }
 
 wait_for_url() {
@@ -46,4 +55,5 @@ npm ci
 npx playwright install chromium
 npm run check
 npm run sdk:check
+stop_backend
 npm run test:e2e

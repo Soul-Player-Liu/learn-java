@@ -19,7 +19,7 @@ export default defineConfig({
         'cd ../backend && JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH ./mvnw spring-boot:run',
       url: 'http://127.0.0.1:8080/v3/api-docs',
       timeout: 120_000,
-      reuseExistingServer: true,
+      reuseExistingServer: false,
     },
     {
       command: 'npm run dev -- --host 127.0.0.1',

@@ -68,7 +68,7 @@ npm run generate:sdk
 
 - 静态检查：`npm run lint`、`npm run format:check`、`npm run typecheck`。
 - 单元测试：`npm run test:unit`，使用 Vitest，当前覆盖 API wrapper 和 Pinia store。
-- 端到端测试：`npm run test:e2e`，使用 Playwright，当前覆盖创建任务、修改状态、查询和删除的完整用户路径。
+- 端到端测试：`npm run test:e2e`，使用 Playwright，当前覆盖创建任务、修改状态、查询和删除的完整用户路径。脚本会用 MySQL admin 账号直连数据库，为每次运行创建随机 MySQL database，测试结束后删除，避免污染 `learn_java`。
 - SDK 一致性检查：`npm run sdk:check`，重新从后端 OpenAPI 生成 SDK，并检查 `src/api/generated` 是否有未提交变化。
 
 常用命令：
@@ -79,7 +79,7 @@ npm run check
 npm run test:e2e
 ```
 
-`npm run test:e2e` 会通过 Playwright 自动启动后端和前端；仍然需要先确保本地 MySQL 正在运行。
+`npm run test:e2e` 会先创建临时 database，再通过 Playwright 自动启动后端和前端；仍然需要先确保 MySQL 可连接。默认连接本地 MySQL，也可以通过 `TEST_MYSQL_HOST`、`TEST_MYSQL_PORT`、`TEST_MYSQL_ADMIN_USERNAME`、`TEST_MYSQL_ADMIN_PASSWORD`、`TEST_MYSQL_APP_USERNAME`、`TEST_MYSQL_APP_PASSWORD` 指向其他测试数据库。
 
 ## 后端阅读路线
 
