@@ -25,6 +25,7 @@ replay_pid*
 .vscode/*
 !.vscode/settings.json
 .playwright/
+.dev/
 
 # Maven
 target/

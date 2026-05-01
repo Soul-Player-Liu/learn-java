@@ -51,6 +51,15 @@ npm run dev
 
 前端默认地址是 `http://localhost:5173`，后端默认地址是 `http://localhost:8080`。
 
+也可以在仓库根目录用脚本幂等启动或关闭前后端。脚本不管理 MySQL，默认数据库已经启动：
+
+```bash
+./start-dev.sh
+./stop-dev.sh
+```
+
+启动日志和 pid 文件放在 `.dev/`，该目录不会提交到 Git。
+
 ## 生成前端 SDK
 
 先启动后端，再运行：
