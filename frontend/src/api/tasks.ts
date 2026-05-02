@@ -34,11 +34,36 @@ import type {
   LearningTaskDto,
   TaskActivityDto,
   TaskCommentDto,
+  TaskListItemDto,
   TaskStatisticsDto,
   TaskTagDto,
 } from './generated'
 
-function normalizeTask(task: LearningTaskDto): LearningTask {
+type ApiEnvelope<T> = {
+  code?: string
+  message?: string
+  data?: T
+}
+
+type PageEnvelope<T> = {
+  items?: T[]
+}
+
+function unwrap<T>(response: ApiEnvelope<T>, label: string): T {
+  if (response.code && response.code !== 'OK') {
+    throw new Error(response.message || `${label}失败`)
+  }
+  if (response.data === undefined || response.data === null) {
+    throw new Error(`${label}数据不完整`)
+  }
+  return response.data
+}
+
+function unwrapPage<T>(response: ApiEnvelope<PageEnvelope<T>>, label: string): T[] {
+  return unwrap(response, label).items ?? []
+}
+
+function normalizeTask(task: LearningTaskDto | TaskListItemDto): LearningTask {
   if (!task.id || !task.title || !task.status) {
     throw new Error('服务端返回的任务数据不完整')
   }
@@ -119,10 +144,12 @@ export async function listTasks(params: ListTaskParams = {}) {
       keyword: params.keyword || undefined,
       overdueOnly: params.overdueOnly || undefined,
       tag: params.tag || undefined,
+      page: params.page,
+      size: params.size,
     },
     throwOnError: true,
   })
-  return result.data.map(normalizeTask)
+  return unwrapPage(result.data, '任务列表').map(normalizeTask)
 }
 
 export async function getTask(id: number) {
@@ -130,17 +157,17 @@ export async function getTask(id: number) {
     path: { id },
     throwOnError: true,
   })
-  return normalizeTask(result.data)
+  return normalizeTask(unwrap(result.data, '任务详情'))
 }
 
 export async function getTaskStatistics() {
   const result = await sdkGetTaskStatistics({ throwOnError: true })
-  return normalizeStatistics(result.data)
+  return normalizeStatistics(unwrap(result.data, '任务统计'))
 }
 
 export async function listProjects() {
   const result = await sdkListProjects({ throwOnError: true })
-  return result.data.map(normalizeProject)
+  return unwrapPage(result.data, '项目列表').map(normalizeProject)
 }
 
 export async function getProject(id: number) {
@@ -148,7 +175,7 @@ export async function getProject(id: number) {
     path: { id },
     throwOnError: true,
   })
-  return normalizeProject(result.data)
+  return normalizeProject(unwrap(result.data, '项目详情'))
 }
 
 export async function createProject(payload: CreateLearningProjectRequest) {
@@ -156,12 +183,12 @@ export async function createProject(payload: CreateLearningProjectRequest) {
     body: payload,
     throwOnError: true,
   })
-  return normalizeProject(result.data)
+  return normalizeProject(unwrap(result.data, '项目创建'))
 }
 
 export async function listTags() {
   const result = await sdkListTags({ throwOnError: true })
-  return result.data.map(normalizeTag)
+  return unwrapPage(result.data, '标签列表').map(normalizeTag)
 }
 
 export async function createTask(payload: CreateLearningTaskRequest) {
@@ -169,7 +196,7 @@ export async function createTask(payload: CreateLearningTaskRequest) {
     body: payload,
     throwOnError: true,
   })
-  return normalizeTask(result.data)
+  return normalizeTask(unwrap(result.data, '任务创建'))
 }
 
 export async function updateTask(id: number, payload: UpdateLearningTaskRequest) {
@@ -178,7 +205,7 @@ export async function updateTask(id: number, payload: UpdateLearningTaskRequest)
     body: payload,
     throwOnError: true,
   })
-  return normalizeTask(result.data)
+  return normalizeTask(unwrap(result.data, '任务更新'))
 }
 
 export async function changeTaskStatus(id: number, payload: ChangeTaskStatusRequest) {
@@ -187,7 +214,7 @@ export async function changeTaskStatus(id: number, payload: ChangeTaskStatusRequ
     body: payload,
     throwOnError: true,
   })
-  return normalizeTask(result.data)
+  return normalizeTask(unwrap(result.data, '状态更新'))
 }
 
 export async function listComments(id: number) {
@@ -195,7 +222,7 @@ export async function listComments(id: number) {
     path: { id },
     throwOnError: true,
   })
-  return result.data.map(normalizeComment)
+  return unwrapPage(result.data, '评论列表').map(normalizeComment)
 }
 
 export async function addComment(id: number, payload: CreateTaskCommentRequest) {
@@ -204,7 +231,7 @@ export async function addComment(id: number, payload: CreateTaskCommentRequest) 
     body: payload,
     throwOnError: true,
   })
-  return normalizeComment(result.data)
+  return normalizeComment(unwrap(result.data, '评论创建'))
 }
 
 export async function listActivities(id: number) {
@@ -212,7 +239,7 @@ export async function listActivities(id: number) {
     path: { id },
     throwOnError: true,
   })
-  return result.data.map(normalizeActivity)
+  return unwrapPage(result.data, '活动列表').map(normalizeActivity)
 }
 
 export async function deleteTask(id: number) {

@@ -2,10 +2,9 @@ package com.example.learning.interfaces.rest;
 
 import com.example.learning.application.ResourceNotFoundException;
 import com.example.learning.application.TaskNotFoundException;
-import com.example.learning.infrastructure.web.HttpRequestLoggingFilter;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.ResponseEntity;
@@ -21,52 +20,59 @@ import java.util.List;
 public class RestExceptionHandler {
 
     @ExceptionHandler({TaskNotFoundException.class, ResourceNotFoundException.class})
-    public ResponseEntity<ErrorResponse> handleNotFound(RuntimeException ex, HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Void>> handleNotFound(RuntimeException ex, HttpServletRequest request) {
         log.warn("Resource not found: {}", ex.getMessage());
-        return error(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", ex.getMessage(), request);
+        return error(HttpStatus.NOT_FOUND, ErrorCode.RESOURCE_NOT_FOUND, ex.getMessage(), request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationFailed(MethodArgumentNotValidException ex,
-                                                                HttpServletRequest request) {
-        List<ErrorResponse.ErrorDetail> details = ex.getBindingResult().getFieldErrors().stream()
-                .map(error -> new ErrorResponse.ErrorDetail(error.getField(), error.getDefaultMessage()))
+    public ResponseEntity<ApiResponse<Void>> handleValidationFailed(MethodArgumentNotValidException ex,
+                                                                    HttpServletRequest request) {
+        List<ApiResponse.ErrorDetail> details = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> new ApiResponse.ErrorDetail(error.getField(), error.getDefaultMessage()))
                 .toList();
         log.warn("Request body validation failed details={}", details);
-        return error(HttpStatus.BAD_REQUEST, "VALIDATION_FAILED", "Request validation failed", request, details);
+        return error(HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_FAILED, "Request validation failed", request, details);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleQueryValidationFailed(ConstraintViolationException ex,
+                                                                        HttpServletRequest request) {
+        List<ApiResponse.ErrorDetail> details = ex.getConstraintViolations().stream()
+                .map(violation -> new ApiResponse.ErrorDetail(violation.getPropertyPath().toString(),
+                        violation.getMessage()))
+                .toList();
+        log.warn("Request parameter validation failed details={}", details);
+        return error(HttpStatus.BAD_REQUEST, ErrorCode.VALIDATION_FAILED, "Request validation failed", request, details);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponse> handleBadRequest(IllegalArgumentException ex, HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Void>> handleBadRequest(IllegalArgumentException ex, HttpServletRequest request) {
         log.warn("Request validation failed: {}", ex.getMessage());
-        return error(HttpStatus.BAD_REQUEST, "BAD_REQUEST", ex.getMessage(), request);
+        return error(HttpStatus.BAD_REQUEST, ErrorCode.BAD_REQUEST, ex.getMessage(), request);
     }
 
     @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
-    public ResponseEntity<ErrorResponse> handleMalformedRequest(Exception ex, HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Void>> handleMalformedRequest(Exception ex, HttpServletRequest request) {
         log.warn("Request could not be parsed: {}", ex.getMessage());
-        return error(HttpStatus.BAD_REQUEST, "MALFORMED_REQUEST", "Request could not be parsed", request);
+        return error(HttpStatus.BAD_REQUEST, ErrorCode.MALFORMED_REQUEST, "Request could not be parsed", request);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleUnexpected(Exception ex, HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Void>> handleUnexpected(Exception ex, HttpServletRequest request) {
         log.error("Unexpected request failure", ex);
-        return error(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_ERROR", "Internal server error", request);
+        return error(HttpStatus.INTERNAL_SERVER_ERROR, ErrorCode.INTERNAL_ERROR, "Internal server error", request);
     }
 
-    private ResponseEntity<ErrorResponse> error(HttpStatus status, String code, String message,
-                                                HttpServletRequest request) {
+    private ResponseEntity<ApiResponse<Void>> error(HttpStatus status, ErrorCode code, String message,
+                                                    HttpServletRequest request) {
         return error(status, code, message, request, List.of());
     }
 
-    private ResponseEntity<ErrorResponse> error(HttpStatus status, String code, String message,
-                                                HttpServletRequest request,
-                                                List<ErrorResponse.ErrorDetail> details) {
+    private ResponseEntity<ApiResponse<Void>> error(HttpStatus status, ErrorCode code, String message,
+                                                    HttpServletRequest request,
+                                                    List<ApiResponse.ErrorDetail> details) {
         return ResponseEntity.status(status)
-                .body(ErrorResponse.of(code, message, request.getRequestURI(), traceId(), details));
-    }
-
-    private String traceId() {
-        return MDC.get(HttpRequestLoggingFilter.TRACE_ID);
+                .body(ApiResponse.error(code, message, request.getRequestURI(), RestResponses.traceId(), details));
     }
 }

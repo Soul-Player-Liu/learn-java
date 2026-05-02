@@ -15,8 +15,52 @@
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
+    <resultMap id="TaskListItemMap" type="com.example.learning.infrastructure.persistence.LearningTaskListItemRecord">
+        <id property="id" column="id"/>
+        <result property="projectId" column="project_id"/>
+        <result property="projectName" column="project_name"/>
+        <result property="title" column="title"/>
+        <result property="description" column="description"/>
+        <result property="status" column="status"/>
+        <result property="dueDate" column="due_date"/>
+        <result property="tagNames" column="tag_names"/>
+        <result property="commentCount" column="comment_count"/>
+        <result property="latestActivityAt" column="latest_activity_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
     <sql id="BaseColumns">
         id, project_id, title, description, status, due_date, created_at, updated_at
+    </sql>
+
+    <sql id="TaskFilterWhere">
+        <where>
+            <if test="status != null">
+                and t.status = #{status}
+            </if>
+            <if test="projectId != null">
+                and t.project_id = #{projectId}
+            </if>
+            <if test="keyword != null">
+                and (t.title like concat('%', #{keyword}, '%')
+                    or t.description like concat('%', #{keyword}, '%'))
+            </if>
+            <if test="tag != null">
+                and exists (
+                    select 1
+                    from learning_task_tag filter_ltt
+                    join learning_tag filter_lt on filter_lt.id = filter_ltt.tag_id
+                    where filter_ltt.task_id = t.id
+                      and filter_lt.name = #{tag}
+                )
+            </if>
+            <if test="overdueOnly">
+                and t.status != 'DONE'
+                and t.due_date is not null
+                and t.due_date &lt; current_date
+            </if>
+        </where>
     </sql>
 
     <insert id="insert" parameterType="com.example.learning.infrastructure.persistence.MyBatisLearningTaskRecord"
@@ -72,6 +116,55 @@
             </if>
         </where>
         order by created_at desc
+    </select>
+
+    <select id="countAll" resultType="long">
+        select count(*)
+        from learning_task t
+        <include refid="TaskFilterWhere"/>
+    </select>
+
+    <select id="findPageItems" resultMap="TaskListItemMap">
+        select t.id,
+               t.project_id,
+               p.name as project_name,
+               t.title,
+               t.description,
+               t.status,
+               t.due_date,
+               coalesce(group_concat(distinct lt.name order by lt.name asc separator ','), '') as tag_names,
+               coalesce(c.comment_count, 0) as comment_count,
+               a.latest_activity_at,
+               t.created_at,
+               t.updated_at
+        from learning_task t
+        left join learning_project p on p.id = t.project_id
+        left join (
+            select task_id, count(*) as comment_count
+            from task_comment
+            group by task_id
+        ) c on c.task_id = t.id
+        left join (
+            select task_id, max(created_at) as latest_activity_at
+            from task_activity
+            group by task_id
+        ) a on a.task_id = t.id
+        left join learning_task_tag ltt on ltt.task_id = t.id
+        left join learning_tag lt on lt.id = ltt.tag_id
+        <include refid="TaskFilterWhere"/>
+        group by t.id,
+                 t.project_id,
+                 p.name,
+                 t.title,
+                 t.description,
+                 t.status,
+                 t.due_date,
+                 c.comment_count,
+                 a.latest_activity_at,
+                 t.created_at,
+                 t.updated_at
+        order by t.created_at desc
+        limit #{limit} offset #{offset}
     </select>
 
     <delete id="deleteById">

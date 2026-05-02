@@ -117,7 +117,10 @@
                         <exclude>com/example/learning/application/dto/**</exclude>
                         <exclude>com/example/learning/infrastructure/persistence/*Record.class</exclude>
                         <exclude>com/example/learning/interfaces/rest/*Request.class</exclude>
+                        <exclude>com/example/learning/interfaces/rest/ApiResponse*.class</exclude>
                         <exclude>com/example/learning/interfaces/rest/ErrorResponse*.class</exclude>
+                        <exclude>com/example/learning/interfaces/rest/ErrorCode.class</exclude>
+                        <exclude>com/example/learning/interfaces/rest/PageResponse*.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>

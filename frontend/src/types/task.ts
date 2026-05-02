@@ -4,7 +4,7 @@ import type {
   CreateLearningTaskRequest as GeneratedCreateLearningTaskRequest,
   CreateTaskCommentRequest as GeneratedCreateTaskCommentRequest,
   LearningProjectDto,
-  LearningTaskDto,
+  TaskListItemDto,
   TaskActivityDto,
   TaskCommentDto,
   TaskStatisticsDto,
@@ -14,7 +14,7 @@ import type {
 
 export type TaskStatus = 'TODO' | 'DOING' | 'DONE'
 
-export interface LearningTask extends Omit<LearningTaskDto, 'id' | 'title' | 'status'> {
+export interface LearningTask extends Omit<TaskListItemDto, 'id' | 'title' | 'status'> {
   id: number
   title: string
   status: TaskStatus
@@ -67,4 +67,6 @@ export interface ListTaskParams {
   keyword?: string
   overdueOnly?: boolean
   tag?: string
+  page?: number
+  size?: number
 }

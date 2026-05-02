@@ -103,6 +103,37 @@ class LearningTaskMapperIT {
     }
 
     @Test
+    void findPageItemsReturnsMultiTableSummaryAndCount() {
+        LearningProjectRecord project = project("Backend");
+        workspaceMapper.insertProject(project);
+
+        MyBatisLearningTaskRecord task = task("Model paged queries", "Join project tags and counts", TaskStatus.TODO,
+                LocalDate.now().plusDays(1));
+        task.setProjectId(project.getId());
+        mapper.insert(task);
+
+        LearningTagRecord backend = tag("backend");
+        LearningTagRecord sql = tag("sql");
+        workspaceMapper.insertTag(backend);
+        workspaceMapper.insertTag(sql);
+        workspaceMapper.insertTaskTag(task.getId(), backend.getId());
+        workspaceMapper.insertTaskTag(task.getId(), sql.getId());
+        workspaceMapper.insertComment(comment(task.getId(), "Looks good"));
+        workspaceMapper.insertActivity(activity(task.getId(), "COMMENT_ADDED", "Comment added"));
+
+        long total = mapper.countAll(null, project.getId(), "paged", false, "sql");
+        List<LearningTaskListItemRecord> page = mapper.findPageItems(null, project.getId(), "paged", false, "sql",
+                10, 0);
+
+        assertThat(total).isEqualTo(1);
+        assertThat(page).hasSize(1);
+        assertThat(page.get(0).getProjectName()).isEqualTo("Backend");
+        assertThat(page.get(0).getCommentCount()).isEqualTo(1);
+        assertThat(page.get(0).getLatestActivityAt()).isNotNull();
+        assertThat(page.get(0).toDto().tagNames()).containsExactly("backend", "sql");
+    }
+
+    @Test
     void workspaceMapperRoundTripsProjectsTagsCommentsAndActivities() {
         LearningProjectRecord project = project("Release Plan");
         workspaceMapper.insertProject(project);

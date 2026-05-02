@@ -10,8 +10,10 @@ import com.example.learning.application.dto.LearningTaskDto;
 import com.example.learning.application.dto.LearningProjectDto;
 import com.example.learning.application.dto.TaskActivityDto;
 import com.example.learning.application.dto.TaskCommentDto;
+import com.example.learning.application.dto.TaskListItemDto;
 import com.example.learning.application.dto.TaskStatisticsDto;
 import com.example.learning.application.dto.TaskTagDto;
+import com.example.learning.application.query.LearningTaskQueryRepository;
 import com.example.learning.domain.model.LearningTask;
 import com.example.learning.domain.model.TaskStatus;
 import com.example.learning.domain.repository.LearningTaskRepository;
@@ -20,6 +22,7 @@ import com.example.learning.infrastructure.persistence.LearningTagRecord;
 import com.example.learning.infrastructure.persistence.LearningWorkspaceMapper;
 import com.example.learning.infrastructure.persistence.TaskActivityRecord;
 import com.example.learning.infrastructure.persistence.TaskCommentRecord;
+import com.example.learning.interfaces.rest.PageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -37,15 +40,16 @@ import java.util.Locale;
 public class LearningTaskApplicationService {
 
     private final LearningTaskRepository taskRepository;
+    private final LearningTaskQueryRepository taskQueryRepository;
     private final LearningWorkspaceMapper workspaceMapper;
 
     @Transactional(readOnly = true)
-    public List<LearningTaskDto> listTasks(ListLearningTasksQuery query) {
-        log.debug("Listing learning tasks status={} keyword={} overdueOnly={}",
-                query.status(), query.normalizedKeyword(), query.isOverdueOnly());
-        return taskRepository.findAll(query).stream()
-                .map(this::toDto)
-                .toList();
+    public PageResponse<TaskListItemDto> listTasks(ListLearningTasksQuery query) {
+        log.debug("Listing learning tasks status={} keyword={} overdueOnly={} page={} size={}",
+                query.status(), query.normalizedKeyword(), query.isOverdueOnly(), query.page(), query.size());
+        long total = taskQueryRepository.count(query);
+        List<TaskListItemDto> items = total == 0 ? List.of() : taskQueryRepository.findPage(query);
+        return PageResponse.of(items, total, query.page(), query.size());
     }
 
     @Transactional(readOnly = true)

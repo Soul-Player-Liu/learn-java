@@ -21,5 +21,19 @@ public interface LearningTaskMapper {
                                             @Param("overdueOnly") boolean overdueOnly,
                                             @Param("tag") String tag);
 
+    long countAll(@Param("status") TaskStatus status,
+                  @Param("projectId") Long projectId,
+                  @Param("keyword") String keyword,
+                  @Param("overdueOnly") boolean overdueOnly,
+                  @Param("tag") String tag);
+
+    List<LearningTaskListItemRecord> findPageItems(@Param("status") TaskStatus status,
+                                                   @Param("projectId") Long projectId,
+                                                   @Param("keyword") String keyword,
+                                                   @Param("overdueOnly") boolean overdueOnly,
+                                                   @Param("tag") String tag,
+                                                   @Param("limit") int limit,
+                                                   @Param("offset") int offset);
+
     int deleteById(Long id);
 }

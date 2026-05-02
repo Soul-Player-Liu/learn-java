@@ -42,9 +42,17 @@ describe('task api wrapper', () => {
     vi.clearAllMocks()
   })
 
+  function ok<T>(data: T) {
+    return { code: 'OK', data }
+  }
+
+  function page<T>(items: T[]) {
+    return { items, total: items.length, page: 1, size: 20, totalPages: items.length > 0 ? 1 : 0 }
+  }
+
   it('normalizes task list data returned by the generated SDK', async () => {
     sdk.listTasks.mockResolvedValue({
-      data: [{ id: 1, title: 'Learn testing', status: 'TODO', description: null }],
+      data: ok(page([{ id: 1, title: 'Learn testing', status: 'TODO', description: null }])),
     })
 
     await expect(
@@ -57,6 +65,8 @@ describe('task api wrapper', () => {
         keyword: 'testing',
         overdueOnly: undefined,
         tag: 'backend',
+        page: undefined,
+        size: undefined,
       },
       throwOnError: true,
     })
@@ -64,10 +74,10 @@ describe('task api wrapper', () => {
 
   it('normalizes projects and task comments', async () => {
     sdk.listProjects.mockResolvedValue({
-      data: [{ id: 1, name: 'Backend', taskCount: 2 }],
+      data: ok(page([{ id: 1, name: 'Backend', taskCount: 2 }])),
     })
     sdk.addComment.mockResolvedValue({
-      data: { id: 9, taskId: 1, content: 'done' },
+      data: ok({ id: 9, taskId: 1, content: 'done' }),
     })
 
     await expect(listProjects()).resolves.toEqual([
@@ -82,7 +92,7 @@ describe('task api wrapper', () => {
 
   it('fills missing statistic fields with zero', async () => {
     sdk.getTaskStatistics.mockResolvedValue({
-      data: { total: 2, todo: 1 },
+      data: ok({ total: 2, todo: 1 }),
     })
 
     await expect(getTaskStatistics()).resolves.toEqual({
@@ -97,11 +107,11 @@ describe('task api wrapper', () => {
 
   it('wraps task detail and mutation SDK calls', async () => {
     const task = { id: 1, title: 'Task', status: 'TODO', tagNames: ['backend'] }
-    sdk.getTask.mockResolvedValue({ data: task })
-    sdk.createTask.mockResolvedValue({ data: task })
-    sdk.updateTask.mockResolvedValue({ data: { ...task, title: 'Updated' } })
-    sdk.changeTaskStatus.mockResolvedValue({ data: { ...task, status: 'DOING' } })
-    sdk.deleteTask.mockResolvedValue({})
+    sdk.getTask.mockResolvedValue({ data: ok(task) })
+    sdk.createTask.mockResolvedValue({ data: ok(task) })
+    sdk.updateTask.mockResolvedValue({ data: ok({ ...task, title: 'Updated' }) })
+    sdk.changeTaskStatus.mockResolvedValue({ data: ok({ ...task, status: 'DOING' }) })
+    sdk.deleteTask.mockResolvedValue({ data: ok(null) })
 
     await expect(getTask(1)).resolves.toEqual(task)
     await expect(createTask({ title: 'Task' })).resolves.toEqual(task)
@@ -127,12 +137,12 @@ describe('task api wrapper', () => {
   })
 
   it('wraps project tag comment and activity list calls', async () => {
-    sdk.getProject.mockResolvedValue({ data: { id: 1, name: 'Backend' } })
-    sdk.createProject.mockResolvedValue({ data: { id: 2, name: 'Frontend', doneTaskCount: 1 } })
-    sdk.listTags.mockResolvedValue({ data: [{ id: 3, name: 'sql' }] })
-    sdk.listComments.mockResolvedValue({ data: [{ id: 4, taskId: 1, content: 'Ready' }] })
+    sdk.getProject.mockResolvedValue({ data: ok({ id: 1, name: 'Backend' }) })
+    sdk.createProject.mockResolvedValue({ data: ok({ id: 2, name: 'Frontend', doneTaskCount: 1 }) })
+    sdk.listTags.mockResolvedValue({ data: ok(page([{ id: 3, name: 'sql' }])) })
+    sdk.listComments.mockResolvedValue({ data: ok(page([{ id: 4, taskId: 1, content: 'Ready' }])) })
     sdk.listActivities.mockResolvedValue({
-      data: [{ id: 5, taskId: 1, type: 'TASK_CREATED', message: 'Created' }],
+      data: ok(page([{ id: 5, taskId: 1, type: 'TASK_CREATED', message: 'Created' }])),
     })
 
     await expect(getProject(1)).resolves.toEqual({ id: 1, name: 'Backend', taskCount: 0, doneTaskCount: 0 })
@@ -150,11 +160,11 @@ describe('task api wrapper', () => {
   })
 
   it('rejects incomplete server payloads before exposing them to the UI', async () => {
-    sdk.getTask.mockResolvedValue({ data: { id: 1, status: 'TODO' } })
-    sdk.getProject.mockResolvedValue({ data: { id: 1 } })
-    sdk.listTags.mockResolvedValue({ data: [{ id: 1 }] })
-    sdk.listComments.mockResolvedValue({ data: [{ id: 1, taskId: 1 }] })
-    sdk.listActivities.mockResolvedValue({ data: [{ id: 1, taskId: 1, type: 'TASK_CREATED' }] })
+    sdk.getTask.mockResolvedValue({ data: ok({ id: 1, status: 'TODO' }) })
+    sdk.getProject.mockResolvedValue({ data: ok({ id: 1 }) })
+    sdk.listTags.mockResolvedValue({ data: ok(page([{ id: 1 }])) })
+    sdk.listComments.mockResolvedValue({ data: ok(page([{ id: 1, taskId: 1 }])) })
+    sdk.listActivities.mockResolvedValue({ data: ok(page([{ id: 1, taskId: 1, type: 'TASK_CREATED' }])) })
 
     await expect(getTask(1)).rejects.toThrow('任务数据不完整')
     await expect(getProject(1)).rejects.toThrow('项目数据不完整')

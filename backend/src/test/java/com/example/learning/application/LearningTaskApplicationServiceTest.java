@@ -7,7 +7,9 @@ import com.example.learning.application.command.CreateTaskCommentCommand;
 import com.example.learning.application.command.ListLearningTasksQuery;
 import com.example.learning.application.dto.LearningProjectDto;
 import com.example.learning.application.dto.LearningTaskDto;
+import com.example.learning.application.dto.TaskListItemDto;
 import com.example.learning.application.dto.TaskStatisticsDto;
+import com.example.learning.application.query.LearningTaskQueryRepository;
 import com.example.learning.domain.model.LearningTask;
 import com.example.learning.domain.model.TaskStatus;
 import com.example.learning.domain.repository.LearningTaskRepository;
@@ -41,7 +43,8 @@ class LearningTaskApplicationServiceTest {
     void setUp() {
         workspaceMapper = new FakeLearningWorkspaceMapper();
         repository = new FakeLearningTaskRepository(workspaceMapper);
-        service = new LearningTaskApplicationService(repository, workspaceMapper);
+        service = new LearningTaskApplicationService(repository, new FakeLearningTaskQueryRepository(repository, workspaceMapper),
+                workspaceMapper);
     }
 
     @Test
@@ -92,14 +95,14 @@ class LearningTaskApplicationServiceTest {
                 List.of("frontend")
         ));
 
-        List<LearningTaskDto> filteredTasks = service.listTasks(
+        List<TaskListItemDto> filteredTasks = service.listTasks(
                 new ListLearningTasksQuery(null, project.id(), null, false, "backend")
-        );
+        ).items();
 
         assertThat(task.projectName()).isEqualTo("Java learning path");
         assertThat(task.tagNames()).containsExactly("backend", "sql");
         assertThat(filteredTasks)
-                .extracting(LearningTaskDto::title)
+                .extracting(TaskListItemDto::title)
                 .containsExactly("Learn MyBatis");
     }
 
@@ -196,6 +199,49 @@ class LearningTaskApplicationServiceTest {
             return task.getStatus() != TaskStatus.DONE
                     && task.getDueDate() != null
                     && task.getDueDate().isBefore(LocalDate.now());
+        }
+    }
+
+    private static final class FakeLearningTaskQueryRepository implements LearningTaskQueryRepository {
+
+        private final FakeLearningTaskRepository repository;
+        private final FakeLearningWorkspaceMapper workspaceMapper;
+
+        private FakeLearningTaskQueryRepository(FakeLearningTaskRepository repository,
+                                                FakeLearningWorkspaceMapper workspaceMapper) {
+            this.repository = repository;
+            this.workspaceMapper = workspaceMapper;
+        }
+
+        @Override
+        public long count(ListLearningTasksQuery query) {
+            return repository.findAll(query).size();
+        }
+
+        @Override
+        public List<TaskListItemDto> findPage(ListLearningTasksQuery query) {
+            List<LearningTask> tasks = repository.findAll(query);
+            int fromIndex = Math.min(query.offset(), tasks.size());
+            int toIndex = Math.min(fromIndex + query.limit(), tasks.size());
+            return tasks.subList(fromIndex, toIndex).stream()
+                    .map(task -> new TaskListItemDto(
+                            task.getId(),
+                            task.getProjectId(),
+                            task.getProjectId() == null ? null : workspaceMapper.findProjectNameById(task.getProjectId()),
+                            task.getTitle(),
+                            task.getDescription(),
+                            task.getStatus(),
+                            task.getDueDate(),
+                            workspaceMapper.findTagNamesByTaskId(task.getId()),
+                            workspaceMapper.findCommentsByTaskId(task.getId()).size(),
+                            workspaceMapper.findActivitiesByTaskId(task.getId()).stream()
+                                    .map(TaskActivityRecord::getCreatedAt)
+                                    .max(LocalDateTime::compareTo)
+                                    .orElse(null),
+                            task.getCreatedAt(),
+                            task.getUpdatedAt()
+                    ))
+                    .toList();
         }
     }
 

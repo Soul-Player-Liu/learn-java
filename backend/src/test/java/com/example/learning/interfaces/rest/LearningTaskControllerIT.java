@@ -1,5 +1,8 @@
 package com.example.learning.interfaces.rest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.example.learning.application.dto.LearningProjectDto;
 import com.example.learning.application.dto.TaskActivityDto;
 import com.example.learning.application.dto.TaskCommentDto;
@@ -43,6 +46,9 @@ class LearningTaskControllerIT {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @BeforeEach
     void cleanDatabase() {
         jdbcTemplate.update("delete from task_activity");
@@ -57,22 +63,20 @@ class LearningTaskControllerIT {
     void createGetAndChangeTaskStatusThroughHttpApi() {
         LearningTaskDto createdTask = createTask("Learn REST", "Call controller", LocalDate.now().plusDays(1));
 
-        ResponseEntity<LearningTaskDto> getResponse = restTemplate.getForEntity(
-                "/api/tasks/{id}", LearningTaskDto.class, createdTask.id());
-        ResponseEntity<LearningTaskDto> patchResponse = restTemplate.exchange(
+        ResponseEntity<JsonNode> getResponse = restTemplate.getForEntity(
+                "/api/tasks/{id}", JsonNode.class, createdTask.id());
+        ResponseEntity<JsonNode> patchResponse = restTemplate.exchange(
                 "/api/tasks/{id}/status",
                 HttpMethod.PATCH,
                 new HttpEntity<>(Map.of("status", "DOING")),
-                LearningTaskDto.class,
+                JsonNode.class,
                 createdTask.id()
         );
 
         assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(getResponse.getBody()).isNotNull();
-        assertThat(getResponse.getBody().title()).isEqualTo("Learn REST");
+        assertThat(data(getResponse).get("title").asText()).isEqualTo("Learn REST");
         assertThat(patchResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(patchResponse.getBody()).isNotNull();
-        assertThat(patchResponse.getBody().status()).isEqualTo(TaskStatus.DOING);
+        assertThat(data(patchResponse).get("status").asText()).isEqualTo(TaskStatus.DOING.name());
     }
 
     @Test
@@ -87,21 +91,21 @@ class LearningTaskControllerIT {
                 vueTask.id()
         );
 
-        ResponseEntity<LearningTaskDto[]> listResponse = restTemplate.getForEntity(
-                "/api/tasks?keyword=Java&overdueOnly=true", LearningTaskDto[].class);
-        ResponseEntity<TaskStatisticsDto> statisticsResponse = restTemplate.getForEntity(
-                "/api/tasks/statistics", TaskStatisticsDto.class);
+        ResponseEntity<JsonNode> listResponse = restTemplate.getForEntity(
+                "/api/tasks?keyword=Java&overdueOnly=true", JsonNode.class);
+        ResponseEntity<JsonNode> statisticsResponse = restTemplate.getForEntity(
+                "/api/tasks/statistics", JsonNode.class);
 
         assertThat(listResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(listResponse.getBody()).isNotNull();
-        assertThat(listResponse.getBody()).hasSize(1);
-        assertThat(listResponse.getBody()[0].title()).isEqualTo("Learn Java");
+        JsonNode items = data(listResponse).get("items");
+        assertThat(items).hasSize(1);
+        assertThat(items.get(0).get("title").asText()).isEqualTo("Learn Java");
+        assertThat(data(listResponse).get("total").asLong()).isEqualTo(1);
 
         assertThat(statisticsResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(statisticsResponse.getBody()).isNotNull();
-        assertThat(statisticsResponse.getBody().total()).isEqualTo(2);
-        assertThat(statisticsResponse.getBody().done()).isEqualTo(1);
-        assertThat(statisticsResponse.getBody().overdue()).isEqualTo(1);
+        assertThat(data(statisticsResponse).get("total").asLong()).isEqualTo(2);
+        assertThat(data(statisticsResponse).get("done").asLong()).isEqualTo(1);
+        assertThat(data(statisticsResponse).get("overdue").asLong()).isEqualTo(1);
     }
 
     @Test
@@ -115,82 +119,78 @@ class LearningTaskControllerIT {
                 List.of("backend", "sql")
         );
 
-        ResponseEntity<LearningTaskDto[]> projectTasks = restTemplate.getForEntity(
-                "/api/tasks?projectId={projectId}", LearningTaskDto[].class, project.id());
-        ResponseEntity<LearningTaskDto[]> sqlTasks = restTemplate.getForEntity(
-                "/api/tasks?tag=sql", LearningTaskDto[].class);
-        ResponseEntity<TaskTagDto[]> tags = restTemplate.getForEntity("/api/tags", TaskTagDto[].class);
-        ResponseEntity<TaskCommentDto> commentResponse = restTemplate.postForEntity(
+        ResponseEntity<JsonNode> projectTasks = restTemplate.getForEntity(
+                "/api/tasks?projectId={projectId}", JsonNode.class, project.id());
+        ResponseEntity<JsonNode> sqlTasks = restTemplate.getForEntity(
+                "/api/tasks?tag=sql", JsonNode.class);
+        ResponseEntity<JsonNode> tags = restTemplate.getForEntity("/api/tags", JsonNode.class);
+        ResponseEntity<JsonNode> commentResponse = restTemplate.postForEntity(
                 "/api/tasks/{id}/comments",
                 Map.of("content", "接口已经完成", "author", "pm"),
-                TaskCommentDto.class,
+                JsonNode.class,
                 task.id()
         );
-        ResponseEntity<TaskCommentDto[]> comments = restTemplate.getForEntity(
-                "/api/tasks/{id}/comments", TaskCommentDto[].class, task.id());
-        ResponseEntity<TaskActivityDto[]> activities = restTemplate.getForEntity(
-                "/api/tasks/{id}/activities", TaskActivityDto[].class, task.id());
-        ResponseEntity<LearningProjectDto> projectDetail = restTemplate.getForEntity(
-                "/api/projects/{id}", LearningProjectDto.class, project.id());
+        ResponseEntity<JsonNode> comments = restTemplate.getForEntity(
+                "/api/tasks/{id}/comments", JsonNode.class, task.id());
+        ResponseEntity<JsonNode> activities = restTemplate.getForEntity(
+                "/api/tasks/{id}/activities", JsonNode.class, task.id());
+        ResponseEntity<JsonNode> projectDetail = restTemplate.getForEntity(
+                "/api/projects/{id}", JsonNode.class, project.id());
 
         assertThat(task.projectId()).isEqualTo(project.id());
         assertThat(task.projectName()).isEqualTo("Backend Track");
         assertThat(task.tagNames()).containsExactly("backend", "sql");
 
-        assertThat(projectTasks.getBody()).isNotNull();
-        assertThat(projectTasks.getBody()).extracting(LearningTaskDto::title).containsExactly("Model project tasks");
-        assertThat(sqlTasks.getBody()).isNotNull();
-        assertThat(sqlTasks.getBody()).extracting(LearningTaskDto::title).containsExactly("Model project tasks");
-        assertThat(tags.getBody()).isNotNull();
-        assertThat(tags.getBody()).extracting(TaskTagDto::name).containsExactly("backend", "sql");
+        assertThat(data(projectTasks).get("items")).extracting(item -> item.get("title").asText())
+                .containsExactly("Model project tasks");
+        assertThat(data(sqlTasks).get("items")).extracting(item -> item.get("title").asText())
+                .containsExactly("Model project tasks");
+        assertThat(data(tags).get("items")).extracting(item -> item.get("name").asText())
+                .containsExactly("backend", "sql");
 
         assertThat(commentResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        assertThat(commentResponse.getBody()).isNotNull();
-        assertThat(commentResponse.getBody().author()).isEqualTo("pm");
-        assertThat(comments.getBody()).isNotNull();
-        assertThat(comments.getBody()).extracting(TaskCommentDto::content).containsExactly("接口已经完成");
-        assertThat(activities.getBody()).isNotNull();
-        assertThat(activities.getBody()).extracting(TaskActivityDto::type)
+        assertThat(data(commentResponse).get("author").asText()).isEqualTo("pm");
+        assertThat(data(comments).get("items")).extracting(item -> item.get("content").asText())
+                .containsExactly("接口已经完成");
+        assertThat(data(activities).get("items")).extracting(item -> item.get("type").asText())
                 .contains("TASK_CREATED", "COMMENT_ADDED");
 
-        assertThat(projectDetail.getBody()).isNotNull();
-        assertThat(projectDetail.getBody().taskCount()).isEqualTo(1);
-        assertThat(projectDetail.getBody().doneTaskCount()).isZero();
+        assertThat(data(projectDetail).get("taskCount").asInt()).isEqualTo(1);
+        assertThat(data(projectDetail).get("doneTaskCount").asInt()).isZero();
     }
 
     @Test
     void validationErrorUsesStructuredErrorResponseAndTraceId() {
-        ResponseEntity<ErrorResponse> response = restTemplate.postForEntity(
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
                 "/api/tasks",
                 Map.of("title", ""),
-                ErrorResponse.class
+                JsonNode.class
         );
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         assertThat(response.getHeaders().getFirst("X-Request-Id")).isNotBlank();
         assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().code()).isEqualTo("VALIDATION_FAILED");
-        assertThat(response.getBody().path()).isEqualTo("/api/tasks");
-        assertThat(response.getBody().traceId()).isEqualTo(response.getHeaders().getFirst("X-Request-Id"));
-        assertThat(response.getBody().details())
-                .extracting(ErrorResponse.ErrorDetail::field)
+        assertThat(response.getBody().get("code").asText()).isEqualTo("VALIDATION_FAILED");
+        assertThat(response.getBody().get("path").asText()).isEqualTo("/api/tasks");
+        assertThat(response.getBody().get("traceId").asText()).isEqualTo(response.getHeaders().getFirst("X-Request-Id"));
+        assertThat(response.getBody().get("details"))
+                .extracting(detail -> detail.get("field").asText())
                 .contains("title");
     }
 
     private LearningTaskDto createTask(String title, String description, LocalDate dueDate) {
-        ResponseEntity<LearningTaskDto> response = restTemplate.postForEntity(
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
                 "/api/tasks",
                 Map.of("title", title, "description", description, "dueDate", dueDate.toString()),
-                LearningTaskDto.class
+                JsonNode.class
         );
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        assertThat(response.getBody()).isNotNull();
-        return response.getBody();
+        return convert(data(response), LearningTaskDto.class);
     }
 
     private LearningTaskDto createTask(Long projectId, String title, String description, LocalDate dueDate,
                                        List<String> tagNames) {
-        ResponseEntity<LearningTaskDto> response = restTemplate.postForEntity(
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
                 "/api/tasks",
                 Map.of(
                         "projectId", projectId,
@@ -199,21 +199,33 @@ class LearningTaskControllerIT {
                         "dueDate", dueDate.toString(),
                         "tagNames", tagNames
                 ),
-                LearningTaskDto.class
+                JsonNode.class
         );
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-        assertThat(response.getBody()).isNotNull();
-        return response.getBody();
+        return convert(data(response), LearningTaskDto.class);
     }
 
     private LearningProjectDto createProject(String name, String description) {
-        ResponseEntity<LearningProjectDto> response = restTemplate.postForEntity(
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
                 "/api/projects",
                 Map.of("name", name, "description", description),
-                LearningProjectDto.class
+                JsonNode.class
         );
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        return convert(data(response), LearningProjectDto.class);
+    }
+
+    private JsonNode data(ResponseEntity<JsonNode> response) {
         assertThat(response.getBody()).isNotNull();
-        return response.getBody();
+        assertThat(response.getBody().get("code").asText()).isEqualTo("OK");
+        return response.getBody().get("data");
+    }
+
+    private <T> T convert(JsonNode node, Class<T> type) {
+        try {
+            return objectMapper.treeToValue(node, type);
+        } catch (JsonProcessingException ex) {
+            throw new IllegalStateException("Failed to convert test response", ex);
+        }
     }
 }

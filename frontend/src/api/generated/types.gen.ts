@@ -4,89 +4,816 @@ export type ClientOptions = {
     baseUrl: 'http://localhost:8080' | (string & {});
 };
 
+/**
+ * Update learning task request
+ */
 export type UpdateLearningTaskRequest = {
+    /**
+     * Project id
+     */
     projectId?: number;
+    /**
+     * Task title
+     */
     title: string;
+    /**
+     * Task description
+     */
     description?: string;
+    /**
+     * Task status
+     */
     status: 'TODO' | 'DOING' | 'DONE';
+    /**
+     * Due date
+     */
     dueDate?: string;
+    /**
+     * Tag names
+     */
     tagNames?: Array<string>;
 };
 
-export type LearningTaskDto = {
-    id?: number;
-    projectId?: number;
-    projectName?: string;
-    title?: string;
-    description?: string;
-    status?: 'TODO' | 'DOING' | 'DONE';
-    dueDate?: string;
-    tagNames?: Array<string>;
-    createdAt?: string;
-    updatedAt?: string;
-};
-
-export type CreateLearningTaskRequest = {
-    projectId?: number;
-    title: string;
-    description?: string;
-    dueDate?: string;
-    tagNames?: Array<string>;
-};
-
-export type CreateTaskCommentRequest = {
-    content: string;
-    author?: string;
-};
-
-export type TaskCommentDto = {
-    id?: number;
-    taskId?: number;
-    content?: string;
-    author?: string;
-    createdAt?: string;
-};
-
-export type CreateLearningProjectRequest = {
-    name: string;
-    description?: string;
-};
-
-export type LearningProjectDto = {
-    id?: number;
-    name?: string;
-    description?: string;
-    taskCount?: number;
-    doneTaskCount?: number;
-    createdAt?: string;
-    updatedAt?: string;
-};
-
-export type ChangeTaskStatusRequest = {
-    status: 'TODO' | 'DOING' | 'DONE';
-};
-
-export type TaskActivityDto = {
-    id?: number;
-    taskId?: number;
-    type?: string;
+/**
+ * Unified API response envelope
+ */
+export type ApiResponseLearningTaskDto = {
+    /**
+     * Business response code
+     */
+    code?: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
+    /**
+     * Human-readable response message
+     */
     message?: string;
+    /**
+     * Response payload
+     */
+    data?: LearningTaskDto;
+    /**
+     * Request path
+     */
+    path?: string;
+    /**
+     * Response timestamp
+     */
+    timestamp?: string;
+    /**
+     * Trace id matching the X-Request-Id response header
+     */
+    traceId?: string;
+    /**
+     * Validation or field-level error details
+     */
+    details?: Array<ErrorDetail>;
+};
+
+/**
+ * Field-level error detail
+ */
+export type ErrorDetail = {
+    /**
+     * Invalid field name
+     */
+    field?: string;
+    /**
+     * Validation message
+     */
+    message?: string;
+};
+
+/**
+ * Learning task detail
+ */
+export type LearningTaskDto = {
+    /**
+     * Task id
+     */
+    id?: number;
+    /**
+     * Project id
+     */
+    projectId?: number;
+    /**
+     * Project name
+     */
+    projectName?: string;
+    /**
+     * Task title
+     */
+    title?: string;
+    /**
+     * Task description
+     */
+    description?: string;
+    /**
+     * Task status
+     */
+    status?: 'TODO' | 'DOING' | 'DONE';
+    /**
+     * Due date
+     */
+    dueDate?: string;
+    /**
+     * Tag names
+     */
+    tagNames?: Array<string>;
+    /**
+     * Creation time
+     */
+    createdAt?: string;
+    /**
+     * Last update time
+     */
+    updatedAt?: string;
+};
+
+/**
+ * Create learning task request
+ */
+export type CreateLearningTaskRequest = {
+    /**
+     * Project id
+     */
+    projectId?: number;
+    /**
+     * Task title
+     */
+    title: string;
+    /**
+     * Task description
+     */
+    description?: string;
+    /**
+     * Due date
+     */
+    dueDate?: string;
+    /**
+     * Tag names
+     */
+    tagNames?: Array<string>;
+};
+
+/**
+ * Create task comment request
+ */
+export type CreateTaskCommentRequest = {
+    /**
+     * Comment content
+     */
+    content: string;
+    /**
+     * Comment author
+     */
+    author?: string;
+};
+
+/**
+ * Unified API response envelope
+ */
+export type ApiResponseTaskCommentDto = {
+    /**
+     * Business response code
+     */
+    code?: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
+    /**
+     * Human-readable response message
+     */
+    message?: string;
+    /**
+     * Response payload
+     */
+    data?: TaskCommentDto;
+    /**
+     * Request path
+     */
+    path?: string;
+    /**
+     * Response timestamp
+     */
+    timestamp?: string;
+    /**
+     * Trace id matching the X-Request-Id response header
+     */
+    traceId?: string;
+    /**
+     * Validation or field-level error details
+     */
+    details?: Array<ErrorDetail>;
+};
+
+/**
+ * Task comment
+ */
+export type TaskCommentDto = {
+    /**
+     * Comment id
+     */
+    id?: number;
+    /**
+     * Task id
+     */
+    taskId?: number;
+    /**
+     * Comment content
+     */
+    content?: string;
+    /**
+     * Comment author
+     */
+    author?: string;
+    /**
+     * Creation time
+     */
     createdAt?: string;
 };
 
-export type TaskStatisticsDto = {
+/**
+ * Create learning project request
+ */
+export type CreateLearningProjectRequest = {
+    /**
+     * Project name
+     */
+    name: string;
+    /**
+     * Project description
+     */
+    description?: string;
+};
+
+/**
+ * Unified API response envelope
+ */
+export type ApiResponseLearningProjectDto = {
+    /**
+     * Business response code
+     */
+    code?: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
+    /**
+     * Human-readable response message
+     */
+    message?: string;
+    /**
+     * Response payload
+     */
+    data?: LearningProjectDto;
+    /**
+     * Request path
+     */
+    path?: string;
+    /**
+     * Response timestamp
+     */
+    timestamp?: string;
+    /**
+     * Trace id matching the X-Request-Id response header
+     */
+    traceId?: string;
+    /**
+     * Validation or field-level error details
+     */
+    details?: Array<ErrorDetail>;
+};
+
+/**
+ * Learning project
+ */
+export type LearningProjectDto = {
+    /**
+     * Project id
+     */
+    id?: number;
+    /**
+     * Project name
+     */
+    name?: string;
+    /**
+     * Project description
+     */
+    description?: string;
+    /**
+     * Task count
+     */
+    taskCount?: number;
+    /**
+     * Done task count
+     */
+    doneTaskCount?: number;
+    /**
+     * Creation time
+     */
+    createdAt?: string;
+    /**
+     * Last update time
+     */
+    updatedAt?: string;
+};
+
+/**
+ * Change task status request
+ */
+export type ChangeTaskStatusRequest = {
+    /**
+     * Target task status
+     */
+    status: 'TODO' | 'DOING' | 'DONE';
+};
+
+/**
+ * Unified API response envelope
+ */
+export type ApiResponsePageResponseTaskListItemDto = {
+    /**
+     * Business response code
+     */
+    code?: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
+    /**
+     * Human-readable response message
+     */
+    message?: string;
+    /**
+     * Response payload
+     */
+    data?: PageResponseTaskListItemDto;
+    /**
+     * Request path
+     */
+    path?: string;
+    /**
+     * Response timestamp
+     */
+    timestamp?: string;
+    /**
+     * Trace id matching the X-Request-Id response header
+     */
+    traceId?: string;
+    /**
+     * Validation or field-level error details
+     */
+    details?: Array<ErrorDetail>;
+};
+
+/**
+ * Paged list payload
+ */
+export type PageResponseTaskListItemDto = {
+    /**
+     * Items in the current page
+     */
+    items?: Array<TaskListItemDto>;
+    /**
+     * Total number of matched records
+     */
     total?: number;
+    /**
+     * One-based page number
+     */
+    page?: number;
+    /**
+     * Page size
+     */
+    size?: number;
+    /**
+     * Total page count
+     */
+    totalPages?: number;
+};
+
+/**
+ * Task summary used by paged task lists
+ */
+export type TaskListItemDto = {
+    /**
+     * Task id
+     */
+    id?: number;
+    /**
+     * Project id
+     */
+    projectId?: number;
+    /**
+     * Project name
+     */
+    projectName?: string;
+    /**
+     * Task title
+     */
+    title?: string;
+    /**
+     * Task description
+     */
+    description?: string;
+    /**
+     * Task status
+     */
+    status?: 'TODO' | 'DOING' | 'DONE';
+    /**
+     * Due date
+     */
+    dueDate?: string;
+    /**
+     * Tag names
+     */
+    tagNames?: Array<string>;
+    /**
+     * Comment count
+     */
+    commentCount?: number;
+    /**
+     * Latest activity time
+     */
+    latestActivityAt?: string;
+    /**
+     * Creation time
+     */
+    createdAt?: string;
+    /**
+     * Last update time
+     */
+    updatedAt?: string;
+};
+
+/**
+ * Unified API response envelope
+ */
+export type ApiResponsePageResponseTaskCommentDto = {
+    /**
+     * Business response code
+     */
+    code?: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
+    /**
+     * Human-readable response message
+     */
+    message?: string;
+    /**
+     * Response payload
+     */
+    data?: PageResponseTaskCommentDto;
+    /**
+     * Request path
+     */
+    path?: string;
+    /**
+     * Response timestamp
+     */
+    timestamp?: string;
+    /**
+     * Trace id matching the X-Request-Id response header
+     */
+    traceId?: string;
+    /**
+     * Validation or field-level error details
+     */
+    details?: Array<ErrorDetail>;
+};
+
+/**
+ * Paged list payload
+ */
+export type PageResponseTaskCommentDto = {
+    /**
+     * Items in the current page
+     */
+    items?: Array<TaskCommentDto>;
+    /**
+     * Total number of matched records
+     */
+    total?: number;
+    /**
+     * One-based page number
+     */
+    page?: number;
+    /**
+     * Page size
+     */
+    size?: number;
+    /**
+     * Total page count
+     */
+    totalPages?: number;
+};
+
+/**
+ * Unified API response envelope
+ */
+export type ApiResponsePageResponseTaskActivityDto = {
+    /**
+     * Business response code
+     */
+    code?: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
+    /**
+     * Human-readable response message
+     */
+    message?: string;
+    /**
+     * Response payload
+     */
+    data?: PageResponseTaskActivityDto;
+    /**
+     * Request path
+     */
+    path?: string;
+    /**
+     * Response timestamp
+     */
+    timestamp?: string;
+    /**
+     * Trace id matching the X-Request-Id response header
+     */
+    traceId?: string;
+    /**
+     * Validation or field-level error details
+     */
+    details?: Array<ErrorDetail>;
+};
+
+/**
+ * Paged list payload
+ */
+export type PageResponseTaskActivityDto = {
+    /**
+     * Items in the current page
+     */
+    items?: Array<TaskActivityDto>;
+    /**
+     * Total number of matched records
+     */
+    total?: number;
+    /**
+     * One-based page number
+     */
+    page?: number;
+    /**
+     * Page size
+     */
+    size?: number;
+    /**
+     * Total page count
+     */
+    totalPages?: number;
+};
+
+/**
+ * Task activity
+ */
+export type TaskActivityDto = {
+    /**
+     * Activity id
+     */
+    id?: number;
+    /**
+     * Task id
+     */
+    taskId?: number;
+    /**
+     * Activity type
+     */
+    type?: string;
+    /**
+     * Activity message
+     */
+    message?: string;
+    /**
+     * Creation time
+     */
+    createdAt?: string;
+};
+
+/**
+ * Unified API response envelope
+ */
+export type ApiResponseTaskStatisticsDto = {
+    /**
+     * Business response code
+     */
+    code?: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
+    /**
+     * Human-readable response message
+     */
+    message?: string;
+    /**
+     * Response payload
+     */
+    data?: TaskStatisticsDto;
+    /**
+     * Request path
+     */
+    path?: string;
+    /**
+     * Response timestamp
+     */
+    timestamp?: string;
+    /**
+     * Trace id matching the X-Request-Id response header
+     */
+    traceId?: string;
+    /**
+     * Validation or field-level error details
+     */
+    details?: Array<ErrorDetail>;
+};
+
+/**
+ * Task statistics
+ */
+export type TaskStatisticsDto = {
+    /**
+     * Total task count
+     */
+    total?: number;
+    /**
+     * Todo task count
+     */
     todo?: number;
+    /**
+     * Doing task count
+     */
     doing?: number;
+    /**
+     * Done task count
+     */
     done?: number;
+    /**
+     * Overdue unfinished task count
+     */
     overdue?: number;
+    /**
+     * Due soon unfinished task count
+     */
     dueSoon?: number;
 };
 
+/**
+ * Unified API response envelope
+ */
+export type ApiResponsePageResponseTaskTagDto = {
+    /**
+     * Business response code
+     */
+    code?: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
+    /**
+     * Human-readable response message
+     */
+    message?: string;
+    /**
+     * Response payload
+     */
+    data?: PageResponseTaskTagDto;
+    /**
+     * Request path
+     */
+    path?: string;
+    /**
+     * Response timestamp
+     */
+    timestamp?: string;
+    /**
+     * Trace id matching the X-Request-Id response header
+     */
+    traceId?: string;
+    /**
+     * Validation or field-level error details
+     */
+    details?: Array<ErrorDetail>;
+};
+
+/**
+ * Paged list payload
+ */
+export type PageResponseTaskTagDto = {
+    /**
+     * Items in the current page
+     */
+    items?: Array<TaskTagDto>;
+    /**
+     * Total number of matched records
+     */
+    total?: number;
+    /**
+     * One-based page number
+     */
+    page?: number;
+    /**
+     * Page size
+     */
+    size?: number;
+    /**
+     * Total page count
+     */
+    totalPages?: number;
+};
+
+/**
+ * Task tag
+ */
 export type TaskTagDto = {
+    /**
+     * Tag id
+     */
     id?: number;
+    /**
+     * Tag name
+     */
     name?: string;
+    /**
+     * Tag color
+     */
     color?: string;
+};
+
+/**
+ * Unified API response envelope
+ */
+export type ApiResponsePageResponseLearningProjectDto = {
+    /**
+     * Business response code
+     */
+    code?: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
+    /**
+     * Human-readable response message
+     */
+    message?: string;
+    /**
+     * Response payload
+     */
+    data?: PageResponseLearningProjectDto;
+    /**
+     * Request path
+     */
+    path?: string;
+    /**
+     * Response timestamp
+     */
+    timestamp?: string;
+    /**
+     * Trace id matching the X-Request-Id response header
+     */
+    traceId?: string;
+    /**
+     * Validation or field-level error details
+     */
+    details?: Array<ErrorDetail>;
+};
+
+/**
+ * Paged list payload
+ */
+export type PageResponseLearningProjectDto = {
+    /**
+     * Items in the current page
+     */
+    items?: Array<LearningProjectDto>;
+    /**
+     * Total number of matched records
+     */
+    total?: number;
+    /**
+     * One-based page number
+     */
+    page?: number;
+    /**
+     * Page size
+     */
+    size?: number;
+    /**
+     * Total page count
+     */
+    totalPages?: number;
+};
+
+/**
+ * Unified API response envelope
+ */
+export type ApiResponseVoid = {
+    /**
+     * Business response code
+     */
+    code?: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
+    /**
+     * Human-readable response message
+     */
+    message?: string;
+    /**
+     * Response payload
+     */
+    data?: unknown;
+    /**
+     * Request path
+     */
+    path?: string;
+    /**
+     * Response timestamp
+     */
+    timestamp?: string;
+    /**
+     * Trace id matching the X-Request-Id response header
+     */
+    traceId?: string;
+    /**
+     * Validation or field-level error details
+     */
+    details?: Array<ErrorDetail>;
 };
 
 export type DeleteTaskData = {
@@ -100,9 +827,9 @@ export type DeleteTaskData = {
 
 export type DeleteTaskResponses = {
     /**
-     * No Content
+     * OK
      */
-    204: void;
+    200: ApiResponseVoid;
 };
 
 export type DeleteTaskResponse = DeleteTaskResponses[keyof DeleteTaskResponses];
@@ -120,7 +847,7 @@ export type GetTaskResponses = {
     /**
      * OK
      */
-    200: LearningTaskDto;
+    200: ApiResponseLearningTaskDto;
 };
 
 export type GetTaskResponse = GetTaskResponses[keyof GetTaskResponses];
@@ -138,7 +865,7 @@ export type UpdateTaskResponses = {
     /**
      * OK
      */
-    200: LearningTaskDto;
+    200: ApiResponseLearningTaskDto;
 };
 
 export type UpdateTaskResponse = UpdateTaskResponses[keyof UpdateTaskResponses];
@@ -147,20 +874,52 @@ export type ListTasksData = {
     body?: never;
     path?: never;
     query?: {
+        /**
+         * Filter by task status
+         */
         status?: 'TODO' | 'DOING' | 'DONE';
+        /**
+         * Filter by project id
+         */
         projectId?: number;
+        /**
+         * Search keyword in title or description
+         */
         keyword?: string;
+        /**
+         * Only include unfinished overdue tasks
+         */
         overdueOnly?: boolean;
+        /**
+         * Filter by exact tag name
+         */
         tag?: string;
+        /**
+         * One-based page number
+         */
+        page?: number;
+        /**
+         * Page size
+         */
+        size?: number;
     };
     url: '/api/tasks';
 };
 
+export type ListTasksErrors = {
+    /**
+     * Invalid query parameter
+     */
+    400: ApiResponsePageResponseTaskListItemDto;
+};
+
+export type ListTasksError = ListTasksErrors[keyof ListTasksErrors];
+
 export type ListTasksResponses = {
     /**
-     * OK
+     * Tasks found
      */
-    200: Array<LearningTaskDto>;
+    200: ApiResponsePageResponseTaskListItemDto;
 };
 
 export type ListTasksResponse = ListTasksResponses[keyof ListTasksResponses];
@@ -176,7 +935,7 @@ export type CreateTaskResponses = {
     /**
      * Created
      */
-    201: LearningTaskDto;
+    201: ApiResponseLearningTaskDto;
 };
 
 export type CreateTaskResponse = CreateTaskResponses[keyof CreateTaskResponses];
@@ -186,7 +945,10 @@ export type ListCommentsData = {
     path: {
         id: number;
     };
-    query?: never;
+    query?: {
+        page?: number;
+        size?: number;
+    };
     url: '/api/tasks/{id}/comments';
 };
 
@@ -194,7 +956,7 @@ export type ListCommentsResponses = {
     /**
      * OK
      */
-    200: Array<TaskCommentDto>;
+    200: ApiResponsePageResponseTaskCommentDto;
 };
 
 export type ListCommentsResponse = ListCommentsResponses[keyof ListCommentsResponses];
@@ -212,7 +974,7 @@ export type AddCommentResponses = {
     /**
      * Created
      */
-    201: TaskCommentDto;
+    201: ApiResponseTaskCommentDto;
 };
 
 export type AddCommentResponse = AddCommentResponses[keyof AddCommentResponses];
@@ -220,7 +982,16 @@ export type AddCommentResponse = AddCommentResponses[keyof AddCommentResponses];
 export type ListProjectsData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * One-based page number
+         */
+        page?: number;
+        /**
+         * Page size
+         */
+        size?: number;
+    };
     url: '/api/projects';
 };
 
@@ -228,7 +999,7 @@ export type ListProjectsResponses = {
     /**
      * OK
      */
-    200: Array<LearningProjectDto>;
+    200: ApiResponsePageResponseLearningProjectDto;
 };
 
 export type ListProjectsResponse = ListProjectsResponses[keyof ListProjectsResponses];
@@ -244,7 +1015,7 @@ export type CreateProjectResponses = {
     /**
      * Created
      */
-    201: LearningProjectDto;
+    201: ApiResponseLearningProjectDto;
 };
 
 export type CreateProjectResponse = CreateProjectResponses[keyof CreateProjectResponses];
@@ -262,7 +1033,7 @@ export type ChangeTaskStatusResponses = {
     /**
      * OK
      */
-    200: LearningTaskDto;
+    200: ApiResponseLearningTaskDto;
 };
 
 export type ChangeTaskStatusResponse = ChangeTaskStatusResponses[keyof ChangeTaskStatusResponses];
@@ -272,7 +1043,10 @@ export type ListActivitiesData = {
     path: {
         id: number;
     };
-    query?: never;
+    query?: {
+        page?: number;
+        size?: number;
+    };
     url: '/api/tasks/{id}/activities';
 };
 
@@ -280,7 +1054,7 @@ export type ListActivitiesResponses = {
     /**
      * OK
      */
-    200: Array<TaskActivityDto>;
+    200: ApiResponsePageResponseTaskActivityDto;
 };
 
 export type ListActivitiesResponse = ListActivitiesResponses[keyof ListActivitiesResponses];
@@ -296,7 +1070,7 @@ export type GetTaskStatisticsResponses = {
     /**
      * OK
      */
-    200: TaskStatisticsDto;
+    200: ApiResponseTaskStatisticsDto;
 };
 
 export type GetTaskStatisticsResponse = GetTaskStatisticsResponses[keyof GetTaskStatisticsResponses];
@@ -304,7 +1078,16 @@ export type GetTaskStatisticsResponse = GetTaskStatisticsResponses[keyof GetTask
 export type ListTagsData = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * One-based page number
+         */
+        page?: number;
+        /**
+         * Page size
+         */
+        size?: number;
+    };
     url: '/api/tags';
 };
 
@@ -312,7 +1095,7 @@ export type ListTagsResponses = {
     /**
      * OK
      */
-    200: Array<TaskTagDto>;
+    200: ApiResponsePageResponseTaskTagDto;
 };
 
 export type ListTagsResponse = ListTagsResponses[keyof ListTagsResponses];
@@ -330,7 +1113,7 @@ export type GetProjectResponses = {
     /**
      * OK
      */
-    200: LearningProjectDto;
+    200: ApiResponseLearningProjectDto;
 };
 
 export type GetProjectResponse = GetProjectResponses[keyof GetProjectResponses];

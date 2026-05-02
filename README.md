@@ -121,9 +121,11 @@ npm run test:e2e
 3. `domain/model/LearningTask.java`
 4. `domain/repository/LearningTaskRepository.java`
 5. `infrastructure/persistence/MyBatisLearningTaskRepository.java`
-6. `infrastructure/persistence/LearningTaskMapper.java`
-7. `resources/mappers/LearningTaskMapper.xml`
-8. `resources/db/migration/V1__init_learning_task.sql`
+6. `application/query/LearningTaskQueryRepository.java`
+7. `infrastructure/persistence/MyBatisLearningTaskQueryRepository.java`
+8. `infrastructure/persistence/LearningTaskMapper.java`
+9. `resources/mappers/LearningTaskMapper.xml`
+10. `resources/db/migration/V1__init_learning_task.sql`
 
 这样能先看到请求怎么进来，再看到业务用例怎么组织，最后看数据库适配。
 
@@ -138,13 +140,16 @@ npm run test:e2e
 - 仓库根目录的 `ci.sh` 会串起后端 MySQL 集成测试、后端覆盖率门槛、前端 check、前端覆盖率门槛、mock build、Storybook build、SDK 一致性检查和 Playwright E2E。
 - GitLab CI 配置在 `.gitlab-ci.yml`，按后端、前端、E2E 拆分 job，并上传 JUnit、JaCoCo、Cobertura、Playwright report 和 Storybook 静态产物。
 - 后端测试分为快测和 MySQL 集成测试两层。
+- 后端接口统一返回 `ApiResponse<T>`，错误码由 `ErrorCode` 枚举集中维护，错误响应包含 `traceId`、请求路径和字段级校验明细。
+- 列表接口支持 `page`、`size` 查询参数，列表数据统一放在 `PageResponse<T>.items` 里。
+- 后端 HTTP Request、应用层 Command、应用/查询 DTO 已分开建模；OpenAPI schema 由 springdoc 根据 Controller、Request、DTO 注解生成。
+- `GET /api/tasks` 使用 MyBatis XML 的多表分页查询，覆盖项目名、标签聚合、评论数量、最近活动时间、动态筛选、`count` 和 `limit/offset`。
 
 ## 后续待设计
 
-- 是否增加分页。
-- 是否增加统一响应格式和错误码。
-- 是否把后端 DTO、命令对象和 OpenAPI schema 做得更规范。
-- 是否加入更复杂的 MyBatis 多表查询示例。
+- 是否在前端页面上增加可见分页控件。目前后端和 SDK 已支持分页，前端 store 仍按第一页列表使用。
+- 是否把错误码进一步拆成业务错误码，例如项目不存在、任务状态流转非法、标签名称非法等更细粒度代码。
+- 是否加入更复杂的 MyBatis 嵌套 `resultMap` / `collection` 示例。目前任务列表采用聚合型多表查询，更适合先学习分页和统计。
 
 ## 后端测试体系
 
