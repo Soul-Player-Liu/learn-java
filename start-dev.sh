@@ -8,9 +8,6 @@ FRONTEND_PID_FILE="$RUN_DIR/frontend.pid"
 BACKEND_LOG="$RUN_DIR/backend.log"
 FRONTEND_LOG="$RUN_DIR/frontend.log"
 
-export JAVA_HOME="${DEV_JAVA_HOME:-/usr/lib/jvm/java-17-openjdk-amd64}"
-export PATH="$JAVA_HOME/bin:$PATH"
-
 mkdir -p "$RUN_DIR"
 
 is_pid_alive() {
@@ -61,7 +58,7 @@ start_backend() {
   fi
 
   echo "Starting backend..."
-  setsid bash -c "cd '$ROOT_DIR/backend' && exec ./mvnw spring-boot:run" >"$BACKEND_LOG" 2>&1 &
+  setsid bash -c "cd '$ROOT_DIR/backend' && exec ../scripts/with-java-17.sh ./mvnw spring-boot:run" >"$BACKEND_LOG" 2>&1 &
   echo "$!" >"$BACKEND_PID_FILE"
   wait_for_url "Backend" "http://127.0.0.1:8080/v3/api-docs" 60
 }

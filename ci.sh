@@ -1,9 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-export PATH="$JAVA_HOME/bin:$PATH"
-
 BACKEND_PID=""
 
 cleanup() {
@@ -42,9 +39,8 @@ trap cleanup EXIT
 docker compose up -d mysql
 
 cd backend
-./mvnw test
-./mvnw verify -Pintegration-test
-./mvnw spring-boot:run >../backend-ci.log 2>&1 &
+../scripts/with-java-17.sh ./mvnw verify -Pintegration-test,coverage
+../scripts/with-java-17.sh ./mvnw spring-boot:run >../backend-ci.log 2>&1 &
 BACKEND_PID=$!
 cd ..
 
@@ -54,6 +50,7 @@ cd frontend
 npm ci
 npx playwright install chromium
 npm run check
+npm run test:coverage
 npm run build:mock
 npm run build:storybook
 npm run sdk:check

@@ -34,11 +34,11 @@ docker compose up -d mysql
 
 项目已经包含 Maven Wrapper，不需要全局安装 `mvn`。项目要求 Java 17。
 
-当前 shell 的 `JAVA_HOME` 仍可能指向旧 Java 8，所以本机建议显式指定 Java 17：
+如果当前 shell 默认不是 Java 17，先把 `JAVA_HOME` 或 `DEV_JAVA_HOME` 指向本机 Java 17 JDK。仓库脚本会检查 Java 主版本，不再写死某台机器的 JDK 路径。
 
 ```bash
 cd backend
-JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH ./mvnw spring-boot:run
+../scripts/with-java-17.sh ./mvnw spring-boot:run
 ```
 
 3. 启动前端
@@ -97,6 +97,7 @@ npm run generate:sdk
 
 - 静态检查：`npm run lint`、`npm run format:check`、`npm run typecheck`。
 - 单元测试：`npm run test:unit`，使用 Vitest，当前覆盖 API wrapper 和 Pinia store。
+- 覆盖率检查：`npm run test:coverage`，使用 Vitest V8 coverage。当前采用“全局基础门槛 + 核心 API/store 文件更高门槛”的策略。
 - 端到端测试：`npm run test:e2e`，使用 Playwright，当前覆盖创建项目、创建带项目和标签的任务、评论、活动日志、状态流转、标签筛选和删除的完整用户路径。脚本会用 MySQL admin 账号直连数据库，为每次运行创建随机 MySQL database，测试结束后删除，避免污染 `learn_java`。
 - SDK 一致性检查：`npm run sdk:check`，重新从后端 OpenAPI 生成 SDK，并检查 `src/api/generated` 是否有未提交变化。
 - 离线页面构建：`npm run build:mock` 和 `npm run build:storybook`，用于确认 MSW mock mode 和 Storybook 不是只能在开发机临时启动。
@@ -134,14 +135,14 @@ npm run test:e2e
 - 前端使用 Vue Router 和 Pinia。
 - 前端 SDK 从后端 OpenAPI 自动生成。
 - 暂不做用户登录。
-- 仓库根目录的 `ci.sh` 会串起后端单测、后端 MySQL 集成测试、前端 check、mock build、Storybook build、SDK 一致性检查和 Playwright E2E。
+- 仓库根目录的 `ci.sh` 会串起后端 MySQL 集成测试、后端覆盖率门槛、前端 check、前端覆盖率门槛、mock build、Storybook build、SDK 一致性检查和 Playwright E2E。
+- GitLab CI 配置在 `.gitlab-ci.yml`，按后端、前端、E2E 拆分 job，并上传 JUnit、JaCoCo、Cobertura、Playwright report 和 Storybook 静态产物。
 - 后端测试分为快测和 MySQL 集成测试两层。
 
 ## 后续待设计
 
 - 是否增加分页。
 - 是否增加统一响应格式和错误码。
-- 是否增加真实 CI 平台配置，例如 GitHub Actions，并上传 Playwright report、JUnit XML 和 Storybook 静态产物。
 - 是否把后端 DTO、命令对象和 OpenAPI schema 做得更规范。
 - 是否加入更复杂的 MyBatis 多表查询示例。
 
@@ -158,14 +159,14 @@ npm run test:e2e
 
 ```bash
 cd backend
-JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH ./mvnw test
+../scripts/with-java-17.sh ./mvnw test
 ```
 
 调整单元测试并行度：
 
 ```bash
 cd backend
-JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH ./mvnw test -Dunit.test.parallelism=8
+../scripts/with-java-17.sh ./mvnw test -Dunit.test.parallelism=8
 ```
 
 需要验证 Flyway、MyBatis XML、Controller 到数据库完整链路时，先启动 MySQL，再跑集成测试：
@@ -174,15 +175,29 @@ JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 PATH=/usr/lib/jvm/java-17-openjdk-a
 docker compose up -d mysql
 
 cd backend
-JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH ./mvnw verify -Pintegration-test
+../scripts/with-java-17.sh ./mvnw verify -Pintegration-test
 ```
 
 调整集成测试 fork 数：
 
 ```bash
 cd backend
-JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH ./mvnw verify -Pintegration-test -Dintegration.test.fork.count=4
+../scripts/with-java-17.sh ./mvnw verify -Pintegration-test -Dintegration.test.fork.count=4
 ```
+
+如果要同时执行覆盖率门槛：
+
+```bash
+cd backend
+../scripts/with-java-17.sh ./mvnw verify -Pintegration-test,coverage
+```
+
+后端覆盖率用 JaCoCo，策略是分层门槛：
+
+- 全局排除 DTO、请求对象、MyBatis record、启动类等低价值结构代码后，要求基础行/指令/分支覆盖率。
+- `domain/model` 是核心业务规则包，门槛最高。
+- `application` 是用例编排层，门槛次之。
+- `infrastructure/persistence` 和 `interfaces/rest` 主要靠集成测试兜底，门槛低于纯业务包。
 
 集成测试默认连接本地 Docker MySQL：
 
@@ -202,21 +217,42 @@ TEST_MYSQL_ADMIN_USERNAME=root \
 TEST_MYSQL_ADMIN_PASSWORD=root123456 \
 TEST_MYSQL_APP_USERNAME=learn \
 TEST_MYSQL_APP_PASSWORD=learn123456 \
-JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 \
-PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH \
-./mvnw verify -Pintegration-test
+../scripts/with-java-17.sh ./mvnw verify -Pintegration-test
 ```
+
+## GitLab CI
+
+`.gitlab-ci.yml` 当前分为五类 job：
+
+- `backend_unit`：跑 `mvnw test`，上传 Surefire JUnit XML。
+- `backend_integration`：用 GitLab MySQL service 跑 `mvnw verify -Pintegration-test,coverage`，上传 Surefire/Failsafe JUnit XML 和 JaCoCo XML/HTML。
+- `frontend_check`：跑 `npm run check`、mock build、Storybook build、Vitest coverage，上传 Vitest JUnit XML、Cobertura coverage、Storybook 静态产物。
+- `sdk_check`：启动真实后端，重新生成 SDK 并检查 `src/api/generated` 是否漂移。
+- `e2e`：用 Playwright 镜像跑真实前后端 E2E，上传 Playwright JUnit XML、HTML report 和 trace/test-results。
+
+CI 使用 Java 17 镜像或在 job 里安装 Java 17；本地脚本只校验版本，不绑定固定 JDK 路径。MySQL 仍沿用当前临时 database/schema 模型，暂不切换 Testcontainers。
+
+## 覆盖率策略
+
+覆盖率不是“一刀切 80%”。当前策略是：
+
+- 后端：JaCoCo 在 `coverage` profile 中执行门槛检查，并按包区分全局、领域层、应用层、接口/基础设施层。
+- 前端：Vitest coverage 设置全局基础门槛，同时对 `src/api/tasks.ts` 和 `src/stores/taskStore.ts` 设置更高门槛。
+- CI 上传机器可读报告，方便 GitLab 展示覆盖率变化；HTML 报告作为 artifact 留给人工排查。
+
+后续真实项目可以把门槛逐步上调，或者只对新增代码、核心业务包、关键 store/API wrapper 提更高要求。
 
 ## 验证命令
 
 ```bash
 cd backend
-JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH ./mvnw test
-JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 PATH=/usr/lib/jvm/java-17-openjdk-amd64/bin:$PATH ./mvnw verify -Pintegration-test
+../scripts/with-java-17.sh ./mvnw test
+../scripts/with-java-17.sh ./mvnw verify -Pintegration-test,coverage
 
 cd ../frontend
 npm run generate:sdk
 npm run check
+npm run test:coverage
 npm run build:mock
 npm run build:storybook
 npm run test:e2e

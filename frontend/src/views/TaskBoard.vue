@@ -190,13 +190,13 @@ onMounted(async () => {
         placeholder="搜索标题或说明"
         @keyup.enter="loadTasks"
       />
-      <el-select v-model="filters.status" clearable placeholder="状态">
+      <el-select v-model="filters.status" clearable placeholder="状态" data-testid="task-filter-status">
         <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
       </el-select>
-      <el-select v-model="filters.projectId" clearable placeholder="项目">
+      <el-select v-model="filters.projectId" clearable placeholder="项目" data-testid="task-filter-project">
         <el-option v-for="project in projects" :key="project.id" :label="project.name" :value="project.id" />
       </el-select>
-      <el-select v-model="filters.tag" clearable filterable placeholder="标签">
+      <el-select v-model="filters.tag" clearable filterable placeholder="标签" data-testid="task-filter-tag">
         <el-option v-for="tag in tags" :key="tag.id" :label="tag.name" :value="tag.name" />
       </el-select>
       <el-checkbox v-model="filters.overdueOnly">只看逾期</el-checkbox>
@@ -253,7 +253,13 @@ onMounted(async () => {
     <el-dialog v-model="dialogVisible" :title="title" width="520px" @closed="resetForm">
       <el-form label-position="top">
         <el-form-item label="项目">
-          <el-select v-model="form.projectId" clearable filterable placeholder="未归属项目">
+          <el-select
+            v-model="form.projectId"
+            clearable
+            filterable
+            placeholder="未归属项目"
+            data-testid="task-form-project"
+          >
             <el-option
               v-for="project in projects"
               :key="project.id"
@@ -278,7 +284,12 @@ onMounted(async () => {
           <el-date-picker v-model="form.dueDate" value-format="YYYY-MM-DD" type="date" />
         </el-form-item>
         <el-form-item label="标签">
-          <el-input v-model="form.tagInput" placeholder="多个标签用逗号分隔" maxlength="120" />
+          <el-input
+            v-model="form.tagInput"
+            placeholder="多个标签用逗号分隔"
+            maxlength="120"
+            data-testid="task-form-tags"
+          />
         </el-form-item>
       </el-form>
       <template #footer>

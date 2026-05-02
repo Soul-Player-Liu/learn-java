@@ -1,0 +1,141 @@
+stages:
+  - backend
+  - frontend
+  - e2e
+
+variables:
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  MYSQL_DATABASE: "learn_java"
+  MYSQL_USER: "learn"
+  MYSQL_PASSWORD: "learn123456"
+  MYSQL_ROOT_PASSWORD: "root123456"
+  TEST_MYSQL_HOST: "mysql"
+  TEST_MYSQL_PORT: "3306"
+  TEST_MYSQL_ADMIN_USERNAME: "root"
+  TEST_MYSQL_ADMIN_PASSWORD: "root123456"
+  TEST_MYSQL_APP_USERNAME: "learn"
+  TEST_MYSQL_APP_PASSWORD: "learn123456"
+
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - .m2/repository/
+    - frontend/.npm/
+
+.mysql_service:
+  services:
+    - name: mysql:8.4.9
+      alias: mysql
+      command:
+        - "--character-set-server=utf8mb4"
+        - "--collation-server=utf8mb4_0900_ai_ci"
+  before_script:
+    - timeout 90 bash -c 'until </dev/tcp/mysql/3306; do sleep 2; done'
+
+backend_unit:
+  stage: backend
+  image: maven:3.9.11-eclipse-temurin-17
+  script:
+    - cd backend
+    - ../scripts/with-java-17.sh ./mvnw $MAVEN_CLI_OPTS test
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - backend/target/surefire-reports/TEST-*.xml
+    paths:
+      - backend/target/surefire-reports/
+    expire_in: 1 week
+
+backend_integration:
+  stage: backend
+  image: maven:3.9.11-eclipse-temurin-17
+  extends: .mysql_service
+  script:
+    - cd backend
+    - ../scripts/with-java-17.sh ./mvnw $MAVEN_CLI_OPTS verify -Pintegration-test,coverage
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - backend/target/surefire-reports/TEST-*.xml
+        - backend/target/failsafe-reports/TEST-*.xml
+      coverage_report:
+        coverage_format: jacoco
+        path: backend/target/site/jacoco/jacoco.xml
+    paths:
+      - backend/target/surefire-reports/
+      - backend/target/failsafe-reports/
+      - backend/target/site/jacoco/
+    expire_in: 1 week
+
+frontend_check:
+  stage: frontend
+  image: node:22-bookworm
+  script:
+    - cd frontend
+    - npm ci --cache .npm --prefer-offline
+    - npm run check
+    - npm run build:mock
+    - npm run build:storybook
+    - npm run test:coverage:ci
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - frontend/test-results/vitest-junit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: frontend/coverage/cobertura-coverage.xml
+    paths:
+      - frontend/coverage/
+      - frontend/storybook-static/
+      - frontend/test-results/
+    expire_in: 1 week
+
+sdk_check:
+  stage: e2e
+  image: node:22-bookworm
+  extends: .mysql_service
+  before_script:
+    - !reference [.mysql_service, before_script]
+    - apt-get update
+    - apt-get install -y --no-install-recommends openjdk-17-jdk curl
+  script:
+    - cd frontend
+    - npm ci --cache .npm --prefer-offline
+    - cd ../backend
+    - ../scripts/with-java-17.sh ./mvnw $MAVEN_CLI_OPTS spring-boot:run >../backend-sdk.log 2>&1 &
+    - BACKEND_PID=$!
+    - cd ..
+    - timeout 120 bash -c 'until curl -fsS http://127.0.0.1:8080/v3/api-docs >/dev/null; do sleep 2; done'
+    - cd frontend
+    - npm run sdk:check
+    - kill "$BACKEND_PID"
+  artifacts:
+    when: always
+    paths:
+      - backend-sdk.log
+    expire_in: 1 week
+
+e2e:
+  stage: e2e
+  image: mcr.microsoft.com/playwright:v1.59.1-jammy
+  extends: .mysql_service
+  before_script:
+    - !reference [.mysql_service, before_script]
+    - apt-get update
+    - apt-get install -y --no-install-recommends openjdk-17-jdk curl
+  script:
+    - cd frontend
+    - npm ci --cache .npm --prefer-offline
+    - npm run test:e2e
+  artifacts:
+    when: always
+    reports:
+      junit:
+        - frontend/test-results/playwright-junit.xml
+    paths:
+      - frontend/playwright-report/
+      - frontend/test-results/
+    expire_in: 1 week

@@ -64,6 +64,8 @@ function runPlaywright() {
       stdio: 'inherit',
       env: {
         ...env,
+        MYSQL_HOST: host,
+        MYSQL_PORT: String(port),
         MYSQL_DATABASE: databaseName,
         MYSQL_USER: appUsername,
         MYSQL_PASSWORD: appPassword,

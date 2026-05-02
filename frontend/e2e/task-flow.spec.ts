@@ -15,11 +15,11 @@ test('creates a project task, comments on it, filters by tag, and deletes it', a
 
   await page.goto('/tasks')
   await page.getByRole('button', { name: '新增' }).click()
-  await page.locator('.el-dialog .el-form-item').filter({ hasText: '项目' }).locator('.el-select').click()
+  await page.getByTestId('task-form-project').click()
   await page.getByRole('option', { name: projectName }).click()
   await page.getByLabel('标题').fill(title)
   await page.getByLabel('说明').fill(description)
-  await page.locator('.el-dialog').getByPlaceholder('多个标签用逗号分隔').fill(tag)
+  await page.getByTestId('task-form-tags').fill(tag)
   await page.getByRole('button', { name: '保存' }).click({ force: true })
 
   const row = page.getByRole('row').filter({ hasText: title })
@@ -40,7 +40,7 @@ test('creates a project task, comments on it, filters by tag, and deletes it', a
 
   await page.getByRole('button', { name: '返回' }).click()
   await page.getByPlaceholder('搜索标题或说明').fill(title)
-  await page.locator('.filter-bar .el-select').nth(2).click()
+  await page.getByTestId('task-filter-tag').click()
   await page.getByRole('option', { name: tag }).click()
   await page.getByRole('button', { name: '查询' }).click()
   const filteredRow = page.getByRole('row').filter({ hasText: title })

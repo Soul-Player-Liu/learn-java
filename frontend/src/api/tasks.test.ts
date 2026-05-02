@@ -20,7 +20,22 @@ const sdk = vi.hoisted(() => ({
 vi.mock('./generated', () => sdk)
 vi.mock('./runtime/sdkClient', () => ({}))
 
-import { addComment, getTaskStatistics, listProjects, listTasks } from './tasks'
+import {
+  addComment,
+  changeTaskStatus,
+  createProject,
+  createTask,
+  deleteTask,
+  getProject,
+  getTask,
+  getTaskStatistics,
+  listActivities,
+  listComments,
+  listProjects,
+  listTags,
+  listTasks,
+  updateTask,
+} from './tasks'
 
 describe('task api wrapper', () => {
   beforeEach(() => {
@@ -78,5 +93,73 @@ describe('task api wrapper', () => {
       overdue: 0,
       dueSoon: 0,
     })
+  })
+
+  it('wraps task detail and mutation SDK calls', async () => {
+    const task = { id: 1, title: 'Task', status: 'TODO', tagNames: ['backend'] }
+    sdk.getTask.mockResolvedValue({ data: task })
+    sdk.createTask.mockResolvedValue({ data: task })
+    sdk.updateTask.mockResolvedValue({ data: { ...task, title: 'Updated' } })
+    sdk.changeTaskStatus.mockResolvedValue({ data: { ...task, status: 'DOING' } })
+    sdk.deleteTask.mockResolvedValue({})
+
+    await expect(getTask(1)).resolves.toEqual(task)
+    await expect(createTask({ title: 'Task' })).resolves.toEqual(task)
+    await expect(updateTask(1, { title: 'Updated', status: 'TODO' })).resolves.toMatchObject({
+      title: 'Updated',
+    })
+    await expect(changeTaskStatus(1, { status: 'DOING' })).resolves.toMatchObject({ status: 'DOING' })
+    await expect(deleteTask(1)).resolves.toBeUndefined()
+
+    expect(sdk.getTask).toHaveBeenCalledWith({ path: { id: 1 }, throwOnError: true })
+    expect(sdk.createTask).toHaveBeenCalledWith({ body: { title: 'Task' }, throwOnError: true })
+    expect(sdk.updateTask).toHaveBeenCalledWith({
+      path: { id: 1 },
+      body: { title: 'Updated', status: 'TODO' },
+      throwOnError: true,
+    })
+    expect(sdk.changeTaskStatus).toHaveBeenCalledWith({
+      path: { id: 1 },
+      body: { status: 'DOING' },
+      throwOnError: true,
+    })
+    expect(sdk.deleteTask).toHaveBeenCalledWith({ path: { id: 1 }, throwOnError: true })
+  })
+
+  it('wraps project tag comment and activity list calls', async () => {
+    sdk.getProject.mockResolvedValue({ data: { id: 1, name: 'Backend' } })
+    sdk.createProject.mockResolvedValue({ data: { id: 2, name: 'Frontend', doneTaskCount: 1 } })
+    sdk.listTags.mockResolvedValue({ data: [{ id: 3, name: 'sql' }] })
+    sdk.listComments.mockResolvedValue({ data: [{ id: 4, taskId: 1, content: 'Ready' }] })
+    sdk.listActivities.mockResolvedValue({
+      data: [{ id: 5, taskId: 1, type: 'TASK_CREATED', message: 'Created' }],
+    })
+
+    await expect(getProject(1)).resolves.toEqual({ id: 1, name: 'Backend', taskCount: 0, doneTaskCount: 0 })
+    await expect(createProject({ name: 'Frontend' })).resolves.toEqual({
+      id: 2,
+      name: 'Frontend',
+      taskCount: 0,
+      doneTaskCount: 1,
+    })
+    await expect(listTags()).resolves.toEqual([{ id: 3, name: 'sql' }])
+    await expect(listComments(1)).resolves.toEqual([{ id: 4, taskId: 1, content: 'Ready' }])
+    await expect(listActivities(1)).resolves.toEqual([
+      { id: 5, taskId: 1, type: 'TASK_CREATED', message: 'Created' },
+    ])
+  })
+
+  it('rejects incomplete server payloads before exposing them to the UI', async () => {
+    sdk.getTask.mockResolvedValue({ data: { id: 1, status: 'TODO' } })
+    sdk.getProject.mockResolvedValue({ data: { id: 1 } })
+    sdk.listTags.mockResolvedValue({ data: [{ id: 1 }] })
+    sdk.listComments.mockResolvedValue({ data: [{ id: 1, taskId: 1 }] })
+    sdk.listActivities.mockResolvedValue({ data: [{ id: 1, taskId: 1, type: 'TASK_CREATED' }] })
+
+    await expect(getTask(1)).rejects.toThrow('任务数据不完整')
+    await expect(getProject(1)).rejects.toThrow('项目数据不完整')
+    await expect(listTags()).rejects.toThrow('标签数据不完整')
+    await expect(listComments(1)).rejects.toThrow('评论数据不完整')
+    await expect(listActivities(1)).rejects.toThrow('活动数据不完整')
   })
 })
