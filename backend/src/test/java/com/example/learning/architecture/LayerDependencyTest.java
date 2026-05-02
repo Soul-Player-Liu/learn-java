@@ -1,62 +1,43 @@
 package com.example.learning.architecture;
 
-import org.junit.jupiter.api.Test;
+import com.tngtech.archunit.core.importer.ImportOption;
+import com.tngtech.archunit.junit.AnalyzeClasses;
+import com.tngtech.archunit.junit.ArchTest;
+import com.tngtech.archunit.lang.ArchRule;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.stream.Stream;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
+@AnalyzeClasses(packages = "com.example.learning", importOptions = ImportOption.DoNotIncludeTests.class)
 class LayerDependencyTest {
 
-    private static final Path SOURCE_ROOT = Path.of("src/main/java/com/example/learning");
+    @ArchTest
+    static final ArchRule domain_does_not_depend_on_outer_layers = noClasses()
+            .that().resideInAPackage("..domain..")
+            .should().dependOnClassesThat().resideInAnyPackage(
+                    "..application..",
+                    "..infrastructure..",
+                    "..interfaces.."
+            )
+            .because("domain should model business rules without depending on use cases or adapters");
 
-    @Test
-    void domainDoesNotDependOnOuterLayers() throws IOException {
-        assertNoImportsFrom("domain", List.of(
-                "com.example.learning.application.",
-                "com.example.learning.infrastructure.",
-                "com.example.learning.interfaces."
-        ));
-    }
+    @ArchTest
+    static final ArchRule application_does_not_depend_on_adapters = noClasses()
+            .that().resideInAPackage("..application..")
+            .should().dependOnClassesThat().resideInAnyPackage(
+                    "..infrastructure..",
+                    "..interfaces.."
+            )
+            .because("application services should depend on ports, not adapter implementations");
 
-    @Test
-    void applicationDoesNotDependOnAdapters() throws IOException {
-        assertNoImportsFrom("application", List.of(
-                "com.example.learning.infrastructure.",
-                "com.example.learning.interfaces."
-        ));
-    }
+    @ArchTest
+    static final ArchRule rest_interface_does_not_depend_on_infrastructure_adapters = noClasses()
+            .that().resideInAPackage("..interfaces..")
+            .should().dependOnClassesThat().resideInAnyPackage("..infrastructure..")
+            .because("REST controllers should call application services instead of infrastructure adapters");
 
-    @Test
-    void restInterfaceDoesNotDependOnInfrastructureAdapters() throws IOException {
-        assertNoImportsFrom("interfaces", List.of("com.example.learning.infrastructure."));
-    }
-
-    private void assertNoImportsFrom(String layer, List<String> forbiddenImports) throws IOException {
-        List<String> violations;
-        try (Stream<Path> files = Files.walk(SOURCE_ROOT.resolve(layer))) {
-            violations = files
-                    .filter(path -> path.toString().endsWith(".java"))
-                    .flatMap(path -> forbiddenImports.stream()
-                            .filter(forbiddenImport -> importsPackage(path, forbiddenImport))
-                            .map(forbiddenImport -> SOURCE_ROOT.relativize(path) + " imports " + forbiddenImport))
-                    .toList();
-        }
-
-        assertThat(violations).isEmpty();
-    }
-
-    private boolean importsPackage(Path path, String packageName) {
-        try {
-            return Files.readAllLines(path).stream()
-                    .map(String::trim)
-                    .anyMatch(line -> line.startsWith("import " + packageName));
-        } catch (IOException ex) {
-            throw new IllegalStateException("Failed to read " + path, ex);
-        }
-    }
+    @ArchTest
+    static final ArchRule infrastructure_does_not_depend_on_rest_interface_adapters = noClasses()
+            .that().resideInAPackage("..infrastructure..")
+            .should().dependOnClassesThat().resideInAnyPackage("..interfaces..")
+            .because("adapter packages should not depend on each other");
 }

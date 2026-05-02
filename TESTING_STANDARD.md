@@ -55,6 +55,26 @@ cd backend
 ../scripts/with-java-17.sh ./mvnw verify -Pintegration-test,coverage
 ```
 
+### 架构测试
+
+架构测试用于把“包之间应该如何依赖”变成可执行门禁。它不验证某个业务结果，而是验证代码结构没有越界。
+
+本项目使用 ArchUnit 编写架构测试，测试文件放在 `backend/src/test/java/com/example/learning/architecture`。这类测试属于 `*Test.java`，由 Maven Surefire 在普通单元测试阶段执行，因此每次本地 `./mvnw test` 和 CI 后端单元测试都会检查。
+
+当前后端按简化 DDD / 六边形架构约束依赖方向：
+
+- `domain` 不依赖 `application`、`infrastructure`、`interfaces`。
+- `application` 不依赖 `infrastructure`、`interfaces`，只能通过 port 调用外部能力。
+- `interfaces` 不依赖 `infrastructure`，Controller 只调用 application service。
+- `infrastructure` 不依赖 `interfaces`，避免不同适配器之间互相引用。
+
+推荐原则：
+
+- 架构规则应少而关键，优先约束分层边界、模块边界和禁止依赖。
+- 规则失败时，优先调整依赖方向，而不是随意放宽规则。
+- 如果确实需要例外，应在测试里用明确命名的规则或注释说明原因，不要把例外隐藏在业务代码里。
+- 真实大项目可以继续扩展规则，例如禁止 Controller 直接访问 Repository、禁止 domain 使用 Spring 注解、限制特定包只能被指定入口调用。
+
 ### 单元测试应该覆盖什么
 
 优先给这些代码写单元测试：
