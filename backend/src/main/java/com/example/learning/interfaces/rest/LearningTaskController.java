@@ -65,8 +65,8 @@ public class LearningTaskController {
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @Parameter(description = "Page size")
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-        return RestResponses.ok(taskService.listTasks(
-                new ListLearningTasksQuery(status, projectId, keyword, overdueOnly, tag, page, size)));
+        return RestResponses.ok(PageResponse.from(taskService.listTasks(
+                new ListLearningTasksQuery(status, projectId, keyword, overdueOnly, tag, page, size))));
     }
 
     @Operation(summary = "Get one learning task")

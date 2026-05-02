@@ -1,8 +1,8 @@
 package com.example.learning.infrastructure.persistence;
 
-import com.example.learning.application.command.ListLearningTasksQuery;
 import com.example.learning.domain.model.LearningTask;
 import com.example.learning.domain.repository.LearningTaskRepository;
+import com.example.learning.domain.repository.LearningTaskSearchCriteria;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
@@ -37,11 +37,11 @@ public class MyBatisLearningTaskRepository implements LearningTaskRepository {
     }
 
     @Override
-    public List<LearningTask> findAll(ListLearningTasksQuery query) {
+    public List<LearningTask> findAll(LearningTaskSearchCriteria criteria) {
         log.debug("Finding learning task records by query status={} keyword={} overdueOnly={}",
-                query.status(), query.normalizedKeyword(), query.isOverdueOnly());
-        return mapper.findAll(query.status(), query.projectId(), query.normalizedKeyword(), query.isOverdueOnly(),
-                        query.normalizedTag()).stream()
+                criteria.status(), criteria.keyword(), criteria.overdueOnly());
+        return mapper.findAll(criteria.status(), criteria.projectId(), criteria.keyword(), criteria.overdueOnly(),
+                        criteria.tag()).stream()
                 .map(MyBatisLearningTaskRecord::toDomain)
                 .toList();
     }

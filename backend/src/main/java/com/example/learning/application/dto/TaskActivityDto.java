@@ -1,6 +1,5 @@
 package com.example.learning.application.dto;
 
-import com.example.learning.infrastructure.persistence.TaskActivityRecord;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
@@ -18,14 +17,4 @@ public record TaskActivityDto(
         @Schema(description = "Creation time")
         LocalDateTime createdAt
 ) {
-
-    public static TaskActivityDto from(TaskActivityRecord record) {
-        return new TaskActivityDto(
-                record.getId(),
-                record.getTaskId(),
-                record.getType(),
-                record.getMessage(),
-                record.getCreatedAt()
-        );
-    }
 }

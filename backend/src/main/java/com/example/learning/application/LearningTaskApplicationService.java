@@ -13,16 +13,12 @@ import com.example.learning.application.dto.TaskCommentDto;
 import com.example.learning.application.dto.TaskListItemDto;
 import com.example.learning.application.dto.TaskStatisticsDto;
 import com.example.learning.application.dto.TaskTagDto;
-import com.example.learning.application.query.LearningTaskQueryRepository;
+import com.example.learning.application.port.LearningTaskQueryRepository;
+import com.example.learning.application.port.LearningWorkspaceRepository;
 import com.example.learning.domain.model.LearningTask;
 import com.example.learning.domain.model.TaskStatus;
 import com.example.learning.domain.repository.LearningTaskRepository;
-import com.example.learning.infrastructure.persistence.LearningProjectRecord;
-import com.example.learning.infrastructure.persistence.LearningTagRecord;
-import com.example.learning.infrastructure.persistence.LearningWorkspaceMapper;
-import com.example.learning.infrastructure.persistence.TaskActivityRecord;
-import com.example.learning.infrastructure.persistence.TaskCommentRecord;
-import com.example.learning.interfaces.rest.PageResponse;
+import com.example.learning.domain.repository.LearningTaskSearchCriteria;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -41,15 +37,15 @@ public class LearningTaskApplicationService {
 
     private final LearningTaskRepository taskRepository;
     private final LearningTaskQueryRepository taskQueryRepository;
-    private final LearningWorkspaceMapper workspaceMapper;
+    private final LearningWorkspaceRepository workspaceRepository;
 
     @Transactional(readOnly = true)
-    public PageResponse<TaskListItemDto> listTasks(ListLearningTasksQuery query) {
+    public PageResult<TaskListItemDto> listTasks(ListLearningTasksQuery query) {
         log.debug("Listing learning tasks status={} keyword={} overdueOnly={} page={} size={}",
                 query.status(), query.normalizedKeyword(), query.isOverdueOnly(), query.page(), query.size());
         long total = taskQueryRepository.count(query);
         List<TaskListItemDto> items = total == 0 ? List.of() : taskQueryRepository.findPage(query);
-        return PageResponse.of(items, total, query.page(), query.size());
+        return new PageResult<>(items, total, query.page(), query.size());
     }
 
     @Transactional(readOnly = true)
@@ -62,69 +58,61 @@ public class LearningTaskApplicationService {
 
     @Transactional(readOnly = true)
     public List<LearningProjectDto> listProjects() {
-        return workspaceMapper.findAllProjects().stream()
-                .map(LearningProjectDto::from)
-                .toList();
+        return workspaceRepository.findAllProjects();
     }
 
     @Transactional(readOnly = true)
     public LearningProjectDto getProject(Long id) {
-        return LearningProjectDto.from(requireProject(id));
+        return requireProject(id);
     }
 
     @Transactional
     public LearningProjectDto createProject(CreateLearningProjectCommand command) {
-        LearningProjectRecord record = new LearningProjectRecord();
         LocalDateTime now = LocalDateTime.now();
-        record.setName(requireText(command.name(), "Project name", 100));
-        record.setDescription(trimToNull(command.description()));
-        record.setCreatedAt(now);
-        record.setUpdatedAt(now);
-        workspaceMapper.insertProject(record);
-        return LearningProjectDto.from(requireProject(record.getId()));
+        LearningProjectDto project = workspaceRepository.createProject(
+                requireText(command.name(), "Project name", 100),
+                trimToNull(command.description()),
+                now,
+                now
+        );
+        return requireProject(project.id());
     }
 
     @Transactional(readOnly = true)
     public List<TaskCommentDto> listComments(Long taskId) {
         requireTask(taskId);
-        return workspaceMapper.findCommentsByTaskId(taskId).stream()
-                .map(TaskCommentDto::from)
-                .toList();
+        return workspaceRepository.findCommentsByTaskId(taskId);
     }
 
     @Transactional
     public TaskCommentDto addComment(Long taskId, CreateTaskCommentCommand command) {
         requireTask(taskId);
-        TaskCommentRecord record = new TaskCommentRecord();
-        record.setTaskId(taskId);
-        record.setContent(requireText(command.content(), "Comment content", 1000));
-        record.setAuthor(requireText(command.author() == null ? "产品经理" : command.author(), "Comment author", 50));
-        record.setCreatedAt(LocalDateTime.now());
-        workspaceMapper.insertComment(record);
-        addActivity(taskId, "COMMENT_ADDED", record.getAuthor() + " 评论了任务");
-        return TaskCommentDto.from(record);
+        TaskCommentDto comment = workspaceRepository.createComment(
+                taskId,
+                requireText(command.content(), "Comment content", 1000),
+                requireText(command.author() == null ? "产品经理" : command.author(), "Comment author", 50),
+                LocalDateTime.now()
+        );
+        addActivity(taskId, "COMMENT_ADDED", comment.author() + " 评论了任务");
+        return comment;
     }
 
     @Transactional(readOnly = true)
     public List<TaskActivityDto> listActivities(Long taskId) {
         requireTask(taskId);
-        return workspaceMapper.findActivitiesByTaskId(taskId).stream()
-                .map(TaskActivityDto::from)
-                .toList();
+        return workspaceRepository.findActivitiesByTaskId(taskId);
     }
 
     @Transactional(readOnly = true)
     public List<TaskTagDto> listTags() {
-        return workspaceMapper.findAllTags().stream()
-                .map(TaskTagDto::from)
-                .toList();
+        return workspaceRepository.findAllTags();
     }
 
     @Transactional(readOnly = true)
     public TaskStatisticsDto getStatistics() {
         LocalDate today = LocalDate.now();
         LocalDate dueSoonLimit = today.plusDays(7);
-        List<LearningTask> tasks = taskRepository.findAll(new ListLearningTasksQuery(null, null, false));
+        List<LearningTask> tasks = taskRepository.findAll(new LearningTaskSearchCriteria(null, null, null, false, null));
         long todo = tasks.stream().filter(task -> task.getStatus() == TaskStatus.TODO).count();
         long doing = tasks.stream().filter(task -> task.getStatus() == TaskStatus.DOING).count();
         long done = tasks.stream().filter(task -> task.getStatus() == TaskStatus.DONE).count();
@@ -203,12 +191,9 @@ public class LearningTaskApplicationService {
                 .orElseThrow(() -> new TaskNotFoundException(id));
     }
 
-    private LearningProjectRecord requireProject(Long id) {
-        LearningProjectRecord project = workspaceMapper.findProjectById(id);
-        if (project == null) {
-            throw new ResourceNotFoundException("Project not found: " + id);
-        }
-        return project;
+    private LearningProjectDto requireProject(Long id) {
+        return workspaceRepository.findProjectById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found: " + id));
     }
 
     private void requireProjectIfPresent(Long projectId) {
@@ -218,23 +203,21 @@ public class LearningTaskApplicationService {
     }
 
     private LearningTaskDto toDto(LearningTask task) {
-        String projectName = task.getProjectId() == null ? null : workspaceMapper.findProjectNameById(task.getProjectId());
-        return LearningTaskDto.from(task, projectName, workspaceMapper.findTagNamesByTaskId(task.getId()));
+        String projectName = task.getProjectId() == null ? null : workspaceRepository.findProjectNameById(task.getProjectId());
+        return LearningTaskDto.from(task, projectName, workspaceRepository.findTagNamesByTaskId(task.getId()));
     }
 
     private void replaceTags(Long taskId, List<String> tagNames) {
-        workspaceMapper.deleteTaskTags(taskId);
-        normalizeTagNames(tagNames).forEach(tagName -> {
-            LearningTagRecord tag = workspaceMapper.findTagByName(tagName);
-            if (tag == null) {
-                tag = new LearningTagRecord();
-                tag.setName(tagName);
-                tag.setColor(defaultTagColor(tagName));
-                tag.setCreatedAt(LocalDateTime.now());
-                workspaceMapper.insertTag(tag);
-            }
-            workspaceMapper.insertTaskTag(taskId, tag.getId());
-        });
+        List<Long> tagIds = normalizeTagNames(tagNames).stream()
+                .map(tagName -> workspaceRepository.findTagByName(tagName)
+                        .orElseGet(() -> workspaceRepository.createTag(
+                                tagName,
+                                defaultTagColor(tagName),
+                                LocalDateTime.now()
+                        )))
+                .map(TaskTagDto::id)
+                .toList();
+        workspaceRepository.replaceTaskTags(taskId, tagIds);
     }
 
     private List<String> normalizeTagNames(List<String> tagNames) {
@@ -249,12 +232,7 @@ public class LearningTaskApplicationService {
     }
 
     private void addActivity(Long taskId, String type, String message) {
-        TaskActivityRecord activity = new TaskActivityRecord();
-        activity.setTaskId(taskId);
-        activity.setType(type);
-        activity.setMessage(message);
-        activity.setCreatedAt(LocalDateTime.now());
-        workspaceMapper.insertActivity(activity);
+        workspaceRepository.createActivity(taskId, type, message, LocalDateTime.now());
     }
 
     private String requireText(String value, String label, int maxLength) {

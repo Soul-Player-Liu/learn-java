@@ -1,6 +1,6 @@
 package com.example.learning.interfaces.rest;
 
-import com.example.learning.infrastructure.web.HttpRequestLoggingFilter;
+import com.example.learning.common.RequestTraceContext;
 import org.slf4j.MDC;
 
 final class RestResponses {
@@ -13,6 +13,6 @@ final class RestResponses {
     }
 
     static String traceId() {
-        return MDC.get(HttpRequestLoggingFilter.TRACE_ID);
+        return MDC.get(RequestTraceContext.TRACE_ID);
     }
 }

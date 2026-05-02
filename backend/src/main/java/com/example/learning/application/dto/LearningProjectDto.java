@@ -1,6 +1,5 @@
 package com.example.learning.application.dto;
 
-import com.example.learning.infrastructure.persistence.LearningProjectRecord;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.LocalDateTime;
@@ -22,16 +21,4 @@ public record LearningProjectDto(
         @Schema(description = "Last update time")
         LocalDateTime updatedAt
 ) {
-
-    public static LearningProjectDto from(LearningProjectRecord record) {
-        return new LearningProjectDto(
-                record.getId(),
-                record.getName(),
-                record.getDescription(),
-                record.getTaskCount(),
-                record.getDoneTaskCount(),
-                record.getCreatedAt(),
-                record.getUpdatedAt()
-        );
-    }
 }

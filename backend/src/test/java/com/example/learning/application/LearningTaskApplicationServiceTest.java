@@ -9,15 +9,15 @@ import com.example.learning.application.dto.LearningProjectDto;
 import com.example.learning.application.dto.LearningTaskDto;
 import com.example.learning.application.dto.TaskListItemDto;
 import com.example.learning.application.dto.TaskStatisticsDto;
-import com.example.learning.application.query.LearningTaskQueryRepository;
+import com.example.learning.application.dto.TaskActivityDto;
+import com.example.learning.application.dto.TaskCommentDto;
+import com.example.learning.application.dto.TaskTagDto;
+import com.example.learning.application.port.LearningTaskQueryRepository;
+import com.example.learning.application.port.LearningWorkspaceRepository;
 import com.example.learning.domain.model.LearningTask;
 import com.example.learning.domain.model.TaskStatus;
 import com.example.learning.domain.repository.LearningTaskRepository;
-import com.example.learning.infrastructure.persistence.LearningProjectRecord;
-import com.example.learning.infrastructure.persistence.LearningTagRecord;
-import com.example.learning.infrastructure.persistence.LearningWorkspaceMapper;
-import com.example.learning.infrastructure.persistence.TaskActivityRecord;
-import com.example.learning.infrastructure.persistence.TaskCommentRecord;
+import com.example.learning.domain.repository.LearningTaskSearchCriteria;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -36,15 +36,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class LearningTaskApplicationServiceTest {
 
     private FakeLearningTaskRepository repository;
-    private FakeLearningWorkspaceMapper workspaceMapper;
+    private FakeLearningWorkspaceRepository workspaceRepository;
     private LearningTaskApplicationService service;
 
     @BeforeEach
     void setUp() {
-        workspaceMapper = new FakeLearningWorkspaceMapper();
-        repository = new FakeLearningTaskRepository(workspaceMapper);
-        service = new LearningTaskApplicationService(repository, new FakeLearningTaskQueryRepository(repository, workspaceMapper),
-                workspaceMapper);
+        workspaceRepository = new FakeLearningWorkspaceRepository();
+        repository = new FakeLearningTaskRepository(workspaceRepository);
+        service = new LearningTaskApplicationService(repository, new FakeLearningTaskQueryRepository(repository, workspaceRepository),
+                workspaceRepository);
     }
 
     @Test
@@ -150,11 +150,11 @@ class LearningTaskApplicationServiceTest {
     private static final class FakeLearningTaskRepository implements LearningTaskRepository {
 
         private final Map<Long, LearningTask> tasks = new LinkedHashMap<>();
-        private final FakeLearningWorkspaceMapper workspaceMapper;
+        private final FakeLearningWorkspaceRepository workspaceRepository;
         private long nextId = 1;
 
-        private FakeLearningTaskRepository(FakeLearningWorkspaceMapper workspaceMapper) {
-            this.workspaceMapper = workspaceMapper;
+        private FakeLearningTaskRepository(FakeLearningWorkspaceRepository workspaceRepository) {
+            this.workspaceRepository = workspaceRepository;
         }
 
         @Override
@@ -173,16 +173,16 @@ class LearningTaskApplicationServiceTest {
         }
 
         @Override
-        public List<LearningTask> findAll(ListLearningTasksQuery query) {
-            String keyword = query.normalizedKeyword();
-            String tag = query.normalizedTag();
+        public List<LearningTask> findAll(LearningTaskSearchCriteria criteria) {
+            String keyword = criteria.keyword();
+            String tag = criteria.tag();
             return new ArrayList<>(tasks.values()).stream()
-                    .filter(task -> query.status() == null || task.getStatus() == query.status())
-                    .filter(task -> query.projectId() == null || query.projectId().equals(task.getProjectId()))
+                    .filter(task -> criteria.status() == null || task.getStatus() == criteria.status())
+                    .filter(task -> criteria.projectId() == null || criteria.projectId().equals(task.getProjectId()))
                     .filter(task -> keyword == null || contains(task.getTitle(), keyword)
                             || contains(task.getDescription(), keyword))
-                    .filter(task -> !query.isOverdueOnly() || isOverdue(task))
-                    .filter(task -> tag == null || workspaceMapper.hasTag(task.getId(), tag))
+                    .filter(task -> !criteria.overdueOnly() || isOverdue(task))
+                    .filter(task -> tag == null || workspaceRepository.hasTag(task.getId(), tag))
                     .toList();
         }
 
@@ -205,37 +205,37 @@ class LearningTaskApplicationServiceTest {
     private static final class FakeLearningTaskQueryRepository implements LearningTaskQueryRepository {
 
         private final FakeLearningTaskRepository repository;
-        private final FakeLearningWorkspaceMapper workspaceMapper;
+        private final FakeLearningWorkspaceRepository workspaceRepository;
 
         private FakeLearningTaskQueryRepository(FakeLearningTaskRepository repository,
-                                                FakeLearningWorkspaceMapper workspaceMapper) {
+                                                FakeLearningWorkspaceRepository workspaceRepository) {
             this.repository = repository;
-            this.workspaceMapper = workspaceMapper;
+            this.workspaceRepository = workspaceRepository;
         }
 
         @Override
         public long count(ListLearningTasksQuery query) {
-            return repository.findAll(query).size();
+            return repository.findAll(toCriteria(query)).size();
         }
 
         @Override
         public List<TaskListItemDto> findPage(ListLearningTasksQuery query) {
-            List<LearningTask> tasks = repository.findAll(query);
+            List<LearningTask> tasks = repository.findAll(toCriteria(query));
             int fromIndex = Math.min(query.offset(), tasks.size());
             int toIndex = Math.min(fromIndex + query.limit(), tasks.size());
             return tasks.subList(fromIndex, toIndex).stream()
                     .map(task -> new TaskListItemDto(
                             task.getId(),
                             task.getProjectId(),
-                            task.getProjectId() == null ? null : workspaceMapper.findProjectNameById(task.getProjectId()),
+                            task.getProjectId() == null ? null : workspaceRepository.findProjectNameById(task.getProjectId()),
                             task.getTitle(),
                             task.getDescription(),
                             task.getStatus(),
                             task.getDueDate(),
-                            workspaceMapper.findTagNamesByTaskId(task.getId()),
-                            workspaceMapper.findCommentsByTaskId(task.getId()).size(),
-                            workspaceMapper.findActivitiesByTaskId(task.getId()).stream()
-                                    .map(TaskActivityRecord::getCreatedAt)
+                            workspaceRepository.findTagNamesByTaskId(task.getId()),
+                            workspaceRepository.findCommentsByTaskId(task.getId()).size(),
+                            workspaceRepository.findActivitiesByTaskId(task.getId()).stream()
+                                    .map(TaskActivityDto::createdAt)
                                     .max(LocalDateTime::compareTo)
                                     .orElse(null),
                             task.getCreatedAt(),
@@ -243,89 +243,93 @@ class LearningTaskApplicationServiceTest {
                     ))
                     .toList();
         }
+
+        private LearningTaskSearchCriteria toCriteria(ListLearningTasksQuery query) {
+            return new LearningTaskSearchCriteria(
+                    query.status(),
+                    query.projectId(),
+                    query.normalizedKeyword(),
+                    query.isOverdueOnly(),
+                    query.normalizedTag()
+            );
+        }
     }
 
-    private static final class FakeLearningWorkspaceMapper implements LearningWorkspaceMapper {
+    private static final class FakeLearningWorkspaceRepository implements LearningWorkspaceRepository {
 
-        private final Map<Long, LearningProjectRecord> projects = new LinkedHashMap<>();
+        private final Map<Long, LearningProjectDto> projects = new LinkedHashMap<>();
         private final Map<Long, List<String>> tagsByTaskId = new HashMap<>();
-        private final Map<String, LearningTagRecord> tagsByName = new LinkedHashMap<>();
-        private final Map<Long, List<TaskCommentRecord>> commentsByTaskId = new HashMap<>();
-        private final Map<Long, List<TaskActivityRecord>> activitiesByTaskId = new HashMap<>();
+        private final Map<String, TaskTagDto> tagsByName = new LinkedHashMap<>();
+        private final Map<Long, List<TaskCommentDto>> commentsByTaskId = new HashMap<>();
+        private final Map<Long, List<TaskActivityDto>> activitiesByTaskId = new HashMap<>();
         private long nextProjectId = 1;
         private long nextTagId = 1;
         private long nextCommentId = 1;
         private long nextActivityId = 1;
 
         @Override
-        public int insertProject(LearningProjectRecord record) {
-            record.setId(nextProjectId++);
-            projects.put(record.getId(), record);
-            return 1;
+        public LearningProjectDto createProject(String name, String description, LocalDateTime createdAt,
+                                                LocalDateTime updatedAt) {
+            LearningProjectDto project = new LearningProjectDto(nextProjectId++, name, description, 0, 0,
+                    createdAt, updatedAt);
+            projects.put(project.id(), project);
+            return project;
         }
 
         @Override
-        public LearningProjectRecord findProjectById(Long id) {
-            LearningProjectRecord record = projects.get(id);
-            if (record != null) {
-                record.setTaskCount(0);
-                record.setDoneTaskCount(0);
-            }
-            return record;
+        public Optional<LearningProjectDto> findProjectById(Long id) {
+            return Optional.ofNullable(projects.get(id));
         }
 
         @Override
-        public List<LearningProjectRecord> findAllProjects() {
+        public List<LearningProjectDto> findAllProjects() {
             return new ArrayList<>(projects.values());
         }
 
         @Override
         public String findProjectNameById(Long id) {
-            LearningProjectRecord project = projects.get(id);
-            return project == null ? null : project.getName();
+            LearningProjectDto project = projects.get(id);
+            return project == null ? null : project.name();
         }
 
         @Override
-        public int insertComment(TaskCommentRecord record) {
-            record.setId(nextCommentId++);
-            commentsByTaskId.computeIfAbsent(record.getTaskId(), key -> new ArrayList<>()).add(0, record);
-            return 1;
+        public TaskCommentDto createComment(Long taskId, String content, String author, LocalDateTime createdAt) {
+            TaskCommentDto comment = new TaskCommentDto(nextCommentId++, taskId, content, author, createdAt);
+            commentsByTaskId.computeIfAbsent(taskId, key -> new ArrayList<>()).add(0, comment);
+            return comment;
         }
 
         @Override
-        public List<TaskCommentRecord> findCommentsByTaskId(Long taskId) {
+        public List<TaskCommentDto> findCommentsByTaskId(Long taskId) {
             return commentsByTaskId.getOrDefault(taskId, List.of());
         }
 
         @Override
-        public int insertActivity(TaskActivityRecord record) {
-            record.setId(nextActivityId++);
-            activitiesByTaskId.computeIfAbsent(record.getTaskId(), key -> new ArrayList<>()).add(0, record);
-            return 1;
+        public TaskActivityDto createActivity(Long taskId, String type, String message, LocalDateTime createdAt) {
+            TaskActivityDto activity = new TaskActivityDto(nextActivityId++, taskId, type, message, createdAt);
+            activitiesByTaskId.computeIfAbsent(taskId, key -> new ArrayList<>()).add(0, activity);
+            return activity;
         }
 
         @Override
-        public List<TaskActivityRecord> findActivitiesByTaskId(Long taskId) {
+        public List<TaskActivityDto> findActivitiesByTaskId(Long taskId) {
             return activitiesByTaskId.getOrDefault(taskId, List.of());
         }
 
         @Override
-        public LearningTagRecord findTagByName(String name) {
-            return tagsByName.get(name);
+        public Optional<TaskTagDto> findTagByName(String name) {
+            return Optional.ofNullable(tagsByName.get(name));
         }
 
         @Override
-        public int insertTag(LearningTagRecord record) {
-            record.setId(nextTagId++);
-            if (record.getCreatedAt() == null) {
-                record.setCreatedAt(LocalDateTime.now());
-            }
-            tagsByName.put(record.getName(), record);
-            return 1;
+        public TaskTagDto createTag(String name, String color, LocalDateTime createdAt) {
+            TaskTagDto tag = new TaskTagDto(nextTagId++, name, color);
+            tagsByName.put(name, tag);
+            return tag;
         }
 
         @Override
-        public List<LearningTagRecord> findAllTags() {
+        public List<TaskTagDto> findAllTags() {
             return new ArrayList<>(tagsByName.values());
         }
 
@@ -335,24 +339,23 @@ class LearningTaskApplicationServiceTest {
         }
 
         @Override
-        public int deleteTaskTags(Long taskId) {
-            tagsByTaskId.remove(taskId);
-            return 1;
-        }
-
-        @Override
-        public int insertTaskTag(Long taskId, Long tagId) {
-            String tagName = tagsByName.values().stream()
-                    .filter(tag -> tag.getId().equals(tagId))
-                    .findFirst()
-                    .map(LearningTagRecord::getName)
-                    .orElseThrow();
-            tagsByTaskId.computeIfAbsent(taskId, key -> new ArrayList<>()).add(tagName);
-            return 1;
+        public void replaceTaskTags(Long taskId, List<Long> tagIds) {
+            List<String> tagNames = tagIds.stream()
+                    .map(this::requireTagName)
+                    .toList();
+            tagsByTaskId.put(taskId, new ArrayList<>(tagNames));
         }
 
         private boolean hasTag(Long taskId, String tagName) {
             return tagsByTaskId.getOrDefault(taskId, List.of()).contains(tagName);
+        }
+
+        private String requireTagName(Long tagId) {
+            return tagsByName.values().stream()
+                    .filter(tag -> tag.id().equals(tagId))
+                    .findFirst()
+                    .map(TaskTagDto::name)
+                    .orElseThrow();
         }
     }
 }
