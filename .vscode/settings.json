@@ -1,9 +1,17 @@
 {
-    "chat.fontSize": 20,
-    "java.import.maven.enabled": true,
-    "java.configuration.updateBuildConfiguration": "interactive",
-    "java.maven.downloadSources": true,
-    "java.jdt.ls.java.home": "/usr/lib/jvm/java-17-openjdk-amd64",
-    "java.compile.nullAnalysis.mode": "automatic",
-    "editor.formatOnSave": true
+  "chat.fontSize": 20,
+  "java.import.maven.enabled": true,
+  "java.configuration.updateBuildConfiguration": "interactive",
+  "java.maven.downloadSources": true,
+  "java.jdt.ls.java.home": "/usr/lib/jvm/java-17-openjdk-amd64",
+  "java.compile.nullAnalysis.mode": "automatic",
+  "editor.formatOnSave": true,
+  "livePreview.defaultPreviewPath": "/backend/target/site/jacoco/index.html",
+  "coverage-gutters.showLineCoverage": true,
+  "coverage-gutters.showGutterCoverage": true,
+  "coverage-gutters.manualCoverageFilePaths": [
+    "/home/dev/learn-java/backend/target/site/jacoco/jacoco.xml",
+    "/home/dev/learn-java/frontend/coverage/lcov.info"
+  ]
+
 }
