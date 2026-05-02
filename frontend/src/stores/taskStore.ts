@@ -41,6 +41,12 @@ export const useTaskStore = defineStore('tasks', {
     comments: [] as TaskComment[],
     activities: [] as TaskActivity[],
     statistics: null as TaskStatistics | null,
+    taskPage: {
+      total: 0,
+      page: 1,
+      size: 20,
+      totalPages: 0,
+    },
     filters: {
       keyword: '',
       status: undefined,
@@ -57,7 +63,14 @@ export const useTaskStore = defineStore('tasks', {
       this.loading = true
       try {
         this.filters = { ...(filters ?? this.filters) }
-        this.tasks = await listTasks(this.filters)
+        const pageResult = await listTasks(this.filters)
+        this.tasks = pageResult.items
+        this.taskPage = {
+          total: pageResult.total,
+          page: pageResult.page,
+          size: pageResult.size,
+          totalPages: pageResult.totalPages,
+        }
       } finally {
         this.loading = false
       }

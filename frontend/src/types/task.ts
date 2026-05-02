@@ -61,6 +61,14 @@ export type CreateTaskCommentRequest = GeneratedCreateTaskCommentRequest
 
 export type TaskStatistics = Required<TaskStatisticsDto>
 
+export interface PageResult<T> {
+  items: T[]
+  total: number
+  page: number
+  size: number
+  totalPages: number
+}
+
 export interface ListTaskParams {
   status?: TaskStatus
   projectId?: number

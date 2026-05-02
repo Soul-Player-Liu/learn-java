@@ -57,7 +57,13 @@ describe('task api wrapper', () => {
 
     await expect(
       listTasks({ keyword: 'testing', projectId: 2, tag: 'backend', overdueOnly: false }),
-    ).resolves.toEqual([{ id: 1, title: 'Learn testing', status: 'TODO', description: null, tagNames: [] }])
+    ).resolves.toEqual({
+      items: [{ id: 1, title: 'Learn testing', status: 'TODO', description: null, tagNames: [] }],
+      total: 1,
+      page: 1,
+      size: 20,
+      totalPages: 1,
+    })
     expect(sdk.listTasks).toHaveBeenCalledWith({
       query: {
         status: undefined,

@@ -142,12 +142,12 @@ npm run test:e2e
 - 后端测试分为快测和 MySQL 集成测试两层。
 - 后端接口统一返回 `ApiResponse<T>`，错误码由 `ErrorCode` 枚举集中维护，错误响应包含 `traceId`、请求路径和字段级校验明细。
 - 列表接口支持 `page`、`size` 查询参数，列表数据统一放在 `PageResponse<T>.items` 里。
+- 前端任务列表已经接入 `PageResponse` 的分页元数据，并通过 Element Plus 分页控件切换页码和每页条数。
 - 后端 HTTP Request、应用层 Command、应用/查询 DTO 已分开建模；OpenAPI schema 由 springdoc 根据 Controller、Request、DTO 注解生成。
 - `GET /api/tasks` 使用 MyBatis XML 的多表分页查询，覆盖项目名、标签聚合、评论数量、最近活动时间、动态筛选、`count` 和 `limit/offset`。
 
 ## 后续待设计
 
-- 是否在前端页面上增加可见分页控件。目前后端和 SDK 已支持分页，前端 store 仍按第一页列表使用。
 - 是否把错误码进一步拆成业务错误码，例如项目不存在、任务状态流转非法、标签名称非法等更细粒度代码。
 - 是否加入更复杂的 MyBatis 嵌套 `resultMap` / `collection` 示例。目前任务列表采用聚合型多表查询，更适合先学习分页和统计。
 

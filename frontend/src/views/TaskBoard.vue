@@ -11,7 +11,7 @@ import type { LearningTask, TaskStatus } from '@/types/task'
 const taskStore = useTaskStore()
 const router = useRouter()
 const route = useRoute()
-const { tasks, loading, projects, tags } = storeToRefs(taskStore)
+const { tasks, loading, projects, tags, taskPage } = storeToRefs(taskStore)
 const dialogVisible = ref(false)
 const editingTask = ref<LearningTask | null>(null)
 
@@ -58,7 +58,7 @@ function resetForm() {
   form.tagInput = filters.tag ?? ''
 }
 
-async function loadTasks() {
+async function loadTasks(page = taskPage.value.page, size = taskPage.value.size) {
   try {
     await taskStore.loadTasks({
       keyword: filters.keyword.trim() || undefined,
@@ -66,10 +66,16 @@ async function loadTasks() {
       projectId: filters.projectId,
       overdueOnly: filters.overdueOnly,
       tag: filters.tag,
+      page,
+      size,
     })
   } catch (error) {
     ElMessage.error(error instanceof Error ? error.message : '加载失败')
   }
+}
+
+async function searchTasks() {
+  await loadTasks(1, taskPage.value.size)
 }
 
 async function resetFilters() {
@@ -78,7 +84,15 @@ async function resetFilters() {
   filters.projectId = undefined
   filters.overdueOnly = false
   filters.tag = undefined
-  await loadTasks()
+  await loadTasks(1, taskPage.value.size)
+}
+
+async function handlePageChange(page: number) {
+  await loadTasks(page, taskPage.value.size)
+}
+
+async function handleSizeChange(size: number) {
+  await loadTasks(1, size)
 }
 
 function openCreateDialog() {
@@ -177,7 +191,7 @@ onMounted(async () => {
         <p>用列表查询、动态 SQL、编辑弹窗和详情跳转串起完整 CRUD。</p>
       </div>
       <div class="toolbar-actions">
-        <el-button :icon="Refresh" @click="loadTasks">刷新</el-button>
+        <el-button :icon="Refresh" @click="loadTasks()">刷新</el-button>
         <el-button type="primary" :icon="Plus" @click="openCreateDialog">新增</el-button>
       </div>
     </section>
@@ -188,7 +202,7 @@ onMounted(async () => {
         :prefix-icon="Search"
         clearable
         placeholder="搜索标题或说明"
-        @keyup.enter="loadTasks"
+        @keyup.enter="searchTasks"
       />
       <el-select v-model="filters.status" clearable placeholder="状态" data-testid="task-filter-status">
         <el-option v-for="item in statusOptions" :key="item.value" :label="item.label" :value="item.value" />
@@ -200,12 +214,12 @@ onMounted(async () => {
         <el-option v-for="tag in tags" :key="tag.id" :label="tag.name" :value="tag.name" />
       </el-select>
       <el-checkbox v-model="filters.overdueOnly">只看逾期</el-checkbox>
-      <el-button type="primary" @click="loadTasks">查询</el-button>
+      <el-button type="primary" @click="searchTasks">查询</el-button>
       <el-button @click="resetFilters">重置</el-button>
     </section>
 
     <section class="content">
-      <el-table v-loading="loading" :data="tasks" row-key="id" height="calc(100vh - 210px)">
+      <el-table v-loading="loading" :data="tasks" row-key="id" height="calc(100vh - 270px)">
         <el-table-column prop="title" label="任务" min-width="180" />
         <el-table-column prop="projectName" label="项目" min-width="150">
           <template #default="{ row }">
@@ -248,6 +262,18 @@ onMounted(async () => {
           </template>
         </el-table-column>
       </el-table>
+      <div class="pagination-bar">
+        <el-pagination
+          background
+          layout="total, sizes, prev, pager, next, jumper"
+          :current-page="taskPage.page"
+          :page-size="taskPage.size"
+          :page-sizes="[10, 20, 50, 100]"
+          :total="taskPage.total"
+          @current-change="handlePageChange"
+          @size-change="handleSizeChange"
+        />
+      </div>
     </section>
 
     <el-dialog v-model="dialogVisible" :title="title" width="520px" @closed="resetForm">

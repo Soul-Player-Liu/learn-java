@@ -23,6 +23,7 @@ import type {
   LearningProject,
   LearningTask,
   ListTaskParams,
+  PageResult,
   TaskActivity,
   TaskComment,
   TaskStatistics,
@@ -47,6 +48,10 @@ type ApiEnvelope<T> = {
 
 type PageEnvelope<T> = {
   items?: T[]
+  total?: number
+  page?: number
+  size?: number
+  totalPages?: number
 }
 
 function unwrap<T>(response: ApiEnvelope<T>, label: string): T {
@@ -59,8 +64,29 @@ function unwrap<T>(response: ApiEnvelope<T>, label: string): T {
   return response.data
 }
 
-function unwrapPage<T>(response: ApiEnvelope<PageEnvelope<T>>, label: string): T[] {
-  return unwrap(response, label).items ?? []
+function unwrapPage<Input, Output>(
+  response: ApiEnvelope<PageEnvelope<Input>>,
+  label: string,
+  normalizeItem: (item: Input) => Output,
+): PageResult<Output> {
+  const page = unwrap(response, label)
+  const items = (page.items ?? []).map(normalizeItem)
+
+  return {
+    items,
+    total: page.total ?? items.length,
+    page: page.page ?? 1,
+    size: page.size ?? items.length,
+    totalPages: page.totalPages ?? (items.length > 0 ? 1 : 0),
+  }
+}
+
+function unwrapPageItems<Input, Output>(
+  response: ApiEnvelope<PageEnvelope<Input>>,
+  label: string,
+  normalizeItem: (item: Input) => Output,
+): Output[] {
+  return unwrapPage(response, label, normalizeItem).items
 }
 
 function normalizeTask(task: LearningTaskDto | TaskListItemDto): LearningTask {
@@ -149,7 +175,7 @@ export async function listTasks(params: ListTaskParams = {}) {
     },
     throwOnError: true,
   })
-  return unwrapPage(result.data, '任务列表').map(normalizeTask)
+  return unwrapPage(result.data, '任务列表', normalizeTask)
 }
 
 export async function getTask(id: number) {
@@ -167,7 +193,7 @@ export async function getTaskStatistics() {
 
 export async function listProjects() {
   const result = await sdkListProjects({ throwOnError: true })
-  return unwrapPage(result.data, '项目列表').map(normalizeProject)
+  return unwrapPageItems(result.data, '项目列表', normalizeProject)
 }
 
 export async function getProject(id: number) {
@@ -188,7 +214,7 @@ export async function createProject(payload: CreateLearningProjectRequest) {
 
 export async function listTags() {
   const result = await sdkListTags({ throwOnError: true })
-  return unwrapPage(result.data, '标签列表').map(normalizeTag)
+  return unwrapPageItems(result.data, '标签列表', normalizeTag)
 }
 
 export async function createTask(payload: CreateLearningTaskRequest) {
@@ -222,7 +248,7 @@ export async function listComments(id: number) {
     path: { id },
     throwOnError: true,
   })
-  return unwrapPage(result.data, '评论列表').map(normalizeComment)
+  return unwrapPageItems(result.data, '评论列表', normalizeComment)
 }
 
 export async function addComment(id: number, payload: CreateTaskCommentRequest) {
@@ -239,7 +265,7 @@ export async function listActivities(id: number) {
     path: { id },
     throwOnError: true,
   })
-  return unwrapPage(result.data, '活动列表').map(normalizeActivity)
+  return unwrapPageItems(result.data, '活动列表', normalizeActivity)
 }
 
 export async function deleteTask(id: number) {

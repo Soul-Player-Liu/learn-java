@@ -23,13 +23,17 @@ vi.mock('@/api/tasks', () => api)
 import { useTaskStore } from './taskStore'
 
 describe('task store', () => {
+  function page<T>(items: T[], total = items.length) {
+    return { items, total, page: 1, size: 20, totalPages: total > 0 ? Math.ceil(total / 20) : 0 }
+  }
+
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
   })
 
   it('loads tasks and clears the loading flag when the request succeeds', async () => {
-    api.listTasks.mockResolvedValue([{ id: 1, title: 'Learn Pinia', status: 'TODO' }])
+    api.listTasks.mockResolvedValue(page([{ id: 1, title: 'Learn Pinia', status: 'TODO' }], 23))
 
     const store = useTaskStore()
     await store.loadTasks({ keyword: 'Pinia' })
@@ -37,11 +41,12 @@ describe('task store', () => {
     expect(store.loading).toBe(false)
     expect(store.filters).toEqual({ keyword: 'Pinia' })
     expect(store.tasks).toEqual([{ id: 1, title: 'Learn Pinia', status: 'TODO' }])
+    expect(store.taskPage).toEqual({ total: 23, page: 1, size: 20, totalPages: 2 })
   })
 
   it('refreshes list and statistics after creating a task', async () => {
     api.createTask.mockResolvedValue({ id: 1, title: 'Created', status: 'TODO' })
-    api.listTasks.mockResolvedValue([{ id: 1, title: 'Created', status: 'TODO' }])
+    api.listTasks.mockResolvedValue(page([{ id: 1, title: 'Created', status: 'TODO' }]))
     api.listProjects.mockResolvedValue([])
     api.listTags.mockResolvedValue([])
     api.getTaskStatistics.mockResolvedValue({
@@ -77,7 +82,7 @@ describe('task store', () => {
   })
 
   it('updates selected task detail after task mutations', async () => {
-    api.listTasks.mockResolvedValue([])
+    api.listTasks.mockResolvedValue(page([]))
     api.listProjects.mockResolvedValue([])
     api.listTags.mockResolvedValue([])
     api.getTaskStatistics.mockResolvedValue({
@@ -120,7 +125,7 @@ describe('task store', () => {
   })
 
   it('clears selected detail after deleting the selected task', async () => {
-    api.listTasks.mockResolvedValue([])
+    api.listTasks.mockResolvedValue(page([]))
     api.listProjects.mockResolvedValue([])
     api.getTaskStatistics.mockResolvedValue({
       total: 0,
