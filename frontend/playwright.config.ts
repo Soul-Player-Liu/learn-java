@@ -1,6 +1,10 @@
 import { defineConfig, devices } from '@playwright/test'
 
 const isCi = process.env.CI === 'true' || process.env.GITLAB_CI === 'true'
+const backendPort = process.env.E2E_BACKEND_PORT ?? '18080'
+const frontendPort = process.env.E2E_FRONTEND_PORT ?? '15173'
+const backendUrl = `http://127.0.0.1:${backendPort}`
+const frontendUrl = `http://127.0.0.1:${frontendPort}`
 
 export default defineConfig({
   testDir: './e2e',
@@ -14,21 +18,21 @@ export default defineConfig({
     ? [['list'], ['junit', { outputFile: 'test-results/playwright-junit.xml' }], ['html', { open: 'never' }]]
     : 'list',
   use: {
-    baseURL: 'http://127.0.0.1:5173',
+    baseURL: frontendUrl,
     trace: 'on-first-retry',
   },
   webServer: [
     {
-      command: 'cd ../backend && ../scripts/with-java-17.sh ./mvnw spring-boot:run',
-      url: 'http://127.0.0.1:8080/v3/api-docs',
+      command: `cd ../backend && SERVER_PORT=${backendPort} ../scripts/with-java-17.sh ./mvnw spring-boot:run`,
+      url: `${backendUrl}/v3/api-docs`,
       timeout: 120_000,
       reuseExistingServer: false,
     },
     {
-      command: 'npm run dev -- --host 127.0.0.1',
-      url: 'http://127.0.0.1:5173',
+      command: `VITE_API_TARGET=${backendUrl} npm run dev -- --host 127.0.0.1 --port ${frontendPort} --strictPort`,
+      url: frontendUrl,
       timeout: 60_000,
-      reuseExistingServer: true,
+      reuseExistingServer: false,
     },
   ],
   projects: [

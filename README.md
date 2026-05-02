@@ -123,7 +123,7 @@ npm run check
 npm run test:e2e
 ```
 
-`npm run test:e2e` 会先创建临时 database，再通过 Playwright 自动启动后端和前端；仍然需要先确保 MySQL 可连接。默认连接本地 MySQL，也可以通过 `TEST_MYSQL_HOST`、`TEST_MYSQL_PORT`、`TEST_MYSQL_ADMIN_USERNAME`、`TEST_MYSQL_ADMIN_PASSWORD`、`TEST_MYSQL_APP_USERNAME`、`TEST_MYSQL_APP_PASSWORD` 指向其他测试数据库。
+`npm run test:e2e` 会先创建临时 database，再通过 Playwright 自动启动后端和前端；仍然需要先确保 MySQL 可连接。E2E 默认使用后端 `18080`、前端 `15173`，避免和本地开发后端 `8080` 或 SDK 检查进程抢端口。默认连接本地 MySQL，也可以通过 `TEST_MYSQL_HOST`、`TEST_MYSQL_PORT`、`TEST_MYSQL_ADMIN_USERNAME`、`TEST_MYSQL_ADMIN_PASSWORD`、`TEST_MYSQL_APP_USERNAME`、`TEST_MYSQL_APP_PASSWORD` 指向其他测试数据库；如需调整 E2E 服务端口，可设置 `E2E_BACKEND_PORT` 和 `E2E_FRONTEND_PORT`。
 
 ## 后端阅读路线
 
