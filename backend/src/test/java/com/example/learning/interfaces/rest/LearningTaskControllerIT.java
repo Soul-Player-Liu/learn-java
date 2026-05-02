@@ -158,6 +158,25 @@ class LearningTaskControllerIT {
         assertThat(projectDetail.getBody().doneTaskCount()).isZero();
     }
 
+    @Test
+    void validationErrorUsesStructuredErrorResponseAndTraceId() {
+        ResponseEntity<ErrorResponse> response = restTemplate.postForEntity(
+                "/api/tasks",
+                Map.of("title", ""),
+                ErrorResponse.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getHeaders().getFirst("X-Request-Id")).isNotBlank();
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().code()).isEqualTo("VALIDATION_FAILED");
+        assertThat(response.getBody().path()).isEqualTo("/api/tasks");
+        assertThat(response.getBody().traceId()).isEqualTo(response.getHeaders().getFirst("X-Request-Id"));
+        assertThat(response.getBody().details())
+                .extracting(ErrorResponse.ErrorDetail::field)
+                .contains("title");
+    }
+
     private LearningTaskDto createTask(String title, String description, LocalDate dueDate) {
         ResponseEntity<LearningTaskDto> response = restTemplate.postForEntity(
                 "/api/tasks",
