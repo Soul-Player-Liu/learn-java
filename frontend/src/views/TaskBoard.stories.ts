@@ -42,3 +42,19 @@ export const Overdue: Story = {
     },
   },
 }
+
+export const ServerError: Story = {
+  parameters: {
+    msw: {
+      handlers: createTaskHandlers('serverError'),
+    },
+  },
+}
+
+export const Slow: Story = {
+  parameters: {
+    msw: {
+      handlers: createTaskHandlers('slow'),
+    },
+  },
+}

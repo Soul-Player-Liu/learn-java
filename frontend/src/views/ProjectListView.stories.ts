@@ -26,3 +26,11 @@ export const Empty: Story = {
     },
   },
 }
+
+export const ServerError: Story = {
+  parameters: {
+    msw: {
+      handlers: createTaskHandlers('serverError'),
+    },
+  },
+}

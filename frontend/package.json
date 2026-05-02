@@ -6,6 +6,10 @@
   "scripts": {
     "dev": "vite",
     "dev:mock": "VITE_USE_MOCK=true vite",
+    "dev:mock:empty": "VITE_USE_MOCK=true VITE_MOCK_SCENARIO=empty vite",
+    "dev:mock:many": "VITE_USE_MOCK=true VITE_MOCK_SCENARIO=many vite",
+    "dev:mock:error": "VITE_USE_MOCK=true VITE_MOCK_SCENARIO=serverError vite",
+    "dev:mock:slow": "VITE_USE_MOCK=true VITE_MOCK_SCENARIO=slow vite",
     "typecheck": "vue-tsc -b",
     "build": "npm-run-all typecheck build:only",
     "build:only": "vite build",

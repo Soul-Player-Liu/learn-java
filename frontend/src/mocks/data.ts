@@ -7,12 +7,12 @@ import type {
   TaskTagDto,
 } from '@/api/generated'
 
-export type MockScenario = 'default' | 'empty' | 'overdue' | 'many'
+export type MockScenario = 'default' | 'empty' | 'overdue' | 'many' | 'serverError' | 'slow'
 
 const now = '2026-05-01T09:00:00'
 
 export function createMockProjects(scenario: MockScenario = 'default'): LearningProjectDto[] {
-  if (scenario === 'empty') {
+  if (scenario === 'empty' || scenario === 'serverError') {
     return []
   }
   return [
@@ -38,7 +38,7 @@ export function createMockProjects(scenario: MockScenario = 'default'): Learning
 }
 
 export function createMockTags(scenario: MockScenario = 'default'): TaskTagDto[] {
-  if (scenario === 'empty') {
+  if (scenario === 'empty' || scenario === 'serverError') {
     return []
   }
   return [
@@ -49,7 +49,7 @@ export function createMockTags(scenario: MockScenario = 'default'): TaskTagDto[]
 }
 
 export function createMockTasks(scenario: MockScenario = 'default'): LearningTaskDto[] {
-  if (scenario === 'empty') {
+  if (scenario === 'empty' || scenario === 'serverError') {
     return []
   }
 
@@ -129,7 +129,7 @@ export function createMockTasks(scenario: MockScenario = 'default'): LearningTas
 }
 
 export function createMockComments(scenario: MockScenario = 'default'): TaskCommentDto[] {
-  if (scenario === 'empty') {
+  if (scenario === 'empty' || scenario === 'serverError') {
     return []
   }
   return [
@@ -144,7 +144,7 @@ export function createMockComments(scenario: MockScenario = 'default'): TaskComm
 }
 
 export function createMockActivities(scenario: MockScenario = 'default'): TaskActivityDto[] {
-  if (scenario === 'empty') {
+  if (scenario === 'empty' || scenario === 'serverError') {
     return []
   }
   return [

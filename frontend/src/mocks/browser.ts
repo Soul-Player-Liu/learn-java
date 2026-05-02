@@ -1,5 +1,8 @@
 import { setupWorker } from 'msw/browser'
 
-import { handlers } from './handlers'
+import { createTaskHandlers } from './handlers'
+import { resolveMockScenario } from './scenarios'
 
-export const worker = setupWorker(...handlers)
+const scenario = resolveMockScenario(import.meta.env.VITE_MOCK_SCENARIO)
+
+export const worker = setupWorker(...createTaskHandlers(scenario))

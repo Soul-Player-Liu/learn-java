@@ -185,6 +185,18 @@ npm run build:storybook
 
 这两类测试价值高，但维护成本也高，建议在基础单元测试、集成测试、E2E 稳定后再引入。
 
+### Frontend Mock
+
+前端 mock 体系用于让产品经理、设计师和前端开发在不依赖后端的情况下稳定查看页面状态。它应当和 Storybook 配合使用，但不替代真实后端联调和 E2E。
+
+本项目的详细规范见 `FRONTEND_MOCK_STANDARD.md`。核心原则：
+
+- mock 放在 HTTP 边界，页面仍然走 Router、Store、API wrapper 和生成 SDK。
+- dev mock 和 Storybook 复用同一套 MSW handlers。
+- handlers 按业务域拆分，避免单文件演变成难维护的小后端。
+- mock 数据使用生成 DTO 类型，降低接口契约漂移风险。
+- CI 至少验证 `build:mock` 和 `build:storybook`。
+
 ## 契约测试
 
 前后端分离项目必须防止接口契约漂移。

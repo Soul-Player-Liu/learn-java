@@ -32,3 +32,11 @@ export const NotFound: Story = {
     },
   },
 }
+
+export const ServerError: Story = {
+  parameters: {
+    msw: {
+      handlers: createTaskHandlers('serverError'),
+    },
+  },
+}
