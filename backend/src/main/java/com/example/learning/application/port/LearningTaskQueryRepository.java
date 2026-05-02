@@ -1,6 +1,6 @@
 package com.example.learning.application.port;
 
-import com.example.learning.application.command.ListLearningTasksQuery;
+import com.example.learning.application.query.ListLearningTasksQuery;
 import com.example.learning.application.dto.TaskListItemDto;
 
 import java.util.List;

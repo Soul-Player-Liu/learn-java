@@ -1,6 +1,6 @@
 package com.example.learning.infrastructure.persistence;
 
-import com.example.learning.application.command.ListLearningTasksQuery;
+import com.example.learning.application.query.ListLearningTasksQuery;
 import com.example.learning.application.dto.TaskListItemDto;
 import com.example.learning.application.port.LearningTaskQueryRepository;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.example.learning.application.command;
+package com.example.learning.application.query;
 
 import com.example.learning.domain.model.TaskStatus;
 

@@ -4,7 +4,7 @@ import com.example.learning.application.command.ChangeTaskStatusCommand;
 import com.example.learning.application.command.CreateLearningProjectCommand;
 import com.example.learning.application.command.CreateLearningTaskCommand;
 import com.example.learning.application.command.CreateTaskCommentCommand;
-import com.example.learning.application.command.ListLearningTasksQuery;
+import com.example.learning.application.query.ListLearningTasksQuery;
 import com.example.learning.application.dto.LearningProjectDto;
 import com.example.learning.application.dto.LearningTaskDto;
 import com.example.learning.application.dto.TaskListItemDto;
