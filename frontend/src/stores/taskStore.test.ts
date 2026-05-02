@@ -81,6 +81,33 @@ describe('task store', () => {
     expect(store.activities).toHaveLength(1)
   })
 
+  it('loads a project and scopes task filters to that project', async () => {
+    api.getProject.mockResolvedValue({ id: 2, name: 'Frontend', taskCount: 0, doneTaskCount: 0 })
+    api.listTasks.mockResolvedValue(page([{ id: 3, title: 'Project task', status: 'TODO' }]))
+
+    const store = useTaskStore()
+    store.filters = { keyword: 'Project' }
+    await store.loadProject(2)
+
+    expect(store.projectLoading).toBe(false)
+    expect(store.selectedProject?.id).toBe(2)
+    expect(api.listTasks).toHaveBeenCalledWith({ keyword: 'Project', projectId: 2 })
+    expect(store.tasks).toEqual([{ id: 3, title: 'Project task', status: 'TODO' }])
+  })
+
+  it('refreshes projects after creating a project and returns the created record', async () => {
+    const createdProject = { id: 4, name: 'Mock platform', taskCount: 0, doneTaskCount: 0 }
+    api.createProject.mockResolvedValue(createdProject)
+    api.listProjects.mockResolvedValue([createdProject])
+
+    const store = useTaskStore()
+    await expect(store.createProject({ name: 'Mock platform' })).resolves.toEqual(createdProject)
+
+    expect(api.createProject).toHaveBeenCalledWith({ name: 'Mock platform' })
+    expect(api.listProjects).toHaveBeenCalled()
+    expect(store.projects).toEqual([createdProject])
+  })
+
   it('updates selected task detail after task mutations', async () => {
     api.listTasks.mockResolvedValue(page([]))
     api.listProjects.mockResolvedValue([])

@@ -178,4 +178,12 @@ describe('task api wrapper', () => {
     await expect(listComments(1)).rejects.toThrow('评论数据不完整')
     await expect(listActivities(1)).rejects.toThrow('活动数据不完整')
   })
+
+  it('rejects non-OK and missing response envelopes before normalization', async () => {
+    sdk.listTasks.mockResolvedValue({ data: { code: 'VALIDATION_ERROR', message: 'Bad query' } })
+    await expect(listTasks()).rejects.toThrow('Bad query')
+
+    sdk.listTasks.mockResolvedValue({ data: { code: 'OK' } })
+    await expect(listTasks()).rejects.toThrow('任务列表数据不完整')
+  })
 })
