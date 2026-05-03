@@ -117,7 +117,7 @@ export function createMockTasks(scenario: MockScenario = 'default'): LearningTas
       projectName: index % 2 === 0 ? 'Java 后端学习' : '前端工程化',
       title: `批量学习任务 ${index + 1}`,
       description: `用于观察表格滚动和筛选表现的模拟数据 ${index + 1}`,
-      status: (['TODO', 'DOING', 'DONE'] as const)[index % 3],
+      status: (['TODO', 'DOING', 'DONE'] as const)[index % 3]!,
       dueDate: `2026-05-${String((index % 20) + 1).padStart(2, '0')}`,
       tagNames: index % 2 === 0 ? ['backend'] : ['frontend'],
       createdAt: now,

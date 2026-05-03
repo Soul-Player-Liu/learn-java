@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 
 @Schema(description = "Create learning project request")
 public record CreateLearningProjectRequest(
-        @Schema(description = "Project name", example = "Backend Track")
+        @Schema(description = "Project name", example = "Backend Track", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotBlank
         @Size(max = 100)
         String name,

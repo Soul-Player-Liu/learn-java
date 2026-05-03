@@ -10,25 +10,25 @@ import java.util.List;
 
 @Schema(description = "Learning task detail")
 public record LearningTaskDto(
-        @Schema(description = "Task id", example = "1")
+        @Schema(description = "Task id", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
         Long id,
         @Schema(description = "Project id", example = "10")
         Long projectId,
         @Schema(description = "Project name", example = "Backend Track")
         String projectName,
-        @Schema(description = "Task title", example = "Learn REST controllers")
+        @Schema(description = "Task title", example = "Learn REST controllers", requiredMode = Schema.RequiredMode.REQUIRED)
         String title,
         @Schema(description = "Task description", example = "Read and test controller code")
         String description,
-        @Schema(description = "Task status", example = "TODO")
+        @Schema(description = "Task status", example = "TODO", requiredMode = Schema.RequiredMode.REQUIRED)
         TaskStatus status,
         @Schema(description = "Due date", example = "2026-05-10")
         LocalDate dueDate,
-        @Schema(description = "Tag names")
+        @Schema(description = "Tag names", requiredMode = Schema.RequiredMode.REQUIRED)
         List<String> tagNames,
-        @Schema(description = "Creation time")
+        @Schema(description = "Creation time", requiredMode = Schema.RequiredMode.REQUIRED)
         LocalDateTime createdAt,
-        @Schema(description = "Last update time")
+        @Schema(description = "Last update time", requiredMode = Schema.RequiredMode.REQUIRED)
         LocalDateTime updatedAt
 ) {
 

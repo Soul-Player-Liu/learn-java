@@ -14,7 +14,7 @@ public record UpdateLearningTaskRequest(
         @Schema(description = "Project id", example = "1")
         Long projectId,
 
-        @Schema(description = "Task title", example = "Learn MyBatis result maps")
+        @Schema(description = "Task title", example = "Learn MyBatis result maps", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotBlank
         @Size(max = 100)
         String title,
@@ -23,7 +23,7 @@ public record UpdateLearningTaskRequest(
         @Size(max = 500)
         String description,
 
-        @Schema(description = "Task status", example = "TODO")
+        @Schema(description = "Task status", example = "TODO", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotNull
         TaskStatus status,
 

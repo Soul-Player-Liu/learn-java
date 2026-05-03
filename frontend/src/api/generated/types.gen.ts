@@ -41,11 +41,11 @@ export type ApiResponseLearningTaskDto = {
     /**
      * Business response code
      */
-    code?: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
+    code: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
     /**
      * Human-readable response message
      */
-    message?: string;
+    message: string;
     /**
      * Response payload
      */
@@ -57,7 +57,7 @@ export type ApiResponseLearningTaskDto = {
     /**
      * Response timestamp
      */
-    timestamp?: string;
+    timestamp: string;
     /**
      * Trace id matching the X-Request-Id response header
      */
@@ -65,7 +65,7 @@ export type ApiResponseLearningTaskDto = {
     /**
      * Validation or field-level error details
      */
-    details?: Array<ErrorDetail>;
+    details: Array<ErrorDetail>;
 };
 
 /**
@@ -75,11 +75,11 @@ export type ErrorDetail = {
     /**
      * Invalid field name
      */
-    field?: string;
+    field: string;
     /**
      * Validation message
      */
-    message?: string;
+    message: string;
 };
 
 /**
@@ -89,7 +89,7 @@ export type LearningTaskDto = {
     /**
      * Task id
      */
-    id?: number;
+    id: number;
     /**
      * Project id
      */
@@ -101,7 +101,7 @@ export type LearningTaskDto = {
     /**
      * Task title
      */
-    title?: string;
+    title: string;
     /**
      * Task description
      */
@@ -109,7 +109,7 @@ export type LearningTaskDto = {
     /**
      * Task status
      */
-    status?: 'TODO' | 'DOING' | 'DONE';
+    status: 'TODO' | 'DOING' | 'DONE';
     /**
      * Due date
      */
@@ -117,15 +117,15 @@ export type LearningTaskDto = {
     /**
      * Tag names
      */
-    tagNames?: Array<string>;
+    tagNames: Array<string>;
     /**
      * Creation time
      */
-    createdAt?: string;
+    createdAt: string;
     /**
      * Last update time
      */
-    updatedAt?: string;
+    updatedAt: string;
 };
 
 /**
@@ -175,11 +175,11 @@ export type ApiResponseTaskCommentDto = {
     /**
      * Business response code
      */
-    code?: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
+    code: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
     /**
      * Human-readable response message
      */
-    message?: string;
+    message: string;
     /**
      * Response payload
      */
@@ -191,7 +191,7 @@ export type ApiResponseTaskCommentDto = {
     /**
      * Response timestamp
      */
-    timestamp?: string;
+    timestamp: string;
     /**
      * Trace id matching the X-Request-Id response header
      */
@@ -199,7 +199,7 @@ export type ApiResponseTaskCommentDto = {
     /**
      * Validation or field-level error details
      */
-    details?: Array<ErrorDetail>;
+    details: Array<ErrorDetail>;
 };
 
 /**
@@ -209,23 +209,23 @@ export type TaskCommentDto = {
     /**
      * Comment id
      */
-    id?: number;
+    id: number;
     /**
      * Task id
      */
-    taskId?: number;
+    taskId: number;
     /**
      * Comment content
      */
-    content?: string;
+    content: string;
     /**
      * Comment author
      */
-    author?: string;
+    author: string;
     /**
      * Creation time
      */
-    createdAt?: string;
+    createdAt: string;
 };
 
 /**
@@ -249,11 +249,11 @@ export type ApiResponseLearningProjectDto = {
     /**
      * Business response code
      */
-    code?: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
+    code: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
     /**
      * Human-readable response message
      */
-    message?: string;
+    message: string;
     /**
      * Response payload
      */
@@ -265,7 +265,7 @@ export type ApiResponseLearningProjectDto = {
     /**
      * Response timestamp
      */
-    timestamp?: string;
+    timestamp: string;
     /**
      * Trace id matching the X-Request-Id response header
      */
@@ -273,7 +273,7 @@ export type ApiResponseLearningProjectDto = {
     /**
      * Validation or field-level error details
      */
-    details?: Array<ErrorDetail>;
+    details: Array<ErrorDetail>;
 };
 
 /**
@@ -283,11 +283,11 @@ export type LearningProjectDto = {
     /**
      * Project id
      */
-    id?: number;
+    id: number;
     /**
      * Project name
      */
-    name?: string;
+    name: string;
     /**
      * Project description
      */
@@ -295,19 +295,19 @@ export type LearningProjectDto = {
     /**
      * Task count
      */
-    taskCount?: number;
+    taskCount: number;
     /**
      * Done task count
      */
-    doneTaskCount?: number;
+    doneTaskCount: number;
     /**
      * Creation time
      */
-    createdAt?: string;
+    createdAt: string;
     /**
      * Last update time
      */
-    updatedAt?: string;
+    updatedAt: string;
 };
 
 /**
@@ -327,11 +327,11 @@ export type ApiResponsePageResponseTaskListItemDto = {
     /**
      * Business response code
      */
-    code?: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
+    code: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
     /**
      * Human-readable response message
      */
-    message?: string;
+    message: string;
     /**
      * Response payload
      */
@@ -343,7 +343,7 @@ export type ApiResponsePageResponseTaskListItemDto = {
     /**
      * Response timestamp
      */
-    timestamp?: string;
+    timestamp: string;
     /**
      * Trace id matching the X-Request-Id response header
      */
@@ -351,7 +351,7 @@ export type ApiResponsePageResponseTaskListItemDto = {
     /**
      * Validation or field-level error details
      */
-    details?: Array<ErrorDetail>;
+    details: Array<ErrorDetail>;
 };
 
 /**
@@ -361,23 +361,23 @@ export type PageResponseTaskListItemDto = {
     /**
      * Items in the current page
      */
-    items?: Array<TaskListItemDto>;
+    items: Array<TaskListItemDto>;
     /**
      * Total number of matched records
      */
-    total?: number;
+    total: number;
     /**
      * One-based page number
      */
-    page?: number;
+    page: number;
     /**
      * Page size
      */
-    size?: number;
+    size: number;
     /**
      * Total page count
      */
-    totalPages?: number;
+    totalPages: number;
 };
 
 /**
@@ -387,7 +387,7 @@ export type TaskListItemDto = {
     /**
      * Task id
      */
-    id?: number;
+    id: number;
     /**
      * Project id
      */
@@ -399,7 +399,7 @@ export type TaskListItemDto = {
     /**
      * Task title
      */
-    title?: string;
+    title: string;
     /**
      * Task description
      */
@@ -407,7 +407,7 @@ export type TaskListItemDto = {
     /**
      * Task status
      */
-    status?: 'TODO' | 'DOING' | 'DONE';
+    status: 'TODO' | 'DOING' | 'DONE';
     /**
      * Due date
      */
@@ -415,11 +415,11 @@ export type TaskListItemDto = {
     /**
      * Tag names
      */
-    tagNames?: Array<string>;
+    tagNames: Array<string>;
     /**
      * Comment count
      */
-    commentCount?: number;
+    commentCount: number;
     /**
      * Latest activity time
      */
@@ -427,11 +427,11 @@ export type TaskListItemDto = {
     /**
      * Creation time
      */
-    createdAt?: string;
+    createdAt: string;
     /**
      * Last update time
      */
-    updatedAt?: string;
+    updatedAt: string;
 };
 
 /**
@@ -441,11 +441,11 @@ export type ApiResponsePageResponseTaskCommentDto = {
     /**
      * Business response code
      */
-    code?: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
+    code: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
     /**
      * Human-readable response message
      */
-    message?: string;
+    message: string;
     /**
      * Response payload
      */
@@ -457,7 +457,7 @@ export type ApiResponsePageResponseTaskCommentDto = {
     /**
      * Response timestamp
      */
-    timestamp?: string;
+    timestamp: string;
     /**
      * Trace id matching the X-Request-Id response header
      */
@@ -465,7 +465,7 @@ export type ApiResponsePageResponseTaskCommentDto = {
     /**
      * Validation or field-level error details
      */
-    details?: Array<ErrorDetail>;
+    details: Array<ErrorDetail>;
 };
 
 /**
@@ -475,23 +475,23 @@ export type PageResponseTaskCommentDto = {
     /**
      * Items in the current page
      */
-    items?: Array<TaskCommentDto>;
+    items: Array<TaskCommentDto>;
     /**
      * Total number of matched records
      */
-    total?: number;
+    total: number;
     /**
      * One-based page number
      */
-    page?: number;
+    page: number;
     /**
      * Page size
      */
-    size?: number;
+    size: number;
     /**
      * Total page count
      */
-    totalPages?: number;
+    totalPages: number;
 };
 
 /**
@@ -501,11 +501,11 @@ export type ApiResponsePageResponseTaskActivityDto = {
     /**
      * Business response code
      */
-    code?: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
+    code: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
     /**
      * Human-readable response message
      */
-    message?: string;
+    message: string;
     /**
      * Response payload
      */
@@ -517,7 +517,7 @@ export type ApiResponsePageResponseTaskActivityDto = {
     /**
      * Response timestamp
      */
-    timestamp?: string;
+    timestamp: string;
     /**
      * Trace id matching the X-Request-Id response header
      */
@@ -525,7 +525,7 @@ export type ApiResponsePageResponseTaskActivityDto = {
     /**
      * Validation or field-level error details
      */
-    details?: Array<ErrorDetail>;
+    details: Array<ErrorDetail>;
 };
 
 /**
@@ -535,23 +535,23 @@ export type PageResponseTaskActivityDto = {
     /**
      * Items in the current page
      */
-    items?: Array<TaskActivityDto>;
+    items: Array<TaskActivityDto>;
     /**
      * Total number of matched records
      */
-    total?: number;
+    total: number;
     /**
      * One-based page number
      */
-    page?: number;
+    page: number;
     /**
      * Page size
      */
-    size?: number;
+    size: number;
     /**
      * Total page count
      */
-    totalPages?: number;
+    totalPages: number;
 };
 
 /**
@@ -561,23 +561,23 @@ export type TaskActivityDto = {
     /**
      * Activity id
      */
-    id?: number;
+    id: number;
     /**
      * Task id
      */
-    taskId?: number;
+    taskId: number;
     /**
      * Activity type
      */
-    type?: string;
+    type: string;
     /**
      * Activity message
      */
-    message?: string;
+    message: string;
     /**
      * Creation time
      */
-    createdAt?: string;
+    createdAt: string;
 };
 
 /**
@@ -587,11 +587,11 @@ export type ApiResponseTaskStatisticsDto = {
     /**
      * Business response code
      */
-    code?: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
+    code: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
     /**
      * Human-readable response message
      */
-    message?: string;
+    message: string;
     /**
      * Response payload
      */
@@ -603,7 +603,7 @@ export type ApiResponseTaskStatisticsDto = {
     /**
      * Response timestamp
      */
-    timestamp?: string;
+    timestamp: string;
     /**
      * Trace id matching the X-Request-Id response header
      */
@@ -611,7 +611,7 @@ export type ApiResponseTaskStatisticsDto = {
     /**
      * Validation or field-level error details
      */
-    details?: Array<ErrorDetail>;
+    details: Array<ErrorDetail>;
 };
 
 /**
@@ -621,27 +621,27 @@ export type TaskStatisticsDto = {
     /**
      * Total task count
      */
-    total?: number;
+    total: number;
     /**
      * Todo task count
      */
-    todo?: number;
+    todo: number;
     /**
      * Doing task count
      */
-    doing?: number;
+    doing: number;
     /**
      * Done task count
      */
-    done?: number;
+    done: number;
     /**
      * Overdue unfinished task count
      */
-    overdue?: number;
+    overdue: number;
     /**
      * Due soon unfinished task count
      */
-    dueSoon?: number;
+    dueSoon: number;
 };
 
 /**
@@ -651,11 +651,11 @@ export type ApiResponsePageResponseTaskTagDto = {
     /**
      * Business response code
      */
-    code?: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
+    code: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
     /**
      * Human-readable response message
      */
-    message?: string;
+    message: string;
     /**
      * Response payload
      */
@@ -667,7 +667,7 @@ export type ApiResponsePageResponseTaskTagDto = {
     /**
      * Response timestamp
      */
-    timestamp?: string;
+    timestamp: string;
     /**
      * Trace id matching the X-Request-Id response header
      */
@@ -675,7 +675,7 @@ export type ApiResponsePageResponseTaskTagDto = {
     /**
      * Validation or field-level error details
      */
-    details?: Array<ErrorDetail>;
+    details: Array<ErrorDetail>;
 };
 
 /**
@@ -685,23 +685,23 @@ export type PageResponseTaskTagDto = {
     /**
      * Items in the current page
      */
-    items?: Array<TaskTagDto>;
+    items: Array<TaskTagDto>;
     /**
      * Total number of matched records
      */
-    total?: number;
+    total: number;
     /**
      * One-based page number
      */
-    page?: number;
+    page: number;
     /**
      * Page size
      */
-    size?: number;
+    size: number;
     /**
      * Total page count
      */
-    totalPages?: number;
+    totalPages: number;
 };
 
 /**
@@ -711,15 +711,15 @@ export type TaskTagDto = {
     /**
      * Tag id
      */
-    id?: number;
+    id: number;
     /**
      * Tag name
      */
-    name?: string;
+    name: string;
     /**
      * Tag color
      */
-    color?: string;
+    color: string;
 };
 
 /**
@@ -729,11 +729,11 @@ export type ApiResponsePageResponseLearningProjectDto = {
     /**
      * Business response code
      */
-    code?: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
+    code: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
     /**
      * Human-readable response message
      */
-    message?: string;
+    message: string;
     /**
      * Response payload
      */
@@ -745,7 +745,7 @@ export type ApiResponsePageResponseLearningProjectDto = {
     /**
      * Response timestamp
      */
-    timestamp?: string;
+    timestamp: string;
     /**
      * Trace id matching the X-Request-Id response header
      */
@@ -753,7 +753,7 @@ export type ApiResponsePageResponseLearningProjectDto = {
     /**
      * Validation or field-level error details
      */
-    details?: Array<ErrorDetail>;
+    details: Array<ErrorDetail>;
 };
 
 /**
@@ -763,23 +763,23 @@ export type PageResponseLearningProjectDto = {
     /**
      * Items in the current page
      */
-    items?: Array<LearningProjectDto>;
+    items: Array<LearningProjectDto>;
     /**
      * Total number of matched records
      */
-    total?: number;
+    total: number;
     /**
      * One-based page number
      */
-    page?: number;
+    page: number;
     /**
      * Page size
      */
-    size?: number;
+    size: number;
     /**
      * Total page count
      */
-    totalPages?: number;
+    totalPages: number;
 };
 
 /**
@@ -789,11 +789,11 @@ export type ApiResponseVoid = {
     /**
      * Business response code
      */
-    code?: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
+    code: 'OK' | 'VALIDATION_FAILED' | 'RESOURCE_NOT_FOUND' | 'MALFORMED_REQUEST' | 'BAD_REQUEST' | 'INTERNAL_ERROR';
     /**
      * Human-readable response message
      */
-    message?: string;
+    message: string;
     /**
      * Response payload
      */
@@ -805,7 +805,7 @@ export type ApiResponseVoid = {
     /**
      * Response timestamp
      */
-    timestamp?: string;
+    timestamp: string;
     /**
      * Trace id matching the X-Request-Id response header
      */
@@ -813,7 +813,7 @@ export type ApiResponseVoid = {
     /**
      * Validation or field-level error details
      */
-    details?: Array<ErrorDetail>;
+    details: Array<ErrorDetail>;
 };
 
 export type DeleteTaskData = {

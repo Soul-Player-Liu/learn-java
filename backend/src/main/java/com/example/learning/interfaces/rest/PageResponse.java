@@ -7,19 +7,19 @@ import java.util.List;
 
 @Schema(description = "Paged list payload")
 public record PageResponse<T>(
-        @Schema(description = "Items in the current page")
+        @Schema(description = "Items in the current page", requiredMode = Schema.RequiredMode.REQUIRED)
         List<T> items,
 
-        @Schema(description = "Total number of matched records", example = "42")
+        @Schema(description = "Total number of matched records", example = "42", requiredMode = Schema.RequiredMode.REQUIRED)
         long total,
 
-        @Schema(description = "One-based page number", example = "1")
+        @Schema(description = "One-based page number", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
         int page,
 
-        @Schema(description = "Page size", example = "20")
+        @Schema(description = "Page size", example = "20", requiredMode = Schema.RequiredMode.REQUIRED)
         int size,
 
-        @Schema(description = "Total page count", example = "3")
+        @Schema(description = "Total page count", example = "3", requiredMode = Schema.RequiredMode.REQUIRED)
         int totalPages
 ) {
 

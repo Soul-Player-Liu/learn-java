@@ -7,10 +7,10 @@ import java.util.List;
 
 @Schema(description = "Unified API response envelope")
 public record ApiResponse<T>(
-        @Schema(description = "Business response code", example = "OK")
+        @Schema(description = "Business response code", example = "OK", requiredMode = Schema.RequiredMode.REQUIRED)
         ErrorCode code,
 
-        @Schema(description = "Human-readable response message", example = "success")
+        @Schema(description = "Human-readable response message", example = "success", requiredMode = Schema.RequiredMode.REQUIRED)
         String message,
 
         @Schema(description = "Response payload")
@@ -19,13 +19,13 @@ public record ApiResponse<T>(
         @Schema(description = "Request path", example = "/api/tasks")
         String path,
 
-        @Schema(description = "Response timestamp")
+        @Schema(description = "Response timestamp", requiredMode = Schema.RequiredMode.REQUIRED)
         Instant timestamp,
 
         @Schema(description = "Trace id matching the X-Request-Id response header")
         String traceId,
 
-        @Schema(description = "Validation or field-level error details")
+        @Schema(description = "Validation or field-level error details", requiredMode = Schema.RequiredMode.REQUIRED)
         List<ErrorDetail> details
 ) {
 
@@ -48,10 +48,10 @@ public record ApiResponse<T>(
 
     @Schema(description = "Field-level error detail")
     public record ErrorDetail(
-            @Schema(description = "Invalid field name", example = "title")
+            @Schema(description = "Invalid field name", example = "title", requiredMode = Schema.RequiredMode.REQUIRED)
             String field,
 
-            @Schema(description = "Validation message", example = "must not be blank")
+            @Schema(description = "Validation message", example = "must not be blank", requiredMode = Schema.RequiredMode.REQUIRED)
             String message
     ) {
     }

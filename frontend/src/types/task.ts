@@ -4,7 +4,7 @@ import type {
   CreateLearningTaskRequest as GeneratedCreateLearningTaskRequest,
   CreateTaskCommentRequest as GeneratedCreateTaskCommentRequest,
   LearningProjectDto,
-  TaskListItemDto,
+  LearningTaskDto,
   TaskActivityDto,
   TaskCommentDto,
   TaskStatisticsDto,
@@ -12,42 +12,17 @@ import type {
   UpdateLearningTaskRequest as GeneratedUpdateLearningTaskRequest,
 } from '@/api/generated'
 
-export type TaskStatus = 'TODO' | 'DOING' | 'DONE'
+export type TaskStatus = NonNullable<LearningTaskDto['status']>
 
-export interface LearningTask extends Omit<TaskListItemDto, 'id' | 'title' | 'status'> {
-  id: number
-  title: string
-  status: TaskStatus
-  tagNames: string[]
-}
+export type LearningTask = LearningTaskDto
 
-export interface LearningProject extends Omit<
-  LearningProjectDto,
-  'id' | 'name' | 'taskCount' | 'doneTaskCount'
-> {
-  id: number
-  name: string
-  taskCount: number
-  doneTaskCount: number
-}
+export type LearningProject = LearningProjectDto
 
-export interface TaskComment extends Omit<TaskCommentDto, 'id' | 'taskId' | 'content'> {
-  id: number
-  taskId: number
-  content: string
-}
+export type TaskComment = TaskCommentDto
 
-export interface TaskActivity extends Omit<TaskActivityDto, 'id' | 'taskId' | 'type' | 'message'> {
-  id: number
-  taskId: number
-  type: string
-  message: string
-}
+export type TaskActivity = TaskActivityDto
 
-export interface TaskTag extends Omit<TaskTagDto, 'id' | 'name'> {
-  id: number
-  name: string
-}
+export type TaskTag = TaskTagDto
 
 export type CreateLearningTaskRequest = GeneratedCreateLearningTaskRequest
 
@@ -59,7 +34,7 @@ export type CreateLearningProjectRequest = GeneratedCreateLearningProjectRequest
 
 export type CreateTaskCommentRequest = GeneratedCreateTaskCommentRequest
 
-export type TaskStatistics = Required<TaskStatisticsDto>
+export type TaskStatistics = TaskStatisticsDto
 
 export interface PageResult<T> {
   items: T[]

@@ -11,7 +11,7 @@ public record CreateLearningTaskRequest(
         @Schema(description = "Project id", example = "1")
         Long projectId,
 
-        @Schema(description = "Task title", example = "Learn MyBatis pagination")
+        @Schema(description = "Task title", example = "Learn MyBatis pagination", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotBlank
         @Size(max = 100)
         String title,

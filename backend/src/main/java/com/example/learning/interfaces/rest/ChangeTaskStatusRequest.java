@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 
 @Schema(description = "Change task status request")
 public record ChangeTaskStatusRequest(
-        @Schema(description = "Target task status", example = "DOING")
+        @Schema(description = "Target task status", example = "DOING", requiredMode = Schema.RequiredMode.REQUIRED)
         @NotNull TaskStatus status
 ) {
 }

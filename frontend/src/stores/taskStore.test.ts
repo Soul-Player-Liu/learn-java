@@ -27,26 +27,51 @@ describe('task store', () => {
     return { items, total, page: 1, size: 20, totalPages: total > 0 ? Math.ceil(total / 20) : 0 }
   }
 
+  const now = '2026-05-01T09:00:00'
+
+  function task(id: number, title: string, status: 'TODO' | 'DOING' | 'DONE') {
+    return { id, title, status, tagNames: [], createdAt: now, updatedAt: now }
+  }
+
+  function project(id: number, name: string) {
+    return {
+      id,
+      name,
+      taskCount: 0,
+      doneTaskCount: 0,
+      createdAt: now,
+      updatedAt: now,
+    }
+  }
+
+  function comment(id: number, taskId: number, content: string) {
+    return { id, taskId, content, author: 'mentor', createdAt: now }
+  }
+
+  function activity(id: number, taskId: number, type: string, message: string) {
+    return { id, taskId, type, message, createdAt: now }
+  }
+
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
   })
 
   it('loads tasks and clears the loading flag when the request succeeds', async () => {
-    api.listTasks.mockResolvedValue(page([{ id: 1, title: 'Learn Pinia', status: 'TODO' }], 23))
+    api.listTasks.mockResolvedValue(page([task(1, 'Learn Pinia', 'TODO')], 23))
 
     const store = useTaskStore()
     await store.loadTasks({ keyword: 'Pinia' })
 
     expect(store.loading).toBe(false)
     expect(store.filters).toEqual({ keyword: 'Pinia' })
-    expect(store.tasks).toEqual([{ id: 1, title: 'Learn Pinia', status: 'TODO' }])
+    expect(store.tasks).toEqual([task(1, 'Learn Pinia', 'TODO')])
     expect(store.taskPage).toEqual({ total: 23, page: 1, size: 20, totalPages: 2 })
   })
 
   it('refreshes list and statistics after creating a task', async () => {
-    api.createTask.mockResolvedValue({ id: 1, title: 'Created', status: 'TODO' })
-    api.listTasks.mockResolvedValue(page([{ id: 1, title: 'Created', status: 'TODO' }]))
+    api.createTask.mockResolvedValue(task(1, 'Created', 'TODO'))
+    api.listTasks.mockResolvedValue(page([task(1, 'Created', 'TODO')]))
     api.listProjects.mockResolvedValue([])
     api.listTags.mockResolvedValue([])
     api.getTaskStatistics.mockResolvedValue({
@@ -67,10 +92,10 @@ describe('task store', () => {
   })
 
   it('loads task detail with comments and activities', async () => {
-    api.getTask.mockResolvedValue({ id: 1, title: 'Detail', status: 'TODO' })
-    api.listComments.mockResolvedValue([{ id: 2, taskId: 1, content: 'Ready' }])
+    api.getTask.mockResolvedValue(task(1, 'Detail', 'TODO'))
+    api.listComments.mockResolvedValue([comment(2, 1, 'Ready')])
     api.listActivities.mockResolvedValue([
-      { id: 3, taskId: 1, type: 'TASK_CREATED', message: 'Task created' },
+      activity(3, 1, 'TASK_CREATED', 'Task created'),
     ])
 
     const store = useTaskStore()
@@ -82,8 +107,8 @@ describe('task store', () => {
   })
 
   it('loads a project and scopes task filters to that project', async () => {
-    api.getProject.mockResolvedValue({ id: 2, name: 'Frontend', taskCount: 0, doneTaskCount: 0 })
-    api.listTasks.mockResolvedValue(page([{ id: 3, title: 'Project task', status: 'TODO' }]))
+    api.getProject.mockResolvedValue(project(2, 'Frontend'))
+    api.listTasks.mockResolvedValue(page([task(3, 'Project task', 'TODO')]))
 
     const store = useTaskStore()
     store.filters = { keyword: 'Project' }
@@ -96,7 +121,7 @@ describe('task store', () => {
   })
 
   it('refreshes projects after creating a project and returns the created record', async () => {
-    const createdProject = { id: 4, name: 'Mock platform', taskCount: 0, doneTaskCount: 0 }
+    const createdProject = project(4, 'Mock platform')
     api.createProject.mockResolvedValue(createdProject)
     api.listProjects.mockResolvedValue([createdProject])
 
@@ -120,12 +145,12 @@ describe('task store', () => {
       overdue: 0,
       dueSoon: 0,
     })
-    api.getTask.mockResolvedValue({ id: 1, title: 'Updated', status: 'DOING' })
+    api.getTask.mockResolvedValue(task(1, 'Updated', 'DOING'))
     api.listComments.mockResolvedValue([])
     api.listActivities.mockResolvedValue([])
 
     const store = useTaskStore()
-    store.selectedTask = { id: 1, title: 'Old', status: 'TODO', tagNames: [] }
+    store.selectedTask = task(1, 'Old', 'TODO')
 
     await store.updateTask(1, { title: 'Updated', status: 'DOING' })
     await store.changeTaskStatus(1, { status: 'DOING' })
@@ -137,13 +162,13 @@ describe('task store', () => {
   })
 
   it('refreshes comments and activities when adding a comment to the selected task', async () => {
-    api.listComments.mockResolvedValue([{ id: 2, taskId: 1, content: 'Follow up' }])
+    api.listComments.mockResolvedValue([comment(2, 1, 'Follow up')])
     api.listActivities.mockResolvedValue([
-      { id: 3, taskId: 1, type: 'COMMENT_ADDED', message: 'Comment added' },
+      activity(3, 1, 'COMMENT_ADDED', 'Comment added'),
     ])
 
     const store = useTaskStore()
-    store.selectedTask = { id: 1, title: 'Selected', status: 'TODO', tagNames: [] }
+    store.selectedTask = task(1, 'Selected', 'TODO')
     await store.addComment(1, { content: 'Follow up' })
 
     expect(api.addComment).toHaveBeenCalledWith(1, { content: 'Follow up' })
@@ -164,9 +189,9 @@ describe('task store', () => {
     })
 
     const store = useTaskStore()
-    store.selectedTask = { id: 1, title: 'Selected', status: 'TODO', tagNames: [] }
-    store.comments = [{ id: 2, taskId: 1, content: 'Old' }]
-    store.activities = [{ id: 3, taskId: 1, type: 'TASK_CREATED', message: 'Old' }]
+    store.selectedTask = task(1, 'Selected', 'TODO')
+    store.comments = [comment(2, 1, 'Old')]
+    store.activities = [activity(3, 1, 'TASK_CREATED', 'Old')]
 
     await store.deleteTask(1)
 
