@@ -23,6 +23,7 @@
         <springdoc-openapi.version>2.8.17</springdoc-openapi.version>
         <archunit.version>1.4.1</archunit.version>
         <jacoco.version>0.8.14</jacoco.version>
+        <exec-maven-plugin.version>3.6.2</exec-maven-plugin.version>
         <unit.test.parallelism>4</unit.test.parallelism>
         <integration.test.fork.count>2</integration.test.fork.count>
     </properties>
@@ -270,6 +271,22 @@
                                 </configuration>
                             </execution>
                         </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>schema-snapshot</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>${exec-maven-plugin.version}</version>
+                        <configuration>
+                            <classpathScope>test</classpathScope>
+                            <mainClass>com.example.learning.support.SchemaSnapshotGenerator</mainClass>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>

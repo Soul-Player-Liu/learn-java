@@ -125,6 +125,17 @@ npm run generate:sdk
 
 生成目录是 `packages/task-api/src/generated/`。这个目录是机器生成代码；跨端手写封装放在 `packages/task-api/src/index.ts`，Web 和移动端只保留各自创建 client 的薄入口。
 
+## 生成最终表结构
+
+表结构的真源是 `backend/src/main/resources/db/migration/` 下的 Flyway 迁移脚本。需要给 agent 或人工快速查看当前最终 DDL 时，先确保 MySQL 可连接，再运行：
+
+```bash
+docker compose up -d mysql
+./scripts/generate-schema.sh
+```
+
+生成文件是 `docs/schema/current.sql`。脚本会创建临时 database，执行全部 Flyway migration，然后用 MySQL 的 `SHOW CREATE TABLE` 导出最终表结构，最后删除临时 database。CI 使用 `./scripts/check-schema.sh` 重新生成并检查这个文件是否有未提交变化。
+
 ## 前端测试体系
 
 前端测试分四层：
@@ -134,6 +145,7 @@ npm run generate:sdk
 - 覆盖率检查：`npm run test:coverage`，使用 Vitest V8 coverage。当前采用“全局基础门槛 + 核心 API/store 文件更高门槛”的策略。
 - 端到端测试：`npm run test:e2e`，使用 Playwright，Chromium 跑完整主流程，Firefox/WebKit 跑 `@smoke` 兼容主链路，Mobile Chromium/Mobile WebKit 跑 `@mobile` 小屏核心路径。当前覆盖创建项目、创建带项目和标签的任务、Dashboard 统计、评论、活动日志、状态流转、状态/项目/逾期/标签筛选、分页和删除。脚本会用 MySQL admin 账号直连数据库，为每次运行创建随机 MySQL database，测试结束后删除，避免污染 `learn_java`。
 - SDK 一致性检查：`npm run sdk:check`，重新从后端 OpenAPI 生成 SDK，并检查 `packages/task-api/src/generated` 是否有未提交变化。
+- 表结构快照检查：`./scripts/check-schema.sh`，重新从 Flyway migration 生成 `docs/schema/current.sql`，并检查是否有未提交变化。
 - 离线页面构建：`npm run build:mock` 和 `npm run build:storybook`，用于确认 MSW mock mode 和 Storybook 不是只能在开发机临时启动。
 - 移动端检查：`cd mobile && npm run check` 会执行类型检查、移动端 store 单测、真实 H5 构建和 mock H5 构建；`npm run test:e2e:h5` 会用 Playwright 启动 uni-app H5 mock mode，在 Chromium 和 WebKit 的移动设备视口下覆盖概览、任务筛选、详情状态变更和项目页。
 
@@ -273,6 +285,7 @@ TEST_MYSQL_APP_PASSWORD=learn123456 \
 - `frontend_check`：跑 `npm run check`、mock build、Storybook build、Vitest coverage，上传 Vitest JUnit XML、Cobertura coverage、Storybook 静态产物。
 - `mobile_check`：跑移动端 typecheck、Vitest store 单测、H5 构建、mock H5 构建和 Playwright H5 E2E，上传移动端构建产物、JUnit XML、Playwright report 和 trace/test-results。
 - `sdk_check`：启动真实后端，重新生成 SDK 并检查 `packages/task-api/src/generated` 是否漂移。
+- `schema_check`：用 GitLab MySQL service 执行 Flyway migration，重新生成 `docs/schema/current.sql` 并检查是否漂移。
 - `e2e`：用 Playwright 镜像跑真实前后端 E2E，上传 Playwright JUnit XML、HTML report 和 trace/test-results。
 
 CI 使用 Java 17 镜像或在 job 里安装 Java 17；本地脚本只校验版本，不绑定固定 JDK 路径。MySQL 仍沿用当前临时 database/schema 模型，暂不切换 Testcontainers。
@@ -301,4 +314,8 @@ npm run test:coverage
 npm run build:mock
 npm run build:storybook
 npm run test:e2e
+
+cd ..
+./scripts/generate-schema.sh
+./scripts/check-schema.sh
 ```

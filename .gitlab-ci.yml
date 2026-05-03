@@ -139,6 +139,13 @@ sdk_check:
       - backend-sdk.log
     expire_in: 1 week
 
+schema_check:
+  stage: e2e
+  image: maven:3.9.11-eclipse-temurin-17
+  extends: .mysql_service
+  script:
+    - ./scripts/check-schema.sh
+
 e2e:
   stage: e2e
   image: mcr.microsoft.com/playwright:v1.59.1-jammy

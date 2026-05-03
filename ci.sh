@@ -38,6 +38,8 @@ trap cleanup EXIT
 
 docker compose up -d mysql
 
+./scripts/check-schema.sh
+
 cd backend
 ../scripts/with-java-17.sh ./mvnw verify -Pintegration-test,coverage
 ../scripts/with-java-17.sh ./mvnw spring-boot:run >../backend-ci.log 2>&1 &
