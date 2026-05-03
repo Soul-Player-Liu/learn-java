@@ -218,3 +218,130 @@ wd-search {
   --wot-search-input-height: 84rpx;
   --wot-search-fs: 32rpx;
 }
+
+@media screen and (max-width: 430px) {
+  .page {
+    padding: 16px 14px 30px;
+    font-size: 17px;
+    line-height: 1.6;
+  }
+
+  .page-hero {
+    margin-bottom: 16px;
+    padding: 20px 18px;
+    border-radius: 18px;
+  }
+
+  .page-hero__eyebrow {
+    margin-bottom: 7px;
+    font-size: 15px;
+  }
+
+  .page-hero__title {
+    font-size: 28px;
+  }
+
+  .page-hero__meta {
+    margin-top: 8px;
+    font-size: 16px;
+  }
+
+  .section {
+    margin-bottom: 22px;
+  }
+
+  .section-title {
+    margin-bottom: 12px;
+  }
+
+  .section-title__text,
+  .title {
+    font-size: 19px;
+  }
+
+  .section-title__meta {
+    font-size: 15px;
+  }
+
+  .summary-grid {
+    gap: 12px;
+  }
+
+  .metric-card {
+    padding: 17px;
+    border-radius: 16px;
+  }
+
+  .metric-card__label {
+    font-size: 16px;
+  }
+
+  .metric-card__value {
+    margin-top: 8px;
+    font-size: 30px;
+  }
+
+  .app-card {
+    margin-bottom: 14px;
+    border-radius: 18px;
+  }
+
+  .card-content {
+    padding: 17px;
+  }
+
+  .stack {
+    gap: 14px;
+  }
+
+  .row {
+    gap: 14px;
+  }
+
+  .body {
+    font-size: 17px;
+  }
+
+  .muted {
+    font-size: 15px;
+  }
+
+  .search-panel {
+    margin-bottom: 16px;
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .search-input-shell {
+    min-height: 48px;
+    padding: 0 16px;
+  }
+
+  .search-input-shell__icon {
+    font-size: 19px;
+  }
+
+  .search-input-shell__input {
+    min-height: 48px;
+    font-size: 17px;
+    line-height: 48px;
+  }
+
+  .status-filter {
+    margin-top: 12px;
+  }
+
+  .tag-row,
+  .button-row {
+    gap: 10px;
+  }
+
+  wd-button {
+    --wot-button-large-height: 52px;
+    --wot-button-medium-height: 46px;
+    --wot-button-small-height: 34px;
+    --wot-button-large-fs: 17px;
+    --wot-button-medium-fs: 17px;
+    --wot-button-small-fs: 15px;
+  }
+}
