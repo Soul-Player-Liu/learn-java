@@ -4,18 +4,21 @@
     "target": "ES2023",
     "lib": ["ES2023", "DOM"],
     "module": "ESNext",
-    "types": ["node"],
+    "types": ["node", "vite/client"],
     "skipLibCheck": true,
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@learn-java/task-api": ["../packages/task-api/src/index.ts"],
+      "@learn-java/task-domain": ["../packages/task-domain/src/index.ts"],
+      "@learn-java/mock-data": ["../packages/mock-data/src/index.ts"]
     },
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
     "strict": true
   },
-  "include": ["vite.config.ts", "playwright.config.ts", "eslint.config.js", ".storybook/**/*.ts"]
+  "include": ["env.d.ts", "vite.config.ts", "playwright.config.ts", "eslint.config.js", ".storybook/**/*.ts"]
 }

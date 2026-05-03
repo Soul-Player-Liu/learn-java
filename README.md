@@ -10,6 +10,7 @@
 - 数据库：MySQL 8.4.x，表结构由 Flyway 管理
 - 数据访问：MyBatis Mapper 接口 + XML
 - 前端：Vue 3 + Vite + TypeScript + Element Plus + Vue Router + Pinia
+- 移动端：uni-app + Vue 3 + TypeScript + Pinia，复用共享业务类型和 API 包装
 - 接口：REST API，后端通过 springdoc 暴露 OpenAPI，前端用 `@hey-api/openapi-ts` 生成 SDK
 
 ## 目录
@@ -18,6 +19,8 @@
 .
 ├── backend/              # Java 后端
 ├── frontend/             # Vue 前端
+├── mobile/               # uni-app 移动端
+├── packages/             # Web 和移动端共享的业务类型、API、mock 数据
 ├── docker-compose.yml    # 本地 MySQL
 └── .env.example          # 本地环境变量示例
 ```
@@ -50,6 +53,16 @@ npm run dev
 ```
 
 前端默认地址是 `http://localhost:5173`，后端默认地址是 `http://localhost:8080`。
+
+4. 启动移动端 H5
+
+```bash
+cd mobile
+npm install
+npm run dev:h5
+```
+
+移动端默认使用 uni-app 的 H5 开发服务，Vite 端口配置为 `5174`。移动端页面通过 `packages/task-api` 和 `packages/task-domain` 复用任务接口、类型和数据归一化逻辑，页面、导航和 `uni.request` 适配保留在 `mobile/` 内。
 
 也可以在仓库根目录用脚本幂等启动或关闭前后端。脚本不管理 MySQL，默认数据库已经启动：
 
@@ -148,9 +161,13 @@ npm run test:e2e
 - 数据访问层使用 MyBatis。
 - 数据库表结构使用 Flyway 管理。
 - 前端使用 Vue Router 和 Pinia。
+- 移动端使用 uni-app，作为与 Web 并列的第二个前端客户端。
+- `packages/task-domain` 存放平台无关的任务/项目/标签类型、状态文案和数据归一化逻辑。
+- `packages/task-api` 存放平台无关 API wrapper，Web 端通过 `fetch` adapter 调用，移动端通过 `uni.request` adapter 调用。
+- `packages/mock-data` 存放可跨端复用的 mock 数据和场景基础。
 - 前端 SDK 从后端 OpenAPI 自动生成。
 - 暂不做用户登录。
-- 仓库根目录的 `ci.sh` 会串起后端 MySQL 集成测试、后端覆盖率门槛、前端 check、前端覆盖率门槛、mock build、Storybook build、SDK 一致性检查和 Playwright E2E。
+- 仓库根目录的 `ci.sh` 会串起后端 MySQL 集成测试、后端覆盖率门槛、前端 check、前端覆盖率门槛、mock build、Storybook build、SDK 一致性检查、uni-app 移动端 check 和 Playwright E2E。
 - GitLab CI 配置在 `.gitlab-ci.yml`，按后端、前端、E2E 拆分 job，并上传 JUnit、JaCoCo、Cobertura、Playwright report 和 Storybook 静态产物。
 - 后端测试分为快测和 MySQL 集成测试两层。
 - 后端接口统一返回 `ApiResponse<T>`，错误码由 `ErrorCode` 枚举集中维护，错误响应包含 `traceId`、请求路径和字段级校验明细。

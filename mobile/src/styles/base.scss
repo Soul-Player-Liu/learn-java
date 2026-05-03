@@ -1,0 +1,72 @@
+.page {
+  min-height: 100vh;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.page-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.page-title__text {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #111827;
+}
+
+.section {
+  margin-bottom: 24rpx;
+}
+
+.card {
+  padding: 24rpx;
+  border: 1px solid #e5e7eb;
+  border-radius: 12rpx;
+  background: #ffffff;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.muted {
+  color: #64748b;
+}
+
+.title {
+  color: #111827;
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.body {
+  color: #334155;
+  font-size: 28rpx;
+  line-height: 1.6;
+}
+
+.badge {
+  display: inline-flex;
+  padding: 4rpx 14rpx;
+  border-radius: 999rpx;
+  color: #1d4ed8;
+  background: #dbeafe;
+  font-size: 24rpx;
+}
+
+.button-row {
+  display: flex;
+  gap: 16rpx;
+}

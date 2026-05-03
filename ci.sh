@@ -54,5 +54,9 @@ npm run test:coverage
 npm run build:mock
 npm run build:storybook
 npm run sdk:check
+cd ../mobile
+npm ci
+npm run check
+cd ../frontend
 stop_backend
 npm run test:e2e

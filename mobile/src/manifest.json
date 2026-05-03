@@ -1,0 +1,21 @@
+{
+  "name": "learn-java-mobile",
+  "appid": "__UNI__LEARNJAVA",
+  "description": "learn-java 移动端学习任务客户端",
+  "versionName": "0.1.0",
+  "versionCode": "100",
+  "transformPx": false,
+  "app-plus": {},
+  "h5": {
+    "router": {
+      "mode": "hash"
+    }
+  },
+  "mp-weixin": {
+    "appid": "",
+    "setting": {
+      "urlCheck": false
+    },
+    "usingComponents": true
+  }
+}

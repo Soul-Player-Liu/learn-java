@@ -1,12 +1,15 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
+  "include": ["env.d.ts", "src/**/*", "src/**/*.vue", "../packages/*/src/**/*.ts"],
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "strict": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@learn-java/task-api": ["../packages/task-api/src/index.ts"],
+      "@learn-java/task-domain": ["../packages/task-domain/src/index.ts"],
+      "@learn-java/mock-data": ["../packages/mock-data/src/index.ts"]
     }
   }
 }

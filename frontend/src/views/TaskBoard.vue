@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { Delete, Edit, Plus, Refresh, Search, View } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRoute, useRouter } from 'vue-router'
+import { parseTagInput, taskStatusLabel, taskStatusOptions, taskStatusType } from '@learn-java/task-domain'
 
 import { useTaskStore } from '@/stores/taskStore'
 import type { LearningTask, TaskStatus } from '@/types/task'
@@ -32,20 +33,16 @@ const filters = reactive({
   tag: undefined as string | undefined,
 })
 
-const statusOptions: Array<{ label: string; value: TaskStatus; type: 'info' | 'warning' | 'success' }> = [
-  { label: '待开始', value: 'TODO', type: 'info' },
-  { label: '进行中', value: 'DOING', type: 'warning' },
-  { label: '已完成', value: 'DONE', type: 'success' },
-]
+const statusOptions = taskStatusOptions
 
 const title = computed(() => (editingTask.value ? '编辑学习任务' : '新增学习任务'))
 
 function statusLabel(status: TaskStatus) {
-  return statusOptions.find((item) => item.value === status)?.label ?? status
+  return taskStatusLabel(status)
 }
 
 function statusType(status: TaskStatus) {
-  return statusOptions.find((item) => item.value === status)?.type ?? 'info'
+  return taskStatusType(status)
 }
 
 function resetForm() {
@@ -122,10 +119,7 @@ async function submitForm() {
     title: form.title.trim(),
     description: form.description.trim() || undefined,
     dueDate: form.dueDate || undefined,
-    tagNames: form.tagInput
-      .split(',')
-      .map((tag) => tag.trim())
-      .filter(Boolean),
+    tagNames: parseTagInput(form.tagInput),
   }
 
   try {

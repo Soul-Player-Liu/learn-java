@@ -1,6 +1,6 @@
 # 测试体系建设规范
 
-本文是一份面向真实工程项目的测试体系规范。当前 `learn-java` 项目是这套规范的可运行示例：后端使用 Spring Boot、Maven、MyBatis、Flyway、MySQL，前端使用 Vue、Vite、TypeScript、Pinia、Vitest、Playwright，CI 使用 GitLab。
+本文是一份面向真实工程项目的测试体系规范。当前 `learn-java` 项目是这套规范的可运行示例：后端使用 Spring Boot、Maven、MyBatis、Flyway、MySQL，Web 前端使用 Vue、Vite、TypeScript、Pinia、Vitest、Playwright，移动端使用 uni-app、Vue 3、TypeScript、Pinia，CI 使用 GitLab。
 
 真实项目不需要逐字复制本项目代码，但建议复制这里的分层思想、门禁顺序、测试数据隔离方式和覆盖率策略。
 
@@ -224,6 +224,23 @@ npm run sdk:check
 
 如果 `sdk:check` 失败，通常表示后端接口变了但前端生成代码没有提交，或者手写类型和后端契约已经不一致。
 
+## 移动端 uni-app 测试规范
+
+移动端作为与 Web 并列的第二个前端客户端，不能只靠 Web 的 Playwright 结果兜底。它至少要有独立的类型检查和 H5 构建门禁：
+
+```bash
+cd mobile
+npm run typecheck
+npm run build:h5
+```
+
+当前移动端复用 `packages/task-domain` 和 `packages/task-api`，因此 Web 和移动端会共同验证平台无关的任务类型、状态文案、API envelope 解包和数据归一化逻辑。平台相关部分保留在各自客户端内：
+
+- Web：`frontend/src/api/adapters/webRequest.ts`、Vue Router、Element Plus 页面和 Playwright E2E。
+- 移动端：`mobile/src/api/uniRequest.ts`、`pages.json`、uni-app 页面生命周期、`uni.navigateTo`、`uni.showToast`。
+
+CI 中的 `mobile_check` job 运行 `npm run check`，也就是 `vue-tsc --noEmit` 加 `unh build --platform h5`。后续如果移动端要覆盖微信小程序或 App，还应增加对应平台的构建 smoke，例如 `unh build --platform mp-weixin`，但这需要先补齐平台 appid、发行配置和密钥管理策略。
+
 ## 覆盖率策略
 
 覆盖率门槛应分层设置，不建议全项目一刀切。
@@ -240,6 +257,7 @@ npm run sdk:check
 
 - 后端使用 JaCoCo，按全局、`domain/model`、`application`、`infrastructure/interfaces` 分层。
 - 前端使用 Vitest V8 coverage，只对当前已有单元测试形态的 API wrapper 和 store 设门槛。
+- 移动端当前先以类型检查和 H5 构建作为基础门禁；等页面交互稳定后，再补 uni-app 组件测试或 H5 smoke 测试。
 - CI 上传 JaCoCo XML、Cobertura XML、HTML 报告。
 
 真实项目可以参考这个起步值：
@@ -260,6 +278,7 @@ GitLab CI 推荐拆成这些 job：
 - `backend_unit`：后端单元测试，上传 Surefire JUnit。
 - `backend_integration`：真实数据库集成测试，上传 Failsafe JUnit 和 JaCoCo。
 - `frontend_check`：lint、format、typecheck、Vitest、build、coverage、Storybook build。
+- `mobile_check`：uni-app 移动端 typecheck 和 H5 build。
 - `sdk_check`：启动后端，重新生成前端 SDK，检查生成代码是否漂移。
 - `e2e`：启动真实前后端和测试数据库，按 Chromium 全量、Firefox/WebKit smoke、Mobile Chromium/Mobile WebKit mobile 的策略跑 Playwright，上传 report 和 trace。
 

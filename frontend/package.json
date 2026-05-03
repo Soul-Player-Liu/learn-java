@@ -10,7 +10,7 @@
     "dev:mock:many": "VITE_USE_MOCK=true VITE_MOCK_SCENARIO=many vite",
     "dev:mock:error": "VITE_USE_MOCK=true VITE_MOCK_SCENARIO=serverError vite",
     "dev:mock:slow": "VITE_USE_MOCK=true VITE_MOCK_SCENARIO=slow vite",
-    "typecheck": "vue-tsc -b",
+    "typecheck": "vue-tsc -p tsconfig.app.json --noEmit && vue-tsc -p tsconfig.node.json --noEmit",
     "build": "npm-run-all typecheck build:only",
     "build:only": "vite build",
     "build:mock": "VITE_USE_MOCK=true npm run build",

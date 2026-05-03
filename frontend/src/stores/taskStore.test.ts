@@ -115,7 +115,7 @@ describe('task store', () => {
     expect(store.projectLoading).toBe(false)
     expect(store.selectedProject?.id).toBe(2)
     expect(api.listTasks).toHaveBeenCalledWith({ keyword: 'Project', projectId: 2 })
-    expect(store.tasks).toEqual([{ id: 3, title: 'Project task', status: 'TODO' }])
+    expect(store.tasks).toEqual([task(3, 'Project task', 'TODO')])
   })
 
   it('refreshes projects after creating a project and returns the created record', async () => {

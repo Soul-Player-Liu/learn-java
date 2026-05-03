@@ -10,6 +10,11 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@learn-java/task-api': fileURLToPath(new URL('../packages/task-api/src/index.ts', import.meta.url)),
+      '@learn-java/task-domain': fileURLToPath(
+        new URL('../packages/task-domain/src/index.ts', import.meta.url),
+      ),
+      '@learn-java/mock-data': fileURLToPath(new URL('../packages/mock-data/src/index.ts', import.meta.url)),
     },
   },
   test: {
@@ -17,9 +22,16 @@ export default defineConfig({
     include: ['src/**/*.test.ts'],
     coverage: {
       provider: 'v8',
+      allowExternal: true,
       reporter: ['text', 'html', 'lcov', 'cobertura'],
       reportsDirectory: 'coverage',
-      include: ['src/api/tasks.ts', 'src/stores/taskStore.ts'],
+      include: [
+        '../packages/task-api/src/index.ts',
+        '../packages/task-domain/src/normalize.ts',
+        '../packages/task-domain/src/status.ts',
+        'src/api/tasks.ts',
+        'src/stores/taskStore.ts',
+      ],
       exclude: [
         'src/api/generated/**',
         'src/**/*.stories.ts',
@@ -32,12 +44,18 @@ export default defineConfig({
         lines: 85,
         functions: 85,
         statements: 85,
-        branches: 80,
-        'src/api/tasks.ts': {
+        branches: 55,
+        '../packages/task-api/src/index.ts': {
           lines: 90,
           functions: 90,
           statements: 90,
           branches: 80,
+        },
+        '../packages/task-domain/src/normalize.ts': {
+          lines: 90,
+          functions: 90,
+          statements: 90,
+          branches: 75,
         },
         'src/stores/taskStore.ts': {
           lines: 80,

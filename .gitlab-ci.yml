@@ -21,6 +21,7 @@ cache:
   paths:
     - .m2/repository/
     - frontend/.npm/
+    - mobile/.npm/
 
 .mysql_service:
   services:
@@ -91,6 +92,19 @@ frontend_check:
       - frontend/coverage/
       - frontend/storybook-static/
       - frontend/test-results/
+    expire_in: 1 week
+
+mobile_check:
+  stage: frontend
+  image: node:22-bookworm
+  script:
+    - cd mobile
+    - npm ci --cache .npm --prefer-offline
+    - npm run check
+  artifacts:
+    when: always
+    paths:
+      - mobile/dist/
     expire_in: 1 week
 
 sdk_check:
