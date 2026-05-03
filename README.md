@@ -1,50 +1,59 @@
 # learn-java
 
-一个用于学习 Java 后端和 Vue 前端的全栈示例项目。
+`learn-java` 是一个用来沉淀大型业务项目工程规范的全栈 Monorepo 范本。它的业务功能刻意保持克制，但后端、Web、移动端、共享包、契约生成、mock、测试、CI 和文档体系都按真实项目的可扩展方向建设。
 
-## 项目主题
+当前示例主题是“学习任务管理器”：
 
-项目是一个“学习任务管理器”。它足够简单，适合入门；同时又能覆盖真实项目里的关键链路：
+- 后端：Spring Boot 3.5.14 + Java 17 + Maven + MyBatis + Flyway + MySQL。
+- Web：Vue 3 + Vite + TypeScript + Element Plus + Vue Router + Pinia。
+- 移动端：uni-app + Vue 3 + TypeScript + Pinia。
+- 共享包：OpenAPI SDK、API wrapper、领域类型、跨端 use cases、mock 数据。
+- 质量门禁：单元测试、真实 MySQL 集成测试、架构测试、SDK drift check、Storybook build、Web E2E、移动端 H5 E2E。
 
-- Java 后端：Spring Boot 3.5.14 + Java 17 + Maven + 简化 DDD 分层
-- 数据库：MySQL 8.4.x，表结构由 Flyway 管理
-- 数据访问：MyBatis Mapper 接口 + XML
-- 前端：Vue 3 + Vite + TypeScript + Element Plus + Vue Router + Pinia
-- 移动端：uni-app + Vue 3 + TypeScript + Pinia，复用共享业务类型和 API 包装
-- 接口：REST API，后端通过 springdoc 暴露 OpenAPI，前端用 `@hey-api/openapi-ts` 生成 SDK
+## 文档入口
 
-## 目录
+本仓库采用“短入口 + 文档地图 + 标准层 + 可执行证据”的文档结构：
+
+- [docs/INDEX.md](docs/INDEX.md)：文档地图，说明每类文档的职责和阅读顺序。
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)：本仓库的架构边界和可执行工程决策。
+- [docs/standards/monorepo.md](docs/standards/monorepo.md)：后端、Web、移动端 Monorepo 标准。
+- [docs/standards/testing.md](docs/standards/testing.md)：测试体系标准。
+- [docs/standards/mock.md](docs/standards/mock.md)：mock 与离线预览标准。
+- [docs/standards/documentation.md](docs/standards/documentation.md)：文档体系标准。
+- [AGENTS.md](AGENTS.md)：给智能体和新接手工程师的工作导航。
+
+`docs/standards/` 下的文档是给后续大项目复用的规范模板，不是说每个项目都必须机械维护同名文件。真实项目应按规模选择必要文档，并确保文档能指向代码、脚本、CI 或评测证据。
+
+## 仓库结构
 
 ```text
 .
-├── backend/              # Java 后端
-├── frontend/             # Vue 前端
-├── mobile/               # uni-app 移动端
-├── packages/             # Web 和移动端共享的业务类型、API、mock 数据
+├── backend/              # Java 后端，业务规则、数据库、HTTP API、OpenAPI
+├── frontend/             # Vue Web 客户端
+├── mobile/               # uni-app 移动端客户端
+├── packages/             # 跨端共享 API、领域类型、use cases、mock 数据
+├── scripts/              # 跨模块脚本
+├── docs/                 # 文档地图、架构说明、标准模板和生成产物
 ├── docker-compose.yml    # 本地 MySQL
-└── .env.example          # 本地环境变量示例
+└── ci.sh                 # 本地模拟 CI 的总入口
 ```
 
-## 启动顺序
+## 快速启动
 
-1. 启动 MySQL
+启动 MySQL：
 
 ```bash
 docker compose up -d mysql
 ```
 
-2. 启动后端
-
-项目已经包含 Maven Wrapper，不需要全局安装 `mvn`。项目要求 Java 17。
-
-如果当前 shell 默认不是 Java 17，先把 `JAVA_HOME` 或 `DEV_JAVA_HOME` 指向本机 Java 17 JDK。仓库脚本会检查 Java 主版本，不再写死某台机器的 JDK 路径。
+启动后端：
 
 ```bash
 cd backend
 ../scripts/with-java-17.sh ./mvnw spring-boot:run
 ```
 
-3. 启动前端
+启动 Web：
 
 ```bash
 cd frontend
@@ -52,9 +61,7 @@ npm install
 npm run dev
 ```
 
-前端默认地址是 `http://localhost:5173`，后端默认地址是 `http://localhost:8080`。
-
-4. 启动移动端 H5
+启动移动端 H5：
 
 ```bash
 cd mobile
@@ -62,260 +69,65 @@ npm install
 npm run dev:h5
 ```
 
-移动端默认使用 uni-app 的 H5 开发服务，Vite 端口配置为 `5174`。移动端页面通过 `packages/task-api` 和 `packages/task-domain` 复用生成 SDK、任务接口、类型、状态文案、数据归一化和任务加载/刷新编排，页面、导航和平台反馈保留在 `mobile/` 内。
-
-移动端也支持不启动后端的 H5 mock mode，直接复用 `packages/mock-data` 的场景数据：
+不启动后端时，可以分别使用 Web 和移动端 mock mode：
 
 ```bash
-cd mobile
+cd frontend
+npm run dev:mock
+
+cd ../mobile
 npm run dev:h5:mock
-npm run dev:h5:mock:many
 ```
 
-也可以在仓库根目录用脚本幂等启动或关闭前后端。脚本不管理 MySQL，默认数据库已经启动：
+根目录也提供幂等启动/停止脚本。脚本只管理应用进程，不管理 MySQL：
 
 ```bash
 ./start-dev.sh
 ./stop-dev.sh
 ```
 
-启动日志和 pid 文件放在 `.dev/`，该目录不会提交到 Git。
+## 常用验证
 
-## 前端离线预览
-
-如果只想看前端页面，不启动 Java 后端，可以使用 MSW mock mode：
-
-```bash
-cd frontend
-npm run dev:mock
-```
-
-这会启动完整 Vue 应用，页面仍然走 Router、Pinia 和生成的 SDK，但 `/api/tasks`、`/api/projects`、`/api/tags` 等请求会被 `src/mocks/handlers.ts` 聚合的 MSW handlers 拦截并返回模拟数据。适合产品或业务人员离线点完整流程。
-
-dev mock 支持切换场景：
-
-```bash
-npm run dev:mock:empty
-npm run dev:mock:many
-npm run dev:mock:error
-npm run dev:mock:slow
-```
-
-也可以直接设置 `VITE_MOCK_SCENARIO`，例如 `VITE_USE_MOCK=true VITE_MOCK_SCENARIO=overdue npm run dev`。
-
-如果要看单个页面的不同状态，可以使用 Storybook：
-
-```bash
-cd frontend
-npm run storybook
-```
-
-当前 stories 覆盖了 `DashboardView`、`ProjectListView`、`TaskBoard`、`TaskDetailView`，并复用同一套 MSW handlers 展示正常、空数据、逾期、多数据和找不到详情等状态。
-
-仓库级 Monorepo 建设规范见 `MONOREPO_STANDARD.md`；前端 mock 体系的工程化规范见 `FRONTEND_MOCK_STANDARD.md`。
-
-## 生成前端 SDK
-
-先启动后端，再运行：
-
-```bash
-cd frontend
-npm run generate:sdk
-```
-
-生成目录是 `packages/task-api/src/generated/`。这个目录是机器生成代码；跨端手写封装放在 `packages/task-api/src/index.ts`，Web 和移动端只保留各自创建 client 的薄入口。
-
-## 生成最终表结构
-
-表结构的真源是 `backend/src/main/resources/db/migration/` 下的 Flyway 迁移脚本。需要给 agent 或人工快速查看当前最终 DDL 时，先确保 MySQL 可连接，再运行：
-
-```bash
-docker compose up -d mysql
-./scripts/generate-schema.sh
-```
-
-生成文件是 `docs/schema/current.sql`。脚本会创建临时 database，执行全部 Flyway migration，然后用 MySQL 的 `SHOW CREATE TABLE` 导出最终表结构，最后删除临时 database。CI 使用 `./scripts/check-schema.sh` 重新生成并检查这个文件是否有未提交变化。
-
-## 前端测试体系
-
-前端测试分四层：
-
-- 静态检查：`npm run lint`、`npm run format:check`、`npm run typecheck`。
-- 单元测试：`npm run test:unit`，使用 Vitest，当前覆盖 API wrapper 和 Pinia store。
-- 覆盖率检查：`npm run test:coverage`，使用 Vitest V8 coverage。当前采用“全局基础门槛 + 核心 API/store 文件更高门槛”的策略。
-- 端到端测试：`npm run test:e2e`，使用 Playwright，Chromium 跑完整主流程，Firefox/WebKit 跑 `@smoke` 兼容主链路，Mobile Chromium/Mobile WebKit 跑 `@mobile` 小屏核心路径。当前覆盖创建项目、创建带项目和标签的任务、Dashboard 统计、评论、活动日志、状态流转、状态/项目/逾期/标签筛选、分页和删除。脚本会用 MySQL admin 账号直连数据库，为每次运行创建随机 MySQL database，测试结束后删除，避免污染 `learn_java`。
-- SDK 一致性检查：`npm run sdk:check`，重新从后端 OpenAPI 生成 SDK，并检查 `packages/task-api/src/generated` 是否有未提交变化。
-- 表结构快照检查：`./scripts/check-schema.sh`，重新从 Flyway migration 生成 `docs/schema/current.sql`，并检查是否有未提交变化。
-- 离线页面构建：`npm run build:mock` 和 `npm run build:storybook`，用于确认 MSW mock mode 和 Storybook 不是只能在开发机临时启动。
-- 移动端检查：`cd mobile && npm run check` 会执行类型检查、移动端 store 单测、真实 H5 构建和 mock H5 构建；`npm run test:e2e:h5` 会用 Playwright 启动 uni-app H5 mock mode，在 Chromium 和 WebKit 的移动设备视口下覆盖概览、任务筛选、详情状态变更和项目页。
-
-常用命令：
-
-```bash
-cd frontend
-npm run check
-npm run test:e2e
-```
-
-`npm run test:e2e` 会先创建临时 database，再通过 Playwright 自动启动后端和前端；仍然需要先确保 MySQL 可连接。E2E 默认使用后端 `18080`、前端 `15173`，避免和本地开发后端 `8080` 或 SDK 检查进程抢端口。默认连接本地 MySQL，也可以通过 `TEST_MYSQL_HOST`、`TEST_MYSQL_PORT`、`TEST_MYSQL_ADMIN_USERNAME`、`TEST_MYSQL_ADMIN_PASSWORD`、`TEST_MYSQL_APP_USERNAME`、`TEST_MYSQL_APP_PASSWORD` 指向其他测试数据库；如需调整 E2E 服务端口，可设置 `E2E_BACKEND_PORT` 和 `E2E_FRONTEND_PORT`。如只想本地快速验证完整业务逻辑，可以执行 `npm run test:e2e -- --project=chromium`；如只想看移动端核心路径，可以执行 `npm run test:e2e -- --project=mobile-webkit`。
-
-## 后端阅读路线
-
-建议按这个顺序读：
-
-1. `interfaces/rest/LearningTaskController.java`
-2. `application/LearningTaskApplicationService.java`
-3. `domain/model/LearningTask.java`
-4. `domain/repository/LearningTaskRepository.java`
-5. `infrastructure/persistence/MyBatisLearningTaskRepository.java`
-6. `application/query/LearningTaskQueryRepository.java`
-7. `infrastructure/persistence/MyBatisLearningTaskQueryRepository.java`
-8. `infrastructure/persistence/LearningTaskMapper.java`
-9. `resources/mappers/LearningTaskMapper.xml`
-10. `resources/db/migration/V1__init_learning_task.sql`
-
-这样能先看到请求怎么进来，再看到业务用例怎么组织，最后看数据库适配。
-
-## 已确定事项
-
-- 后端使用 Spring Boot 3.5.14 + Java 17。
-- 数据访问层使用 MyBatis。
-- 数据库表结构使用 Flyway 管理。
-- 前端使用 Vue Router 和 Pinia。
-- 移动端使用 uni-app，作为与 Web 并列的第二个前端客户端。
-- `packages/task-domain` 存放从生成 DTO 派生的任务/项目/标签类型、状态文案和数据归一化逻辑。
-- `packages/task-api` 存放 OpenAPI 生成 SDK、平台无关 API wrapper、Web fetch client、uni-app request client、共享 mock API，以及 Web/移动端共享的任务加载、详情刷新和状态变更编排。
-- `packages/mock-data` 存放可跨端复用的 mock 数据、场景数据工厂和统计计算逻辑；前端 MSW 只保留 HTTP handler。
-- 前端 SDK 从后端 OpenAPI 自动生成。
-- 暂不做用户登录。
-- 仓库根目录的 `ci.sh` 会串起后端 MySQL 集成测试、后端覆盖率门槛、前端 check、前端覆盖率门槛、mock build、Storybook build、SDK 一致性检查、uni-app 移动端 check、移动端 H5 E2E 和 Web Playwright E2E。
-- GitLab CI 配置在 `.gitlab-ci.yml`，按后端、前端、E2E 拆分 job，并上传 JUnit、JaCoCo、Cobertura、Playwright report 和 Storybook 静态产物。
-- 后端测试分为快测和 MySQL 集成测试两层。
-- 后端接口统一返回 `ApiResponse<T>`，错误码由 `ErrorCode` 枚举集中维护，错误响应包含 `traceId`、请求路径和字段级校验明细。
-- 列表接口支持 `page`、`size` 查询参数，列表数据统一放在 `PageResponse<T>.items` 里。
-- 前端任务列表已经接入 `PageResponse` 的分页元数据，并通过 Element Plus 分页控件切换页码和每页条数。
-- 后端 HTTP Request、应用层 Command、应用/查询 DTO 已分开建模；OpenAPI schema 由 springdoc 根据 Controller、Request、DTO 注解生成。
-- `GET /api/tasks` 使用 MyBatis XML 的多表分页查询，覆盖项目名、标签聚合、评论数量、最近活动时间、动态筛选、`count` 和 `limit/offset`。
-
-## 后续待设计
-
-- 是否把错误码进一步拆成业务错误码，例如项目不存在、任务状态流转非法、标签名称非法等更细粒度代码。
-- 是否加入更复杂的 MyBatis 嵌套 `resultMap` / `collection` 示例。目前任务列表采用聚合型多表查询，更适合先学习分页和统计。
-
-## 后端测试体系
-
-测试分两类，并且按不同层级采用不同并行策略：
-
-- `*Test`：默认单元测试，不依赖 Spring 和 MySQL。当前覆盖领域对象和应用服务，应用服务用内存版 Repository 隔离数据库。
-- `*IT`：集成测试，需要本机 MySQL。测试会为每个 Failsafe fork JVM 创建一个共享随机 schema，启动 Spring/Flyway/MyBatis 后执行真实数据库测试，进程退出时删除 schema。
-- `mvnw test` 由 Surefire 执行，只跑 `*Test`，并开启 JUnit 线程并行。默认并行度是 `4`，可以用 `-Dunit.test.parallelism=8` 覆盖。
-- `mvnw verify -Pintegration-test` 由 Failsafe 执行 `*IT`，默认开 `2` 个 fork JVM。每个 fork JVM 共享一个随机 MySQL schema，schema 名里带 `worker_${surefire.forkNumber}`，避免并行 worker 之间互相清表。
-
-普通开发优先跑快测：
-
-```bash
-cd backend
-../scripts/with-java-17.sh ./mvnw test
-```
-
-调整单元测试并行度：
-
-```bash
-cd backend
-../scripts/with-java-17.sh ./mvnw test -Dunit.test.parallelism=8
-```
-
-需要验证 Flyway、MyBatis XML、Controller 到数据库完整链路时，先启动 MySQL，再跑集成测试：
-
-```bash
-docker compose up -d mysql
-
-cd backend
-../scripts/with-java-17.sh ./mvnw verify -Pintegration-test
-```
-
-调整集成测试 fork 数：
-
-```bash
-cd backend
-../scripts/with-java-17.sh ./mvnw verify -Pintegration-test -Dintegration.test.fork.count=4
-```
-
-如果要同时执行覆盖率门槛：
-
-```bash
-cd backend
-../scripts/with-java-17.sh ./mvnw verify -Pintegration-test,coverage
-```
-
-后端覆盖率用 JaCoCo，策略是分层门槛：
-
-- 全局排除 DTO、请求对象、MyBatis record、启动类等低价值结构代码后，要求基础行/指令/分支覆盖率。
-- `domain/model` 是核心业务规则包，门槛最高。
-- `application` 是用例编排层，门槛次之。
-- `infrastructure/persistence` 和 `interfaces/rest` 主要靠集成测试兜底，门槛低于纯业务包。
-
-集成测试默认连接本地 Docker MySQL：
-
-```text
-host: localhost
-port: 3306
-admin user: root / root123456
-app user: learn / learn123456
-```
-
-如果要连别的本机持久 MySQL，可以用环境变量覆盖：
-
-```bash
-TEST_MYSQL_HOST=localhost \
-TEST_MYSQL_PORT=3306 \
-TEST_MYSQL_ADMIN_USERNAME=root \
-TEST_MYSQL_ADMIN_PASSWORD=root123456 \
-TEST_MYSQL_APP_USERNAME=learn \
-TEST_MYSQL_APP_PASSWORD=learn123456 \
-../scripts/with-java-17.sh ./mvnw verify -Pintegration-test
-```
-
-## GitLab CI
-
-`.gitlab-ci.yml` 当前分为五类 job：
-
-- `backend_unit`：跑 `mvnw test`，上传 Surefire JUnit XML。
-- `backend_integration`：用 GitLab MySQL service 跑 `mvnw verify -Pintegration-test,coverage`，上传 Surefire/Failsafe JUnit XML 和 JaCoCo XML/HTML。
-- `frontend_check`：跑 `npm run check`、mock build、Storybook build、Vitest coverage，上传 Vitest JUnit XML、Cobertura coverage、Storybook 静态产物。
-- `mobile_check`：跑移动端 typecheck、Vitest store 单测、H5 构建、mock H5 构建和 Playwright H5 E2E，上传移动端构建产物、JUnit XML、Playwright report 和 trace/test-results。
-- `sdk_check`：启动真实后端，重新生成 SDK 并检查 `packages/task-api/src/generated` 是否漂移。
-- `schema_check`：用 GitLab MySQL service 执行 Flyway migration，重新生成 `docs/schema/current.sql` 并检查是否漂移。
-- `e2e`：用 Playwright 镜像跑真实前后端 E2E，上传 Playwright JUnit XML、HTML report 和 trace/test-results。
-
-CI 使用 Java 17 镜像或在 job 里安装 Java 17；本地脚本只校验版本，不绑定固定 JDK 路径。MySQL 仍沿用当前临时 database/schema 模型，暂不切换 Testcontainers。
-
-## 覆盖率策略
-
-覆盖率不是“一刀切 80%”。当前策略是：
-
-- 后端：JaCoCo 在 `coverage` profile 中执行门槛检查，并按包区分全局、领域层、应用层、接口/基础设施层。
-- 前端：Vitest coverage 设置全局基础门槛，同时对 `src/api/tasks.ts` 和 `src/stores/taskStore.ts` 设置更高门槛。
-- CI 上传机器可读报告，方便 GitLab 展示覆盖率变化；HTML 报告作为 artifact 留给人工排查。
-
-后续真实项目可以把门槛逐步上调，或者只对新增代码、核心业务包、关键 store/API wrapper 提更高要求。
-
-## 验证命令
+后端：
 
 ```bash
 cd backend
 ../scripts/with-java-17.sh ./mvnw test
 ../scripts/with-java-17.sh ./mvnw verify -Pintegration-test,coverage
+```
 
-cd ../frontend
-npm run generate:sdk
+Web：
+
+```bash
+cd frontend
 npm run check
-npm run test:coverage
 npm run build:mock
 npm run build:storybook
 npm run test:e2e
-
-cd ..
-./scripts/generate-schema.sh
-./scripts/check-schema.sh
 ```
+
+移动端：
+
+```bash
+cd mobile
+npm run check
+npm run test:e2e:h5
+```
+
+仓库级：
+
+```bash
+./scripts/check-schema.sh
+./ci.sh
+```
+
+## 契约生成
+
+先启动后端，再生成前端 SDK：
+
+```bash
+cd frontend
+npm run generate:sdk
+```
+
+生成目录是 `packages/task-api/src/generated/`。端侧业务代码应依赖 `packages/task-api` 的手写 wrapper，而不是把生成 SDK 调用散落在页面里。
