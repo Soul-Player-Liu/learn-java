@@ -10,7 +10,7 @@ export default tseslint.config(
       'playwright-report',
       'test-results',
       'storybook-static',
-      'src/api/generated',
+      '../packages/task-api/src/generated',
     ],
   },
   js.configs.recommended,

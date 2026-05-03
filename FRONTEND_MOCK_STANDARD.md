@@ -21,13 +21,13 @@
 
 推荐把前端 mock 分成五层。
 
-| 层级 | 目标 | 本项目示例 |
-| --- | --- | --- |
-| 类型契约 | 复用后端 OpenAPI 生成的 DTO 类型 | `src/api/generated` |
-| 数据工厂 | 产出稳定的场景数据 | `src/mocks/data.ts` |
-| 场景选择 | 统一管理可用场景和 dev mock 场景解析 | `src/mocks/scenarios.ts` |
-| 接口处理器 | 按业务域模拟 HTTP API | `src/mocks/handlers/*.handlers.ts` |
-| 消费入口 | dev mock 和 Storybook 复用同一套 handlers | `src/mocks/browser.ts`、`*.stories.ts` |
+| 层级       | 目标                                      | 本项目示例                             |
+| ---------- | ----------------------------------------- | -------------------------------------- |
+| 类型契约   | 复用后端 OpenAPI 生成的 DTO 类型          | `packages/task-api/src/generated`      |
+| 数据工厂   | 产出稳定的场景数据                        | `src/mocks/data.ts`                    |
+| 场景选择   | 统一管理可用场景和 dev mock 场景解析      | `src/mocks/scenarios.ts`               |
+| 接口处理器 | 按业务域模拟 HTTP API                     | `src/mocks/handlers/*.handlers.ts`     |
+| 消费入口   | dev mock 和 Storybook 复用同一套 handlers | `src/mocks/browser.ts`、`*.stories.ts` |
 
 ## 推荐目录结构
 
@@ -121,10 +121,10 @@ Storybook 应复用 MSW handlers：
 export const ManyRows = {
   parameters: {
     msw: {
-      handlers: createTaskHandlers('many'),
+      handlers: createTaskHandlers("many"),
     },
   },
-}
+};
 ```
 
 不要为了 Storybook 在组件里写专门的 mock 分支。组件应该像真实运行一样调用 Store 和 API，由 Storybook 在 HTTP 边界提供不同响应。
@@ -214,4 +214,3 @@ npm run sdk:check
 - 页面 stories：`frontend/src/views/*.stories.ts`。
 
 这套结构可以作为大项目起步蓝本。扩展时优先新增业务域 handler 和场景，不要把复杂业务规则堆进单个文件。
-

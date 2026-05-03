@@ -6,7 +6,7 @@ import type {
   CreateTaskCommentRequest,
   LearningTaskDto,
   UpdateLearningTaskRequest,
-} from '@/api/generated'
+} from '@learn-java/task-api/generated'
 import { calculateStatistics, type MockScenario } from '../data'
 import {
   currentTimestamp,

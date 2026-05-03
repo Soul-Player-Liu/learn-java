@@ -1,8 +1,6 @@
-import { createTaskApi } from '@learn-java/task-api'
+import { createFetchTaskApi } from '@learn-java/task-api'
 
-import { webRequest } from './adapters/webRequest'
-
-const taskApi = createTaskApi(webRequest)
+const taskApi = createFetchTaskApi(import.meta.env.VITE_API_BASE_URL ?? '')
 
 export const listTasks = taskApi.listTasks
 export const getTask = taskApi.getTask

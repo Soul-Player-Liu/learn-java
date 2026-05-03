@@ -1,10 +1,16 @@
+import { createTaskApi } from '@learn-java/task-api'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const webRequest = vi.hoisted(() => vi.fn())
+const client = vi.hoisted(() => ({
+  delete: vi.fn(),
+  get: vi.fn(),
+  patch: vi.fn(),
+  post: vi.fn(),
+  put: vi.fn(),
+}))
 
-vi.mock('./adapters/webRequest', () => ({ webRequest }))
-
-import {
+const taskApi = createTaskApi(client as never)
+const {
   addComment,
   changeTaskStatus,
   createProject,
@@ -19,9 +25,9 @@ import {
   listTags,
   listTasks,
   updateTask,
-} from './tasks'
+} = taskApi
 
-describe('task api wrapper', () => {
+describe('shared task api wrapper', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -35,9 +41,9 @@ describe('task api wrapper', () => {
   }
 
   it('normalizes task list data returned by the generated SDK', async () => {
-    webRequest.mockResolvedValue(
-      ok(page([{ id: 1, title: 'Learn testing', status: 'TODO', description: null }])),
-    )
+    client.get.mockResolvedValue({
+      data: ok(page([{ id: 1, title: 'Learn testing', status: 'TODO', description: null }])),
+    })
 
     await expect(
       listTasks({ keyword: 'testing', projectId: 2, tag: 'backend', overdueOnly: false }),
@@ -48,24 +54,26 @@ describe('task api wrapper', () => {
       size: 20,
       totalPages: 1,
     })
-    expect(webRequest).toHaveBeenCalledWith({
-      path: '/api/tasks',
-      query: {
-        status: undefined,
-        projectId: 2,
-        keyword: 'testing',
-        overdueOnly: undefined,
-        tag: 'backend',
-        page: undefined,
-        size: undefined,
-      },
-    })
+    expect(client.get).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: '/api/tasks',
+        query: {
+          status: undefined,
+          projectId: 2,
+          keyword: 'testing',
+          overdueOnly: undefined,
+          tag: 'backend',
+          page: undefined,
+          size: undefined,
+        },
+        throwOnError: true,
+      }),
+    )
   })
 
   it('normalizes projects and task comments', async () => {
-    webRequest
-      .mockResolvedValueOnce(ok(page([{ id: 1, name: 'Backend', taskCount: 2 }])))
-      .mockResolvedValueOnce(ok({ id: 9, taskId: 1, content: 'done' }))
+    client.get.mockResolvedValueOnce({ data: ok(page([{ id: 1, name: 'Backend', taskCount: 2 }])) })
+    client.post.mockResolvedValueOnce({ data: ok({ id: 9, taskId: 1, content: 'done' }) })
 
     await expect(listProjects()).resolves.toEqual([
       { id: 1, name: 'Backend', taskCount: 2, doneTaskCount: 0 },
@@ -78,7 +86,7 @@ describe('task api wrapper', () => {
   })
 
   it('fills missing statistic fields with zero', async () => {
-    webRequest.mockResolvedValue(ok({ total: 2, todo: 1 }))
+    client.get.mockResolvedValue({ data: ok({ total: 2, todo: 1 }) })
 
     await expect(getTaskStatistics()).resolves.toEqual({
       total: 2,
@@ -90,14 +98,13 @@ describe('task api wrapper', () => {
     })
   })
 
-  it('wraps task detail and mutation SDK calls', async () => {
+  it('wraps task detail and mutation generated SDK calls', async () => {
     const task = { id: 1, title: 'Task', status: 'TODO', tagNames: ['backend'] }
-    webRequest
-      .mockResolvedValueOnce(ok(task))
-      .mockResolvedValueOnce(ok(task))
-      .mockResolvedValueOnce(ok({ ...task, title: 'Updated' }))
-      .mockResolvedValueOnce(ok({ ...task, status: 'DOING' }))
-      .mockResolvedValueOnce(ok(null))
+    client.get.mockResolvedValueOnce({ data: ok(task) })
+    client.post.mockResolvedValueOnce({ data: ok(task) })
+    client.put.mockResolvedValueOnce({ data: ok({ ...task, title: 'Updated' }) })
+    client.patch.mockResolvedValueOnce({ data: ok({ ...task, status: 'DOING' }) })
+    client.delete.mockResolvedValueOnce({ data: ok(null) })
 
     await expect(getTask(1)).resolves.toEqual(task)
     await expect(createTask({ title: 'Task' })).resolves.toEqual(task)
@@ -107,32 +114,51 @@ describe('task api wrapper', () => {
     await expect(changeTaskStatus(1, { status: 'DOING' })).resolves.toMatchObject({ status: 'DOING' })
     await expect(deleteTask(1)).resolves.toBeUndefined()
 
-    expect(webRequest).toHaveBeenNthCalledWith(1, { path: '/api/tasks/1' })
-    expect(webRequest).toHaveBeenNthCalledWith(2, {
-      method: 'POST',
-      path: '/api/tasks',
-      body: { title: 'Task' },
-    })
-    expect(webRequest).toHaveBeenNthCalledWith(3, {
-      method: 'PUT',
-      path: '/api/tasks/1',
-      body: { title: 'Updated', status: 'TODO' },
-    })
-    expect(webRequest).toHaveBeenNthCalledWith(4, {
-      method: 'PATCH',
-      path: '/api/tasks/1/status',
-      body: { status: 'DOING' },
-    })
-    expect(webRequest).toHaveBeenNthCalledWith(5, { method: 'DELETE', path: '/api/tasks/1' })
+    expect(client.get).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ path: { id: 1 }, throwOnError: true, url: '/api/tasks/{id}' }),
+    )
+    expect(client.post).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        body: { title: 'Task' },
+        throwOnError: true,
+        url: '/api/tasks',
+      }),
+    )
+    expect(client.put).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        body: { title: 'Updated', status: 'TODO' },
+        path: { id: 1 },
+        throwOnError: true,
+        url: '/api/tasks/{id}',
+      }),
+    )
+    expect(client.patch).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        body: { status: 'DOING' },
+        path: { id: 1 },
+        throwOnError: true,
+        url: '/api/tasks/{id}/status',
+      }),
+    )
+    expect(client.delete).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ path: { id: 1 }, throwOnError: true, url: '/api/tasks/{id}' }),
+    )
   })
 
   it('wraps project tag comment and activity list calls', async () => {
-    webRequest
-      .mockResolvedValueOnce(ok({ id: 1, name: 'Backend' }))
-      .mockResolvedValueOnce(ok({ id: 2, name: 'Frontend', doneTaskCount: 1 }))
-      .mockResolvedValueOnce(ok(page([{ id: 3, name: 'sql' }])))
-      .mockResolvedValueOnce(ok(page([{ id: 4, taskId: 1, content: 'Ready' }])))
-      .mockResolvedValueOnce(ok(page([{ id: 5, taskId: 1, type: 'TASK_CREATED', message: 'Created' }])))
+    client.get
+      .mockResolvedValueOnce({ data: ok({ id: 1, name: 'Backend' }) })
+      .mockResolvedValueOnce({ data: ok(page([{ id: 3, name: 'sql' }])) })
+      .mockResolvedValueOnce({ data: ok(page([{ id: 4, taskId: 1, content: 'Ready' }])) })
+      .mockResolvedValueOnce({
+        data: ok(page([{ id: 5, taskId: 1, type: 'TASK_CREATED', message: 'Created' }])),
+      })
+    client.post.mockResolvedValueOnce({ data: ok({ id: 2, name: 'Frontend', doneTaskCount: 1 }) })
 
     await expect(getProject(1)).resolves.toEqual({ id: 1, name: 'Backend', taskCount: 0, doneTaskCount: 0 })
     await expect(createProject({ name: 'Frontend' })).resolves.toEqual({
@@ -149,12 +175,12 @@ describe('task api wrapper', () => {
   })
 
   it('rejects incomplete server payloads before exposing them to the UI', async () => {
-    webRequest
-      .mockResolvedValueOnce(ok({ id: 1, status: 'TODO' }))
-      .mockResolvedValueOnce(ok({ id: 1 }))
-      .mockResolvedValueOnce(ok(page([{ id: 1 }])))
-      .mockResolvedValueOnce(ok(page([{ id: 1, taskId: 1 }])))
-      .mockResolvedValueOnce(ok(page([{ id: 1, taskId: 1, type: 'TASK_CREATED' }])))
+    client.get
+      .mockResolvedValueOnce({ data: ok({ id: 1, status: 'TODO' }) })
+      .mockResolvedValueOnce({ data: ok({ id: 1 }) })
+      .mockResolvedValueOnce({ data: ok(page([{ id: 1 }])) })
+      .mockResolvedValueOnce({ data: ok(page([{ id: 1, taskId: 1 }])) })
+      .mockResolvedValueOnce({ data: ok(page([{ id: 1, taskId: 1, type: 'TASK_CREATED' }])) })
 
     await expect(getTask(1)).rejects.toThrow('任务数据不完整')
     await expect(getProject(1)).rejects.toThrow('项目数据不完整')
@@ -164,10 +190,10 @@ describe('task api wrapper', () => {
   })
 
   it('rejects non-OK and missing response envelopes before normalization', async () => {
-    webRequest.mockResolvedValueOnce({ code: 'VALIDATION_FAILED', message: 'Bad query' })
+    client.get.mockResolvedValueOnce({ data: { code: 'VALIDATION_FAILED', message: 'Bad query' } })
     await expect(listTasks()).rejects.toThrow('Bad query')
 
-    webRequest.mockResolvedValueOnce({ code: 'OK' })
+    client.get.mockResolvedValueOnce({ data: { code: 'OK' } })
     await expect(listTasks()).rejects.toThrow('任务列表数据不完整')
   })
 })

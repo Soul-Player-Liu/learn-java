@@ -12,6 +12,9 @@ export default defineConfig({
       "@learn-java/task-api": fileURLToPath(
         new URL("../packages/task-api/src/index.ts", import.meta.url),
       ),
+      "@learn-java/task-api/generated": fileURLToPath(
+        new URL("../packages/task-api/src/generated/index.ts", import.meta.url),
+      ),
       "@learn-java/task-domain": fileURLToPath(
         new URL("../packages/task-domain/src/index.ts", import.meta.url),
       ),

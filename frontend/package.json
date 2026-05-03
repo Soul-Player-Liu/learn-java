@@ -26,7 +26,7 @@
     "build:storybook": "storybook build",
     "check": "npm-run-all lint format:check typecheck test:unit build:only",
     "preview": "vite preview",
-    "generate:sdk": "openapi-ts -i http://localhost:8080/v3/api-docs -o src/api/generated -c @hey-api/client-fetch",
+    "generate:sdk": "openapi-ts -i http://localhost:8080/v3/api-docs -o ../packages/task-api/src/generated -c @hey-api/client-fetch && prettier ../packages/task-api/src/generated --write",
     "sdk:check": "node scripts/check-sdk.mjs"
   },
   "dependencies": {

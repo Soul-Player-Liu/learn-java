@@ -1,88 +1,41 @@
-export type TaskStatus = "TODO" | "DOING" | "DONE";
+import type {
+  ChangeTaskStatusRequest,
+  CreateLearningProjectRequest,
+  CreateLearningTaskRequest,
+  CreateTaskCommentRequest,
+  LearningProjectDto,
+  LearningTaskDto,
+  TaskActivityDto,
+  TaskCommentDto,
+  TaskListItemDto,
+  TaskStatisticsDto,
+  TaskTagDto,
+  UpdateLearningTaskRequest,
+} from "@learn-java/task-api/generated";
 
-export interface LearningTask {
-  id: number;
-  projectId?: number;
-  projectName?: string;
-  title: string;
-  description?: string;
-  status: TaskStatus;
-  dueDate?: string;
-  tagNames: string[];
-  commentCount?: number;
-  latestActivityAt?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+export type TaskStatus = NonNullable<LearningTaskDto["status"]>;
 
-export type TaskListItem = LearningTask;
+export type LearningTask = LearningTaskDto | TaskListItemDto;
 
-export interface LearningProject {
-  id: number;
-  name: string;
-  description?: string;
-  taskCount: number;
-  doneTaskCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
+export type TaskListItem = TaskListItemDto;
 
-export interface TaskComment {
-  id: number;
-  taskId: number;
-  content: string;
-  author: string;
-  createdAt: string;
-}
+export type LearningProject = LearningProjectDto;
 
-export interface TaskActivity {
-  id: number;
-  taskId: number;
-  type: string;
-  message: string;
-  createdAt: string;
-}
+export type TaskComment = TaskCommentDto;
 
-export interface TaskTag {
-  id: number;
-  name: string;
-  color: string;
-}
+export type TaskActivity = TaskActivityDto;
 
-export interface TaskStatistics {
-  total: number;
-  todo: number;
-  doing: number;
-  done: number;
-  overdue: number;
-  dueSoon: number;
-}
+export type TaskTag = TaskTagDto;
 
-export interface CreateLearningTaskRequest {
-  projectId?: number;
-  title: string;
-  description?: string;
-  dueDate?: string;
-  tagNames?: string[];
-}
+export type TaskStatistics = TaskStatisticsDto;
 
-export interface UpdateLearningTaskRequest extends CreateLearningTaskRequest {
-  status: TaskStatus;
-}
-
-export interface ChangeTaskStatusRequest {
-  status: TaskStatus;
-}
-
-export interface CreateLearningProjectRequest {
-  name: string;
-  description?: string;
-}
-
-export interface CreateTaskCommentRequest {
-  content: string;
-  author?: string;
-}
+export type {
+  ChangeTaskStatusRequest,
+  CreateLearningProjectRequest,
+  CreateLearningTaskRequest,
+  CreateTaskCommentRequest,
+  UpdateLearningTaskRequest,
+};
 
 export interface PageResult<T> {
   items: T[];

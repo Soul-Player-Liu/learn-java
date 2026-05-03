@@ -11,6 +11,9 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       '@learn-java/task-api': fileURLToPath(new URL('../packages/task-api/src/index.ts', import.meta.url)),
+      '@learn-java/task-api/generated': fileURLToPath(
+        new URL('../packages/task-api/src/generated/index.ts', import.meta.url),
+      ),
       '@learn-java/task-domain': fileURLToPath(
         new URL('../packages/task-domain/src/index.ts', import.meta.url),
       ),
@@ -29,11 +32,10 @@ export default defineConfig({
         '../packages/task-api/src/index.ts',
         '../packages/task-domain/src/normalize.ts',
         '../packages/task-domain/src/status.ts',
-        'src/api/tasks.ts',
         'src/stores/taskStore.ts',
       ],
       exclude: [
-        'src/api/generated/**',
+        '../packages/task-api/src/generated/**',
         'src/**/*.stories.ts',
         'src/main.ts',
         'src/mocks/**',

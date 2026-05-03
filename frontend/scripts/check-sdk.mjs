@@ -1,7 +1,7 @@
 import { execFileSync } from 'node:child_process'
 
 function gitDiffGenerated() {
-  return execFileSync('git', ['diff', '--', 'src/api/generated'], {
+  return execFileSync('git', ['diff', '--', '../packages/task-api/src/generated'], {
     cwd: process.cwd(),
     encoding: 'utf8',
   })

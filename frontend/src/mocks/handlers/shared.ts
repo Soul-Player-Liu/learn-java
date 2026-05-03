@@ -6,7 +6,7 @@ import type {
   TaskActivityDto,
   TaskCommentDto,
   TaskTagDto,
-} from '@/api/generated'
+} from '@learn-java/task-api/generated'
 import {
   createMockActivities,
   createMockComments,

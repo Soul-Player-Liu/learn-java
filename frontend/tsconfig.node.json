@@ -12,6 +12,7 @@
     "paths": {
       "@/*": ["./src/*"],
       "@learn-java/task-api": ["../packages/task-api/src/index.ts"],
+      "@learn-java/task-api/generated": ["../packages/task-api/src/generated/index.ts"],
       "@learn-java/task-domain": ["../packages/task-domain/src/index.ts"],
       "@learn-java/mock-data": ["../packages/mock-data/src/index.ts"]
     },

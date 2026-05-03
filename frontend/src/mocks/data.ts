@@ -5,7 +5,7 @@ import type {
   TaskCommentDto,
   TaskStatisticsDto,
   TaskTagDto,
-} from '@/api/generated'
+} from '@learn-java/task-api/generated'
 
 export type MockScenario = 'default' | 'empty' | 'overdue' | 'many' | 'serverError' | 'slow'
 

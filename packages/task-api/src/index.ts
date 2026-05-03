@@ -10,7 +10,6 @@ import {
   unwrapPageItems,
 } from "@learn-java/task-domain";
 import type {
-  ApiEnvelope,
   ChangeTaskStatusRequest,
   CreateLearningProjectRequest,
   CreateLearningTaskRequest,
@@ -18,7 +17,6 @@ import type {
   LearningProject,
   LearningTask,
   ListTaskParams,
-  PageEnvelope,
   PageResult,
   TaskActivity,
   TaskComment,
@@ -26,17 +24,42 @@ import type {
   TaskTag,
   UpdateLearningTaskRequest,
 } from "@learn-java/task-domain";
+import {
+  addComment as sdkAddComment,
+  changeTaskStatus as sdkChangeTaskStatus,
+  createProject as sdkCreateProject,
+  createTask as sdkCreateTask,
+  deleteTask as sdkDeleteTask,
+  getProject as sdkGetProject,
+  getTask as sdkGetTask,
+  getTaskStatistics as sdkGetTaskStatistics,
+  listActivities as sdkListActivities,
+  listComments as sdkListComments,
+  listProjects as sdkListProjects,
+  listTags as sdkListTags,
+  listTasks as sdkListTasks,
+  updateTask as sdkUpdateTask,
+} from "./generated";
+import { createClient, type Client } from "./generated/client";
 
-export interface RequestOptions {
-  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-  path: string;
-  query?: Record<string, string | number | boolean | undefined>;
-  body?: unknown;
-}
+export type * from "./generated";
 
-export interface TaskApiRequest {
-  <T>(options: RequestOptions): Promise<T>;
-}
+type UniRequestMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+
+type UniRequestRuntime = {
+  request(options: {
+    url: string;
+    method: UniRequestMethod;
+    data?: string;
+    header?: Record<string, string>;
+    success(response: {
+      statusCode: number;
+      data?: unknown;
+      header?: Record<string, string>;
+    }): void;
+    fail(error: { errMsg?: string }): void;
+  }): void;
+};
 
 export interface TaskApi {
   listTasks(params?: ListTaskParams): Promise<PageResult<LearningTask>>;
@@ -66,13 +89,26 @@ export interface TaskApi {
   deleteTask(id: number): Promise<void>;
 }
 
-export function createTaskApi(request: TaskApiRequest): TaskApi {
+export function createFetchTaskApi(baseUrl = ""): TaskApi {
+  const client = createClient({
+    baseUrl: baseUrl as "http://localhost:8080",
+  });
+  return createTaskApi(client);
+}
+
+export function createUniTaskApi(baseUrl = ""): TaskApi {
+  const client = createClient({
+    baseUrl: baseUrl as "http://localhost:8080",
+    fetch: createUniFetch() as typeof fetch,
+  });
+  return createTaskApi(client);
+}
+
+export function createTaskApi(client: Client): TaskApi {
   return {
     async listTasks(params: ListTaskParams = {}) {
-      const response = await request<
-        ApiEnvelope<PageEnvelope<Partial<LearningTask>>>
-      >({
-        path: "/api/tasks",
+      const result = await sdkListTasks({
+        client,
         query: {
           status: params.status,
           projectId: params.projectId,
@@ -82,117 +118,174 @@ export function createTaskApi(request: TaskApiRequest): TaskApi {
           page: params.page,
           size: params.size,
         },
+        throwOnError: true,
       });
-      return unwrapPage(response, "任务列表", normalizeTask);
+      return unwrapPage(result.data, "任务列表", normalizeTask);
     },
 
     async getTask(id: number) {
-      const response = await request<ApiEnvelope<Partial<LearningTask>>>({
-        path: `/api/tasks/${id}`,
+      const result = await sdkGetTask({
+        client,
+        path: { id },
+        throwOnError: true,
       });
-      return normalizeTask(unwrap(response, "任务详情"));
+      return normalizeTask(unwrap(result.data, "任务详情"));
     },
 
     async getTaskStatistics() {
-      const response = await request<ApiEnvelope<Partial<TaskStatistics>>>({
-        path: "/api/tasks/statistics",
+      const result = await sdkGetTaskStatistics({
+        client,
+        throwOnError: true,
       });
-      return normalizeStatistics(unwrap(response, "任务统计"));
+      return normalizeStatistics(unwrap(result.data, "任务统计"));
     },
 
     async listProjects() {
-      const response = await request<
-        ApiEnvelope<PageEnvelope<Partial<LearningProject>>>
-      >({
-        path: "/api/projects",
+      const result = await sdkListProjects({
+        client,
+        throwOnError: true,
       });
-      return unwrapPageItems(response, "项目列表", normalizeProject);
+      return unwrapPageItems(result.data, "项目列表", normalizeProject);
     },
 
     async getProject(id: number) {
-      const response = await request<ApiEnvelope<Partial<LearningProject>>>({
-        path: `/api/projects/${id}`,
+      const result = await sdkGetProject({
+        client,
+        path: { id },
+        throwOnError: true,
       });
-      return normalizeProject(unwrap(response, "项目详情"));
+      return normalizeProject(unwrap(result.data, "项目详情"));
     },
 
     async createProject(payload: CreateLearningProjectRequest) {
-      const response = await request<ApiEnvelope<Partial<LearningProject>>>({
-        method: "POST",
-        path: "/api/projects",
+      const result = await sdkCreateProject({
+        client,
         body: payload,
+        throwOnError: true,
       });
-      return normalizeProject(unwrap(response, "项目创建"));
+      return normalizeProject(unwrap(result.data, "项目创建"));
     },
 
     async listTags() {
-      const response = await request<
-        ApiEnvelope<PageEnvelope<Partial<TaskTag>>>
-      >({
-        path: "/api/tags",
+      const result = await sdkListTags({
+        client,
+        throwOnError: true,
       });
-      return unwrapPageItems(response, "标签列表", normalizeTag);
+      return unwrapPageItems(result.data, "标签列表", normalizeTag);
     },
 
     async createTask(payload: CreateLearningTaskRequest) {
-      const response = await request<ApiEnvelope<Partial<LearningTask>>>({
-        method: "POST",
-        path: "/api/tasks",
+      const result = await sdkCreateTask({
+        client,
         body: payload,
+        throwOnError: true,
       });
-      return normalizeTask(unwrap(response, "任务创建"));
+      return normalizeTask(unwrap(result.data, "任务创建"));
     },
 
     async updateTask(id: number, payload: UpdateLearningTaskRequest) {
-      const response = await request<ApiEnvelope<Partial<LearningTask>>>({
-        method: "PUT",
-        path: `/api/tasks/${id}`,
+      const result = await sdkUpdateTask({
+        client,
+        path: { id },
         body: payload,
+        throwOnError: true,
       });
-      return normalizeTask(unwrap(response, "任务更新"));
+      return normalizeTask(unwrap(result.data, "任务更新"));
     },
 
     async changeTaskStatus(id: number, payload: ChangeTaskStatusRequest) {
-      const response = await request<ApiEnvelope<Partial<LearningTask>>>({
-        method: "PATCH",
-        path: `/api/tasks/${id}/status`,
+      const result = await sdkChangeTaskStatus({
+        client,
+        path: { id },
         body: payload,
+        throwOnError: true,
       });
-      return normalizeTask(unwrap(response, "状态更新"));
+      return normalizeTask(unwrap(result.data, "状态更新"));
     },
 
     async listComments(id: number) {
-      const response = await request<
-        ApiEnvelope<PageEnvelope<Partial<TaskComment>>>
-      >({
-        path: `/api/tasks/${id}/comments`,
+      const result = await sdkListComments({
+        client,
+        path: { id },
+        throwOnError: true,
       });
-      return unwrapPageItems(response, "评论列表", normalizeComment);
+      return unwrapPageItems(result.data, "评论列表", normalizeComment);
     },
 
     async addComment(id: number, payload: CreateTaskCommentRequest) {
-      const response = await request<ApiEnvelope<Partial<TaskComment>>>({
-        method: "POST",
-        path: `/api/tasks/${id}/comments`,
+      const result = await sdkAddComment({
+        client,
+        path: { id },
         body: payload,
+        throwOnError: true,
       });
-      return normalizeComment(unwrap(response, "评论创建"));
+      return normalizeComment(unwrap(result.data, "评论创建"));
     },
 
     async listActivities(id: number) {
-      const response = await request<
-        ApiEnvelope<PageEnvelope<Partial<TaskActivity>>>
-      >({
-        path: `/api/tasks/${id}/activities`,
+      const result = await sdkListActivities({
+        client,
+        path: { id },
+        throwOnError: true,
       });
-      return unwrapPageItems(response, "活动列表", normalizeActivity);
+      return unwrapPageItems(result.data, "活动列表", normalizeActivity);
     },
 
     async deleteTask(id: number) {
-      await request({
-        method: "DELETE",
-        path: `/api/tasks/${id}`,
+      await sdkDeleteTask({
+        client,
+        path: { id },
+        throwOnError: true,
       });
     },
+  };
+}
+
+function createUniFetch() {
+  return async (input: RequestInfo | URL, init?: RequestInit) => {
+    const request = input instanceof Request ? input : new Request(input, init);
+    const uniApi = (
+      globalThis as typeof globalThis & { uni?: UniRequestRuntime }
+    ).uni;
+
+    if (!uniApi) {
+      throw new Error("当前运行环境不支持 uni.request");
+    }
+
+    const headers: Record<string, string> = {};
+    request.headers.forEach((value, key) => {
+      headers[key] = value;
+    });
+
+    const method = request.method.toUpperCase() as UniRequestMethod;
+    const body =
+      method === "GET" || method === "DELETE"
+        ? undefined
+        : await request.text();
+
+    return new Promise<Response>((resolve, reject) => {
+      uniApi.request({
+        url: request.url,
+        method,
+        data: body,
+        header: headers,
+        success: (response) => {
+          const responseBody =
+            typeof response.data === "string"
+              ? response.data
+              : JSON.stringify(response.data ?? {});
+
+          resolve(
+            new Response(responseBody, {
+              status: response.statusCode,
+              headers: response.header,
+            }),
+          );
+        },
+        fail: (error) => {
+          reject(new Error(error.errMsg || "移动端请求失败"));
+        },
+      });
+    });
   };
 }

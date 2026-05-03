@@ -1,6 +1,6 @@
 import { HttpResponse, http } from 'msw'
 
-import type { CreateLearningProjectRequest, LearningProjectDto } from '@/api/generated'
+import type { CreateLearningProjectRequest, LearningProjectDto } from '@learn-java/task-api/generated'
 import type { MockScenario } from '../data'
 import {
   currentTimestamp,
