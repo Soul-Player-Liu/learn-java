@@ -24,8 +24,8 @@
 | 层级       | 目标                                      | 本项目示例                             |
 | ---------- | ----------------------------------------- | -------------------------------------- |
 | 类型契约   | 复用后端 OpenAPI 生成的 DTO 类型          | `packages/task-api/src/generated`      |
-| 数据工厂   | 产出稳定的场景数据                        | `src/mocks/data.ts`                    |
-| 场景选择   | 统一管理可用场景和 dev mock 场景解析      | `src/mocks/scenarios.ts`               |
+| 数据工厂   | 产出稳定的场景数据                        | `packages/mock-data/src/scenarios.ts`  |
+| 场景选择   | 统一管理可用场景和 dev mock 场景解析      | `packages/mock-data/src/scenarios.ts`  |
 | 接口处理器 | 按业务域模拟 HTTP API                     | `src/mocks/handlers/*.handlers.ts`     |
 | 消费入口   | dev mock 和 Storybook 复用同一套 handlers | `src/mocks/browser.ts`、`*.stories.ts` |
 
@@ -55,6 +55,7 @@ src/mocks/
 - `handlers/shared.ts` 放通用响应格式、分页、延迟、错误响应、共享 mock 状态。
 - `data.ts` 只放场景数据工厂，不处理 HTTP request。
 - `scenarios.ts` 集中列出可用场景，避免 story 和 dev mock 写散落字符串。
+- 多端项目应优先把场景数据放到共享包，例如本项目的 `packages/mock-data`；Web 端再用薄的 `frontend/src/mocks/data.ts` 兼容入口导出，移动端则通过共享 mock API 直接消费。
 
 ## Dev Mock 规范
 
@@ -201,15 +202,17 @@ npm run sdk:check
 - 视觉回归。
 - mock fixture schema 校验。
 - 每个主要页面必须存在基础 story 的静态检查。
+- 移动端 H5 mock E2E，用共享 mock API 替代后端，覆盖真实 uni-app 页面而不是只测 Web 的移动视口。
 
 ## 本项目实现要点
 
 - dev mock 入口：`frontend/src/main.ts`。
 - MSW browser worker：`frontend/src/mocks/browser.ts`。
 - 场景解析：`frontend/src/mocks/scenarios.ts`。
-- mock 数据：`frontend/src/mocks/data.ts`。
+- mock 数据：`packages/mock-data/src/scenarios.ts`，兼容导出在 `frontend/src/mocks/data.ts`。
 - handlers 聚合：`frontend/src/mocks/handlers.ts`。
 - 分域 handlers：`frontend/src/mocks/handlers/*.handlers.ts`。
+- 移动端 mock API：`packages/task-api/src/mockApi.ts`。
 - Storybook 全局配置：`frontend/.storybook/preview.ts`。
 - 页面 stories：`frontend/src/views/*.stories.ts`。
 

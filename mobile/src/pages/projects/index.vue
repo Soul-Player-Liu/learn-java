@@ -27,7 +27,12 @@ onShow(async () => {
     </view>
 
     <view class="stack">
-      <view v-for="project in projects" :key="project.id" class="card stack">
+      <view
+        v-for="project in projects"
+        :key="project.id"
+        class="card stack"
+        data-testid="mobile-project-card"
+      >
         <view class="row">
           <text class="title">{{ project.name }}</text>
           <text class="badge"

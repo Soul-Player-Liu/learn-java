@@ -57,6 +57,7 @@ npm run sdk:check
 cd ../mobile
 npm ci
 npm run check
+npm run test:e2e:h5
 cd ../frontend
 stop_backend
 npm run test:e2e

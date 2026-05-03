@@ -46,11 +46,13 @@ onShow(loadTasks);
       <input
         v-model="filters.keyword"
         class="body"
+        data-testid="mobile-task-search"
         placeholder="搜索标题或说明"
         @confirm="loadTasks"
       />
       <view class="button-row">
         <button
+          data-testid="mobile-filter-all"
           size="mini"
           @click="
             filters.status = undefined;
@@ -62,6 +64,7 @@ onShow(loadTasks);
         <button
           v-for="item in taskStatusOptions"
           :key="item.value"
+          :data-testid="`mobile-filter-${item.value}`"
           size="mini"
           @click="
             filters.status = item.value;
@@ -78,6 +81,7 @@ onShow(loadTasks);
         v-for="task in tasks"
         :key="task.id"
         class="card"
+        data-testid="mobile-task-card"
         @click="openTask(task.id)"
       >
         <view class="row">

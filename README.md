@@ -64,6 +64,14 @@ npm run dev:h5
 
 移动端默认使用 uni-app 的 H5 开发服务，Vite 端口配置为 `5174`。移动端页面通过 `packages/task-api` 和 `packages/task-domain` 复用生成 SDK、任务接口、类型、状态文案、数据归一化和任务加载/刷新编排，页面、导航和平台反馈保留在 `mobile/` 内。
 
+移动端也支持不启动后端的 H5 mock mode，直接复用 `packages/mock-data` 的场景数据：
+
+```bash
+cd mobile
+npm run dev:h5:mock
+npm run dev:h5:mock:many
+```
+
 也可以在仓库根目录用脚本幂等启动或关闭前后端。脚本不管理 MySQL，默认数据库已经启动：
 
 ```bash
@@ -104,7 +112,7 @@ npm run storybook
 
 当前 stories 覆盖了 `DashboardView`、`ProjectListView`、`TaskBoard`、`TaskDetailView`，并复用同一套 MSW handlers 展示正常、空数据、逾期、多数据和找不到详情等状态。
 
-前端 mock 体系的工程化规范见 `FRONTEND_MOCK_STANDARD.md`。
+仓库级 Monorepo 建设规范见 `MONOREPO_STANDARD.md`；前端 mock 体系的工程化规范见 `FRONTEND_MOCK_STANDARD.md`。
 
 ## 生成前端 SDK
 
@@ -127,6 +135,7 @@ npm run generate:sdk
 - 端到端测试：`npm run test:e2e`，使用 Playwright，Chromium 跑完整主流程，Firefox/WebKit 跑 `@smoke` 兼容主链路，Mobile Chromium/Mobile WebKit 跑 `@mobile` 小屏核心路径。当前覆盖创建项目、创建带项目和标签的任务、Dashboard 统计、评论、活动日志、状态流转、状态/项目/逾期/标签筛选、分页和删除。脚本会用 MySQL admin 账号直连数据库，为每次运行创建随机 MySQL database，测试结束后删除，避免污染 `learn_java`。
 - SDK 一致性检查：`npm run sdk:check`，重新从后端 OpenAPI 生成 SDK，并检查 `packages/task-api/src/generated` 是否有未提交变化。
 - 离线页面构建：`npm run build:mock` 和 `npm run build:storybook`，用于确认 MSW mock mode 和 Storybook 不是只能在开发机临时启动。
+- 移动端检查：`cd mobile && npm run check` 会执行类型检查、移动端 store 单测、真实 H5 构建和 mock H5 构建；`npm run test:e2e:h5` 会用 Playwright 启动 uni-app H5 mock mode，在 Chromium 和 WebKit 的移动设备视口下覆盖概览、任务筛选、详情状态变更和项目页。
 
 常用命令：
 
@@ -163,11 +172,11 @@ npm run test:e2e
 - 前端使用 Vue Router 和 Pinia。
 - 移动端使用 uni-app，作为与 Web 并列的第二个前端客户端。
 - `packages/task-domain` 存放从生成 DTO 派生的任务/项目/标签类型、状态文案和数据归一化逻辑。
-- `packages/task-api` 存放 OpenAPI 生成 SDK、平台无关 API wrapper、Web fetch client、uni-app request client，以及 Web/移动端共享的任务加载、详情刷新和状态变更编排。
+- `packages/task-api` 存放 OpenAPI 生成 SDK、平台无关 API wrapper、Web fetch client、uni-app request client、共享 mock API，以及 Web/移动端共享的任务加载、详情刷新和状态变更编排。
 - `packages/mock-data` 存放可跨端复用的 mock 数据、场景数据工厂和统计计算逻辑；前端 MSW 只保留 HTTP handler。
 - 前端 SDK 从后端 OpenAPI 自动生成。
 - 暂不做用户登录。
-- 仓库根目录的 `ci.sh` 会串起后端 MySQL 集成测试、后端覆盖率门槛、前端 check、前端覆盖率门槛、mock build、Storybook build、SDK 一致性检查、uni-app 移动端 check 和 Playwright E2E。
+- 仓库根目录的 `ci.sh` 会串起后端 MySQL 集成测试、后端覆盖率门槛、前端 check、前端覆盖率门槛、mock build、Storybook build、SDK 一致性检查、uni-app 移动端 check、移动端 H5 E2E 和 Web Playwright E2E。
 - GitLab CI 配置在 `.gitlab-ci.yml`，按后端、前端、E2E 拆分 job，并上传 JUnit、JaCoCo、Cobertura、Playwright report 和 Storybook 静态产物。
 - 后端测试分为快测和 MySQL 集成测试两层。
 - 后端接口统一返回 `ApiResponse<T>`，错误码由 `ErrorCode` 枚举集中维护，错误响应包含 `traceId`、请求路径和字段级校验明细。
@@ -262,6 +271,7 @@ TEST_MYSQL_APP_PASSWORD=learn123456 \
 - `backend_unit`：跑 `mvnw test`，上传 Surefire JUnit XML。
 - `backend_integration`：用 GitLab MySQL service 跑 `mvnw verify -Pintegration-test,coverage`，上传 Surefire/Failsafe JUnit XML 和 JaCoCo XML/HTML。
 - `frontend_check`：跑 `npm run check`、mock build、Storybook build、Vitest coverage，上传 Vitest JUnit XML、Cobertura coverage、Storybook 静态产物。
+- `mobile_check`：跑移动端 typecheck、Vitest store 单测、H5 构建、mock H5 构建和 Playwright H5 E2E，上传移动端构建产物、JUnit XML、Playwright report 和 trace/test-results。
 - `sdk_check`：启动真实后端，重新生成 SDK 并检查 `packages/task-api/src/generated` 是否漂移。
 - `e2e`：用 Playwright 镜像跑真实前后端 E2E，上传 Playwright JUnit XML、HTML report 和 trace/test-results。
 

@@ -96,15 +96,22 @@ frontend_check:
 
 mobile_check:
   stage: frontend
-  image: node:22-bookworm
+  image: mcr.microsoft.com/playwright:v1.59.1-jammy
   script:
     - cd mobile
     - npm ci --cache .npm --prefer-offline
+    - npx playwright install chromium webkit
     - npm run check
+    - npm run test:e2e:h5
   artifacts:
     when: always
+    reports:
+      junit:
+        - mobile/test-results/mobile-h5-junit.xml
     paths:
       - mobile/dist/
+      - mobile/playwright-report/
+      - mobile/test-results/
     expire_in: 1 week
 
 sdk_check:

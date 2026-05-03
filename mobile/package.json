@@ -5,9 +5,18 @@
   "type": "module",
   "scripts": {
     "dev:h5": "unh dev",
+    "dev:h5:mock": "VITE_USE_MOCK=true unh dev",
+    "dev:h5:mock:empty": "VITE_USE_MOCK=true VITE_MOCK_SCENARIO=empty unh dev",
+    "dev:h5:mock:many": "VITE_USE_MOCK=true VITE_MOCK_SCENARIO=many unh dev",
+    "dev:h5:mock:error": "VITE_USE_MOCK=true VITE_MOCK_SCENARIO=serverError unh dev",
     "build:h5": "unh build --platform h5",
+    "build:h5:mock": "VITE_USE_MOCK=true unh build --platform h5",
     "typecheck": "vue-tsc --noEmit",
-    "check": "npm-run-all typecheck build:h5"
+    "test:unit": "vitest run -c vitest.config.ts",
+    "test:coverage": "vitest run -c vitest.config.ts --coverage",
+    "test:e2e:h5": "playwright test -c playwright.h5.config.ts",
+    "test:e2e:h5:ui": "playwright test -c playwright.h5.config.ts --ui",
+    "check": "npm-run-all typecheck test:unit build:h5 build:h5:mock"
   },
   "dependencies": {
     "@dcloudio/uni-app": "3.0.0-5000720260410001",
@@ -37,8 +46,10 @@
     "@dcloudio/uni-cli-shared": "3.0.0-5000720260410001",
     "@dcloudio/uni-stacktracey": "3.0.0-5000720260410001",
     "@dcloudio/vite-plugin-uni": "3.0.0-5000720260410001",
+    "@playwright/test": "^1.59.1",
     "@mini-types/alipay": "^3.0.14",
     "@types/node": "^25.6.0",
+    "@vitest/coverage-v8": "^4.1.5",
     "@uni-helper/plugin-uni": "0.1.0",
     "@uni-helper/unh": "^0.3.1",
     "@uni-helper/uni-types": "^1.0.0-alpha.8",
@@ -49,6 +60,7 @@
     "sass": "1.64.2",
     "typescript": "5.9.3",
     "vite": "5.2.8",
+    "vitest": "^4.1.5",
     "vue-tsc": "^3.2.7"
   }
 }

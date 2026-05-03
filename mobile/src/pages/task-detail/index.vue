@@ -51,7 +51,9 @@ onLoad((query) => {
       <view class="card stack">
         <view class="row">
           <text class="title">{{ selectedTask.title }}</text>
-          <text class="badge">{{ taskStatusLabel(selectedTask.status) }}</text>
+          <text class="badge" data-testid="mobile-task-status">{{
+            taskStatusLabel(selectedTask.status)
+          }}</text>
         </view>
         <text class="muted">{{
           selectedTask.projectName || "未归属项目"
@@ -68,6 +70,7 @@ onLoad((query) => {
           <button
             v-for="item in taskStatusOptions"
             :key="item.value"
+            :data-testid="`mobile-status-${item.value}`"
             size="mini"
             @click="changeStatus(item.value)"
           >

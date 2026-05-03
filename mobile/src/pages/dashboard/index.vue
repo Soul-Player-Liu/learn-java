@@ -29,7 +29,9 @@ onShow(async () => {
 <template>
   <view class="page">
     <view class="page-title">
-      <text class="page-title__text">学习概览</text>
+      <text class="page-title__text" data-testid="mobile-dashboard-title"
+        >学习概览</text
+      >
       <text class="muted">{{ loading ? "加载中" : "已同步" }}</text>
     </view>
 
@@ -58,6 +60,7 @@ onShow(async () => {
         v-for="task in recentTasks"
         :key="task.id"
         class="card"
+        data-testid="mobile-recent-task"
         @click="openTask(task.id)"
       >
         <view class="row">

@@ -226,12 +226,15 @@ npm run sdk:check
 
 ## 移动端 uni-app 测试规范
 
-移动端作为与 Web 并列的第二个前端客户端，不能只靠 Web 的 Playwright 结果兜底。它至少要有独立的类型检查和 H5 构建门禁：
+移动端作为与 Web 并列的第二个前端客户端，不能只靠 Web 的 Playwright 结果兜底。它要有独立的类型检查、store 单测、H5 构建、mock H5 构建和 H5 E2E 门禁：
 
 ```bash
 cd mobile
 npm run typecheck
+npm run test:unit
 npm run build:h5
+npm run build:h5:mock
+npm run test:e2e:h5
 ```
 
 当前移动端复用 `packages/task-domain` 和 `packages/task-api`，因此 Web 和移动端会共同验证同一份 OpenAPI 生成 SDK、任务类型、状态文案、API envelope 解包、数据归一化逻辑，以及任务列表、详情、看板和状态变更后的刷新编排。平台相关部分保留在各自客户端内：
@@ -239,9 +242,9 @@ npm run build:h5
 - Web：`frontend/src/api/tasks.ts`、Vue Router、Element Plus 页面和 Playwright E2E。
 - 移动端：`mobile/src/api/tasks.ts`、`pages.json`、uni-app 页面生命周期、`uni.navigateTo`、`uni.showToast`。
 
-Mock 数据场景放在 `packages/mock-data`，包括 `default`、`empty`、`overdue`、`many`、`serverError`、`slow` 的数据工厂和统计计算。前端 MSW handler 只负责把共享场景翻译成 HTTP 响应；后续移动端如果要做 H5 离线预览，应优先复用这套场景数据，而不是在 `mobile/` 里再造一份。
+Mock 数据场景放在 `packages/mock-data`，包括 `default`、`empty`、`overdue`、`many`、`serverError`、`slow` 的数据工厂和统计计算。Web 端 MSW handler 负责把共享场景翻译成 HTTP 响应；移动端通过 `packages/task-api` 的共享 mock API 直接复用同一套场景数据，在 `VITE_USE_MOCK=true` 时不依赖后端即可启动 H5 预览和 E2E。
 
-CI 中的 `mobile_check` job 运行 `npm run check`，也就是 `vue-tsc --noEmit` 加 `unh build --platform h5`。后续如果移动端要覆盖微信小程序或 App，还应增加对应平台的构建 smoke，例如 `unh build --platform mp-weixin`，但这需要先补齐平台 appid、发行配置和密钥管理策略。
+CI 中的 `mobile_check` job 运行 `npm run check` 和 `npm run test:e2e:h5`。`check` 覆盖 `vue-tsc --noEmit`、Vitest store 单测、真实 H5 构建和 mock H5 构建；H5 E2E 会启动 uni-app H5 mock mode，在 Chromium 和 WebKit 的移动设备视口下覆盖概览、任务筛选、详情状态变更和项目页。后续如果移动端要覆盖微信小程序或 App，还应增加对应平台的构建 smoke，例如 `unh build --platform mp-weixin`，但这需要先补齐平台 appid、发行配置和密钥管理策略。
 
 ## 覆盖率策略
 
@@ -259,7 +262,7 @@ CI 中的 `mobile_check` job 运行 `npm run check`，也就是 `vue-tsc --noEmi
 
 - 后端使用 JaCoCo，按全局、`domain/model`、`application`、`infrastructure/interfaces` 分层。
 - 前端使用 Vitest V8 coverage，只对当前已有单元测试形态的 API wrapper 和 store 设门槛。
-- 移动端当前先以类型检查和 H5 构建作为基础门禁；等页面交互稳定后，再补 uni-app 组件测试或 H5 smoke 测试。
+- 移动端当前以类型检查、store 单测、H5 构建、mock H5 构建和 H5 E2E 作为基础门禁；等页面交互继续复杂后，再补更细的组件测试或平台构建 smoke。
 - CI 上传 JaCoCo XML、Cobertura XML、HTML 报告。
 
 真实项目可以参考这个起步值：
@@ -280,7 +283,7 @@ GitLab CI 推荐拆成这些 job：
 - `backend_unit`：后端单元测试，上传 Surefire JUnit。
 - `backend_integration`：真实数据库集成测试，上传 Failsafe JUnit 和 JaCoCo。
 - `frontend_check`：lint、format、typecheck、Vitest、build、coverage、Storybook build。
-- `mobile_check`：uni-app 移动端 typecheck 和 H5 build。
+- `mobile_check`：uni-app 移动端 typecheck、store 单测、H5 build、mock H5 build 和 H5 E2E。
 - `sdk_check`：启动后端，重新生成前端 SDK，检查生成代码是否漂移。
 - `e2e`：启动真实前后端和测试数据库，按 Chromium 全量、Firefox/WebKit smoke、Mobile Chromium/Mobile WebKit mobile 的策略跑 Playwright，上传 report 和 trace。
 
