@@ -17,7 +17,7 @@ packages/mock-data    -> 跨端 mock 场景数据和统计计算
 
 - `backend/`：业务规则、状态流转、数据库事务、Flyway migration、MyBatis SQL、REST API、OpenAPI。
 - `frontend/`：Web 路由、Element Plus 页面、Pinia store、MSW、Storybook、Web E2E。
-- `mobile/`：uni-app 页面、移动端生命周期、平台 API、H5 构建、H5 mock、移动端 E2E。
+- `mobile/`：uni-app 页面、Wot Design Uni 组件、uni-ui 补充组件、移动端生命周期、平台 API、H5 构建、H5 mock、移动端 E2E。
 - `packages/task-api/`：生成 SDK、平台无关 API interface、Web fetch client、uni request client、共享 mock API、跨端 use cases。
 - `packages/task-domain/`：从接口 DTO 派生的业务类型、状态文案、状态语义、归一化和纯函数校验。
 - `packages/mock-data/`：稳定 mock 场景、数据工厂、统计计算。
@@ -46,6 +46,8 @@ Web 和移动端共享业务能力，但不共享 UI：
 - 不共享：Element Plus 组件、uni-app 页面结构、路由配置、平台反馈、E2E selector。
 
 判断规则：依赖组件库、DOM、路由、平台生命周期的代码留在端侧；只依赖业务数据和 API 抽象的代码可以进入 `packages/`。
+
+移动端 UI 选型以 Wot Design Uni 为主，负责按钮、标签、进度、分段控件和主要移动端组件；uni-ui 作为官方补充组件库，用于后续需要官方跨端组件能力的场景。共享包不依赖任何移动端 UI 组件库。
 
 ## 契约流
 

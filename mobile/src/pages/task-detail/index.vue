@@ -3,7 +3,7 @@ import { computed } from "vue";
 import { onLoad } from "@dcloudio/uni-app";
 import { storeToRefs } from "pinia";
 import { taskStatusLabel, taskStatusOptions } from "@learn-java/task-domain";
-import type { TaskStatus } from "@learn-java/task-domain";
+import type { LearningTask, TaskStatus } from "@learn-java/task-domain";
 
 import { useMobileTaskStore } from "@/stores/taskStore";
 
@@ -37,6 +37,16 @@ async function changeStatus(status: TaskStatus) {
   }
 }
 
+function statusType(status: LearningTask["status"]) {
+  if (status === "DONE") {
+    return "success";
+  }
+  if (status === "DOING") {
+    return "primary";
+  }
+  return "warning";
+}
+
 onLoad((query) => {
   const id = Number(query?.id);
   if (id) {
@@ -48,40 +58,58 @@ onLoad((query) => {
 <template>
   <view class="page">
     <view v-if="selectedTask" class="stack">
-      <view class="card stack">
-        <view class="row">
-          <text class="title">{{ selectedTask.title }}</text>
-          <text class="badge" data-testid="mobile-task-status">{{
-            taskStatusLabel(selectedTask.status)
-          }}</text>
-        </view>
-        <text class="muted">{{
+      <view class="page-hero">
+        <text class="page-hero__eyebrow">{{
           selectedTask.projectName || "未归属项目"
         }}</text>
-        <text class="body">{{ selectedTask.description || "暂无说明" }}</text>
-        <text class="muted"
+        <text class="page-hero__title">{{ selectedTask.title }}</text>
+        <text class="page-hero__meta"
           >截止日期：{{ selectedTask.dueDate || "未设置" }}</text
         >
       </view>
 
-      <view class="card stack">
-        <text class="title">更新状态</text>
-        <view class="button-row">
-          <button
-            v-for="item in taskStatusOptions"
-            :key="item.value"
-            :data-testid="`mobile-status-${item.value}`"
-            size="mini"
-            @click="changeStatus(item.value)"
-          >
-            {{ item.label }}
-          </button>
+      <view class="app-card">
+        <view class="card-content stack">
+          <view class="row">
+            <text class="title">任务状态</text>
+            <wd-tag
+              round
+              :type="statusType(selectedTask.status)"
+              data-testid="mobile-task-status"
+              >{{ taskStatusLabel(selectedTask.status) }}</wd-tag
+            >
+          </view>
+          <text class="body">{{ selectedTask.description || "暂无说明" }}</text>
+        </view>
+      </view>
+
+      <view class="app-card">
+        <view class="card-content stack">
+          <view class="section-title">
+            <text class="section-title__text">更新状态</text>
+            <text class="section-title__meta">即时同步</text>
+          </view>
+          <view class="button-row">
+            <wd-button
+              v-for="item in taskStatusOptions"
+              :key="item.value"
+              :data-testid="`mobile-status-${item.value}`"
+              :type="item.value === selectedTask.status ? 'primary' : 'info'"
+              :plain="item.value !== selectedTask.status"
+              size="large"
+              @click="changeStatus(item.value)"
+            >
+              {{ item.label }}
+            </wd-button>
+          </view>
         </view>
       </view>
     </view>
 
-    <view v-else class="card">
-      <text class="muted">任务加载中</text>
+    <view v-else class="app-card">
+      <view class="card-content">
+        <text class="muted">任务加载中</text>
+      </view>
     </view>
   </view>
 </template>

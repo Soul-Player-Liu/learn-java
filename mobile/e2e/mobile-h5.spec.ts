@@ -27,7 +27,7 @@ test("mobile H5 covers dashboard, task filtering, detail status update, and proj
   await expect(page).toHaveURL(/\/pages\/task-detail\/index\?id=5/);
   await expect(page.getByText("更新状态")).toBeVisible();
 
-  await page.getByText("已完成", { exact: true }).click();
+  await page.getByTestId("mobile-status-DONE").click();
   await expect(page.getByText("状态已更新")).toBeVisible();
   await expect(page.getByTestId("mobile-task-status")).toContainText("已完成");
 

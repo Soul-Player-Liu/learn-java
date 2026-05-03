@@ -6,7 +6,7 @@
 
 - 后端：Spring Boot 3.5.14 + Java 17 + Maven + MyBatis + Flyway + MySQL。
 - Web：Vue 3 + Vite + TypeScript + Element Plus + Vue Router + Pinia。
-- 移动端：uni-app + Vue 3 + TypeScript + Pinia。
+- 移动端：uni-app + Vue 3 + TypeScript + Pinia + Wot Design Uni，uni-ui 作为补充组件库。
 - 共享包：OpenAPI SDK、API wrapper、领域类型、跨端 use cases、mock 数据。
 - 质量门禁：单元测试、真实 MySQL 集成测试、架构测试、SDK drift check、Storybook build、Web E2E、移动端 H5 E2E。
 

@@ -1,72 +1,220 @@
 .page {
   min-height: 100vh;
-  padding: 24rpx;
+  padding: 32rpx 28rpx 48rpx;
   box-sizing: border-box;
+  color: #172033;
+  font-size: 34rpx;
+  line-height: 1.55;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(37, 99, 235, 0.12), transparent 30%),
+    linear-gradient(180deg, #eef4ff 0%, #f7f8fb 360rpx, #f7f8fb 100%);
 }
 
-.page-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24rpx;
+.page-hero {
+  margin-bottom: 30rpx;
+  padding: 34rpx 32rpx;
+  border-radius: 28rpx;
+  color: #ffffff;
+  background: linear-gradient(135deg, #1f4fd7 0%, #169d8f 100%);
+  box-shadow: 0 22rpx 54rpx rgba(31, 79, 215, 0.24);
 }
 
-.page-title__text {
-  font-size: 40rpx;
-  font-weight: 700;
-  color: #111827;
+.page-hero__eyebrow {
+  display: block;
+  margin-bottom: 10rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  letter-spacing: 0;
+  opacity: 0.82;
+}
+
+.page-hero__title {
+  display: block;
+  font-size: 50rpx;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.page-hero__meta {
+  display: block;
+  margin-top: 14rpx;
+  font-size: 30rpx;
+  line-height: 1.5;
+  opacity: 0.9;
 }
 
 .section {
-  margin-bottom: 24rpx;
+  margin-bottom: 34rpx;
 }
 
-.card {
-  padding: 24rpx;
-  border: 1px solid #e5e7eb;
-  border-radius: 12rpx;
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24rpx;
+  margin: 0 4rpx 18rpx;
+}
+
+.section-title__text {
+  color: #111827;
+  font-size: 36rpx;
+  line-height: 1.35;
+  font-weight: 800;
+}
+
+.section-title__meta {
+  color: #64748b;
+  font-size: 28rpx;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20rpx;
+}
+
+.metric-card {
+  padding: 26rpx;
+  border-radius: 24rpx;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 12rpx 34rpx rgba(15, 23, 42, 0.08);
+}
+
+.metric-card__label {
+  display: block;
+  color: #64748b;
+  font-size: 28rpx;
+}
+
+.metric-card__value {
+  display: block;
+  margin-top: 12rpx;
+  color: #0f172a;
+  font-size: 48rpx;
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+.app-card {
+  margin-bottom: 22rpx;
+  overflow: hidden;
+  border-radius: 26rpx;
   background: #ffffff;
+  box-shadow: 0 12rpx 34rpx rgba(15, 23, 42, 0.08);
+}
+
+.app-card--interactive {
+  transition: transform 0.16s ease, box-shadow 0.16s ease;
+}
+
+.app-card--interactive:active {
+  transform: scale(0.985);
+  box-shadow: 0 6rpx 20rpx rgba(15, 23, 42, 0.1);
+}
+
+.card-content {
+  padding: 28rpx;
 }
 
 .stack {
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
+  gap: 22rpx;
 }
 
 .row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16rpx;
-}
-
-.muted {
-  color: #64748b;
+  gap: 24rpx;
 }
 
 .title {
   color: #111827;
-  font-size: 32rpx;
-  font-weight: 700;
+  font-size: 36rpx;
+  line-height: 1.35;
+  font-weight: 800;
 }
 
 .body {
   color: #334155;
-  font-size: 28rpx;
+  font-size: 32rpx;
   line-height: 1.6;
 }
 
-.badge {
-  display: inline-flex;
-  padding: 4rpx 14rpx;
-  border-radius: 999rpx;
-  color: #1d4ed8;
-  background: #dbeafe;
-  font-size: 24rpx;
+.muted {
+  color: #64748b;
+  font-size: 30rpx;
+  line-height: 1.5;
 }
 
+.tag-row,
 .button-row {
   display: flex;
-  gap: 16rpx;
+  flex-wrap: wrap;
+  gap: 18rpx;
+}
+
+.progress-block {
+  display: flex;
+  flex-direction: column;
+  gap: 14rpx;
+}
+
+.search-panel {
+  margin-bottom: 26rpx;
+  padding: 18rpx 18rpx 22rpx;
+  border-radius: 26rpx;
+  background: #ffffff;
+  box-shadow: 0 12rpx 34rpx rgba(15, 23, 42, 0.08);
+}
+
+.status-filter {
+  margin-top: 18rpx;
+}
+
+.search-input-shell {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+  min-height: 86rpx;
+  padding: 0 28rpx;
+  border-radius: 999rpx;
+  background: #f8fafc;
+  box-sizing: border-box;
+}
+
+.search-input-shell__icon {
+  flex-shrink: 0;
+  color: #94a3b8;
+  font-size: 34rpx;
+  line-height: 1;
+}
+
+.search-input-shell__input {
+  flex: 1;
+  min-width: 0;
+  min-height: 86rpx;
+  color: #172033;
+  font-size: 32rpx;
+  line-height: 86rpx;
+}
+
+.row > .body,
+.row > .title,
+.row > .muted {
+  min-width: 0;
+  flex: 1;
+}
+
+wd-button {
+  --wot-button-large-height: 92rpx;
+  --wot-button-medium-height: 80rpx;
+  --wot-button-medium-fs: 32rpx;
+  --wot-button-large-fs: 34rpx;
+}
+
+wd-search {
+  --wot-search-input-height: 84rpx;
+  --wot-search-fs: 32rpx;
 }
