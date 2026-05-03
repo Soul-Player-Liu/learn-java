@@ -43,6 +43,7 @@ import {
 import { createClient, type Client } from "./generated/client";
 
 export type * from "./generated";
+export * from "./useCases";
 
 type UniRequestMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 

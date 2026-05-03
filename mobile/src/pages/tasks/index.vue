@@ -2,7 +2,7 @@
 import { reactive } from "vue";
 import { onShow } from "@dcloudio/uni-app";
 import { storeToRefs } from "pinia";
-import { taskStatusLabel } from "@learn-java/task-domain";
+import { taskStatusLabel, taskStatusOptions } from "@learn-java/task-domain";
 import type { TaskStatus } from "@learn-java/task-domain";
 
 import { useMobileTaskStore } from "@/stores/taskStore";
@@ -60,31 +60,15 @@ onShow(loadTasks);
           全部
         </button>
         <button
+          v-for="item in taskStatusOptions"
+          :key="item.value"
           size="mini"
           @click="
-            filters.status = 'TODO';
+            filters.status = item.value;
             loadTasks();
           "
         >
-          待开始
-        </button>
-        <button
-          size="mini"
-          @click="
-            filters.status = 'DOING';
-            loadTasks();
-          "
-        >
-          进行中
-        </button>
-        <button
-          size="mini"
-          @click="
-            filters.status = 'DONE';
-            loadTasks();
-          "
-        >
-          已完成
+          {{ item.label }}
         </button>
       </view>
     </view>

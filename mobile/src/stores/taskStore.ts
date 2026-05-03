@@ -1,47 +1,44 @@
 import { defineStore } from "pinia";
+import { createTaskUseCases, defaultTaskPage } from "@learn-java/task-api";
 
 import { taskApi } from "@/api/tasks";
 import type {
   LearningProject,
   LearningTask,
+  TaskActivity,
+  TaskComment,
   ListTaskParams,
   TaskStatistics,
   TaskTag,
 } from "@learn-java/task-domain";
 
+const taskUseCases = createTaskUseCases(taskApi);
+
 export const useMobileTaskStore = defineStore("mobile-tasks", {
   state: () => ({
     tasks: [] as LearningTask[],
     selectedTask: null as LearningTask | null,
+    selectedProject: null as LearningProject | null,
     projects: [] as LearningProject[],
     tags: [] as TaskTag[],
+    comments: [] as TaskComment[],
+    activities: [] as TaskActivity[],
     statistics: null as TaskStatistics | null,
-    taskPage: {
-      total: 0,
-      page: 1,
-      size: 20,
-      totalPages: 0,
-    },
+    taskPage: { ...defaultTaskPage },
+    filters: {
+      keyword: "",
+      status: undefined,
+      projectId: undefined,
+      overdueOnly: false,
+      tag: undefined,
+    } as ListTaskParams,
     loading: false,
   }),
   actions: {
     async loadDashboard() {
       this.loading = true;
       try {
-        const [statistics, tasks, projects] = await Promise.all([
-          taskApi.getTaskStatistics(),
-          taskApi.listTasks({ page: 1, size: 5 }),
-          taskApi.listProjects(),
-        ]);
-        this.statistics = statistics;
-        this.tasks = tasks.items;
-        this.taskPage = {
-          total: tasks.total,
-          page: tasks.page,
-          size: tasks.size,
-          totalPages: tasks.totalPages,
-        };
-        this.projects = projects;
+        await taskUseCases.loadDashboard(this);
       } finally {
         this.loading = false;
       }
@@ -49,20 +46,14 @@ export const useMobileTaskStore = defineStore("mobile-tasks", {
     async loadTasks(params: ListTaskParams = {}) {
       this.loading = true;
       try {
-        const page = await taskApi.listTasks({ page: 1, size: 20, ...params });
-        this.tasks = page.items;
-        this.taskPage = {
-          total: page.total,
-          page: page.page,
-          size: page.size,
-          totalPages: page.totalPages,
-        };
+        this.filters = { page: 1, size: 20, ...params };
+        await taskUseCases.loadTasks(this, this.filters);
       } finally {
         this.loading = false;
       }
     },
     async loadTask(id: number) {
-      this.selectedTask = await taskApi.getTask(id);
+      await taskUseCases.loadTaskDetail(this, id);
     },
     async loadProjects() {
       this.projects = await taskApi.listProjects();
@@ -71,9 +62,7 @@ export const useMobileTaskStore = defineStore("mobile-tasks", {
       this.tags = await taskApi.listTags();
     },
     async changeTaskStatus(id: number, status: LearningTask["status"]) {
-      await taskApi.changeTaskStatus(id, { status });
-      await this.loadTask(id);
-      await this.loadTasks();
+      await taskUseCases.changeTaskStatus(this, id, status);
     },
   },
 });

@@ -62,7 +62,7 @@ npm install
 npm run dev:h5
 ```
 
-移动端默认使用 uni-app 的 H5 开发服务，Vite 端口配置为 `5174`。移动端页面通过 `packages/task-api` 和 `packages/task-domain` 复用生成 SDK、任务接口、类型和数据归一化逻辑，页面和导航保留在 `mobile/` 内。
+移动端默认使用 uni-app 的 H5 开发服务，Vite 端口配置为 `5174`。移动端页面通过 `packages/task-api` 和 `packages/task-domain` 复用生成 SDK、任务接口、类型、状态文案、数据归一化和任务加载/刷新编排，页面、导航和平台反馈保留在 `mobile/` 内。
 
 也可以在仓库根目录用脚本幂等启动或关闭前后端。脚本不管理 MySQL，默认数据库已经启动：
 
@@ -163,8 +163,8 @@ npm run test:e2e
 - 前端使用 Vue Router 和 Pinia。
 - 移动端使用 uni-app，作为与 Web 并列的第二个前端客户端。
 - `packages/task-domain` 存放从生成 DTO 派生的任务/项目/标签类型、状态文案和数据归一化逻辑。
-- `packages/task-api` 存放 OpenAPI 生成 SDK、平台无关 API wrapper、Web fetch client 和 uni-app request client。
-- `packages/mock-data` 存放可跨端复用的 mock 数据和场景基础。
+- `packages/task-api` 存放 OpenAPI 生成 SDK、平台无关 API wrapper、Web fetch client、uni-app request client，以及 Web/移动端共享的任务加载、详情刷新和状态变更编排。
+- `packages/mock-data` 存放可跨端复用的 mock 数据、场景数据工厂和统计计算逻辑；前端 MSW 只保留 HTTP handler。
 - 前端 SDK 从后端 OpenAPI 自动生成。
 - 暂不做用户登录。
 - 仓库根目录的 `ci.sh` 会串起后端 MySQL 集成测试、后端覆盖率门槛、前端 check、前端覆盖率门槛、mock build、Storybook build、SDK 一致性检查、uni-app 移动端 check 和 Playwright E2E。

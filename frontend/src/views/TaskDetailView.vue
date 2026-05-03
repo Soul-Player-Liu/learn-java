@@ -3,6 +3,7 @@ import { computed, onMounted, reactive } from 'vue'
 import { storeToRefs } from 'pinia'
 import { Back, Refresh } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { taskStatusLabel, taskStatusOptions } from '@learn-java/task-domain'
 
 import { useTaskStore } from '@/stores/taskStore'
 import type { TaskStatus } from '@/types/task'
@@ -18,15 +19,9 @@ const commentForm = reactive({
   author: '',
 })
 
-const statusOptions: Array<{ label: string; value: TaskStatus }> = [
-  { label: '待开始', value: 'TODO' },
-  { label: '进行中', value: 'DOING' },
-  { label: '已完成', value: 'DONE' },
-]
+const statusOptions = taskStatusOptions
 
-const statusText = computed(
-  () => statusOptions.find((item) => item.value === selectedTask.value?.status)?.label ?? '-',
-)
+const statusText = computed(() => (selectedTask.value ? taskStatusLabel(selectedTask.value.status) : '-'))
 
 async function loadTask() {
   try {

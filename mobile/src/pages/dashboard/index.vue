@@ -2,6 +2,7 @@
 import { computed } from "vue";
 import { onShow } from "@dcloudio/uni-app";
 import { storeToRefs } from "pinia";
+import { taskStatusLabel } from "@learn-java/task-domain";
 
 import { useMobileTaskStore } from "@/stores/taskStore";
 
@@ -61,7 +62,7 @@ onShow(async () => {
       >
         <view class="row">
           <text class="body">{{ task.title }}</text>
-          <text class="badge">{{ task.status }}</text>
+          <text class="badge">{{ taskStatusLabel(task.status) }}</text>
         </view>
         <text class="muted">{{ task.projectName || "未归属项目" }}</text>
       </view>

@@ -2,7 +2,7 @@
 import { computed } from "vue";
 import { onLoad } from "@dcloudio/uni-app";
 import { storeToRefs } from "pinia";
-import { taskStatusLabel } from "@learn-java/task-domain";
+import { taskStatusLabel, taskStatusOptions } from "@learn-java/task-domain";
 import type { TaskStatus } from "@learn-java/task-domain";
 
 import { useMobileTaskStore } from "@/stores/taskStore";
@@ -65,9 +65,14 @@ onLoad((query) => {
       <view class="card stack">
         <text class="title">更新状态</text>
         <view class="button-row">
-          <button size="mini" @click="changeStatus('TODO')">待开始</button>
-          <button size="mini" @click="changeStatus('DOING')">进行中</button>
-          <button size="mini" @click="changeStatus('DONE')">已完成</button>
+          <button
+            v-for="item in taskStatusOptions"
+            :key="item.value"
+            size="mini"
+            @click="changeStatus(item.value)"
+          >
+            {{ item.label }}
+          </button>
         </view>
       </view>
     </view>

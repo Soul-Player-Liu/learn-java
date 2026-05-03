@@ -234,10 +234,12 @@ npm run typecheck
 npm run build:h5
 ```
 
-当前移动端复用 `packages/task-domain` 和 `packages/task-api`，因此 Web 和移动端会共同验证同一份 OpenAPI 生成 SDK、任务类型、状态文案、API envelope 解包和数据归一化逻辑。平台相关部分保留在各自客户端内：
+当前移动端复用 `packages/task-domain` 和 `packages/task-api`，因此 Web 和移动端会共同验证同一份 OpenAPI 生成 SDK、任务类型、状态文案、API envelope 解包、数据归一化逻辑，以及任务列表、详情、看板和状态变更后的刷新编排。平台相关部分保留在各自客户端内：
 
 - Web：`frontend/src/api/tasks.ts`、Vue Router、Element Plus 页面和 Playwright E2E。
 - 移动端：`mobile/src/api/tasks.ts`、`pages.json`、uni-app 页面生命周期、`uni.navigateTo`、`uni.showToast`。
+
+Mock 数据场景放在 `packages/mock-data`，包括 `default`、`empty`、`overdue`、`many`、`serverError`、`slow` 的数据工厂和统计计算。前端 MSW handler 只负责把共享场景翻译成 HTTP 响应；后续移动端如果要做 H5 离线预览，应优先复用这套场景数据，而不是在 `mobile/` 里再造一份。
 
 CI 中的 `mobile_check` job 运行 `npm run check`，也就是 `vue-tsc --noEmit` 加 `unh build --platform h5`。后续如果移动端要覆盖微信小程序或 App，还应增加对应平台的构建 smoke，例如 `unh build --platform mp-weixin`，但这需要先补齐平台 appid、发行配置和密钥管理策略。
 

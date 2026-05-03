@@ -1,21 +1,7 @@
 import { defineStore } from 'pinia'
+import { createTaskUseCases, defaultTaskPage } from '@learn-java/task-api'
 
-import {
-  addComment,
-  changeTaskStatus,
-  createProject,
-  createTask,
-  deleteTask,
-  getProject,
-  getTask,
-  getTaskStatistics,
-  listActivities,
-  listComments,
-  listProjects,
-  listTags,
-  listTasks,
-  updateTask,
-} from '@/api/tasks'
+import * as taskApi from '@/api/tasks'
 import type {
   ChangeTaskStatusRequest,
   CreateLearningProjectRequest,
@@ -31,6 +17,8 @@ import type {
   UpdateLearningTaskRequest,
 } from '@/types/task'
 
+const taskUseCases = createTaskUseCases(taskApi)
+
 export const useTaskStore = defineStore('tasks', {
   state: () => ({
     tasks: [] as LearningTask[],
@@ -41,12 +29,7 @@ export const useTaskStore = defineStore('tasks', {
     comments: [] as TaskComment[],
     activities: [] as TaskActivity[],
     statistics: null as TaskStatistics | null,
-    taskPage: {
-      total: 0,
-      page: 1,
-      size: 20,
-      totalPages: 0,
-    },
+    taskPage: { ...defaultTaskPage },
     filters: {
       keyword: '',
       status: undefined,
@@ -63,14 +46,7 @@ export const useTaskStore = defineStore('tasks', {
       this.loading = true
       try {
         this.filters = { ...(filters ?? this.filters) }
-        const pageResult = await listTasks(this.filters)
-        this.tasks = pageResult.items
-        this.taskPage = {
-          total: pageResult.total,
-          page: pageResult.page,
-          size: pageResult.size,
-          totalPages: pageResult.totalPages,
-        }
+        await taskUseCases.loadTasks(this, this.filters)
       } finally {
         this.loading = false
       }
@@ -78,83 +54,45 @@ export const useTaskStore = defineStore('tasks', {
     async loadTask(id: number) {
       this.detailLoading = true
       try {
-        const [task, comments, activities] = await Promise.all([
-          getTask(id),
-          listComments(id),
-          listActivities(id),
-        ])
-        this.selectedTask = task
-        this.comments = comments
-        this.activities = activities
+        await taskUseCases.loadTaskDetail(this, id)
       } finally {
         this.detailLoading = false
       }
     },
     async loadStatistics() {
-      this.statistics = await getTaskStatistics()
+      this.statistics = await taskApi.getTaskStatistics()
     },
     async loadProjects() {
-      this.projects = await listProjects()
+      this.projects = await taskApi.listProjects()
     },
     async loadProject(id: number) {
       this.projectLoading = true
       try {
-        this.selectedProject = await getProject(id)
-        await this.loadTasks({ ...this.filters, projectId: id })
+        await taskUseCases.loadProject(this, id)
       } finally {
         this.projectLoading = false
       }
     },
     async createProject(payload: CreateLearningProjectRequest) {
-      const project = await createProject(payload)
-      await this.loadProjects()
-      return project
+      return taskUseCases.createProject(this, payload)
     },
     async loadTags() {
-      this.tags = await listTags()
+      this.tags = await taskApi.listTags()
     },
     async createTask(payload: CreateLearningTaskRequest) {
-      await createTask(payload)
-      await this.loadTasks()
-      await this.loadStatistics()
-      await Promise.all([this.loadProjects(), this.loadTags()])
+      await taskUseCases.createTask(this, payload, this.filters)
     },
     async updateTask(id: number, payload: UpdateLearningTaskRequest) {
-      await updateTask(id, payload)
-      await this.loadTasks()
-      await this.loadStatistics()
-      await Promise.all([this.loadProjects(), this.loadTags()])
-      if (this.selectedTask?.id === id) {
-        await this.loadTask(id)
-      }
+      await taskUseCases.updateTask(this, id, payload)
     },
     async changeTaskStatus(id: number, payload: ChangeTaskStatusRequest) {
-      await changeTaskStatus(id, payload)
-      await this.loadTasks()
-      await this.loadStatistics()
-      await this.loadProjects()
-      if (this.selectedTask?.id === id) {
-        await this.loadTask(id)
-      }
+      await taskUseCases.changeTaskStatus(this, id, payload.status)
     },
     async addComment(id: number, payload: CreateTaskCommentRequest) {
-      await addComment(id, payload)
-      if (this.selectedTask?.id === id) {
-        const [comments, activities] = await Promise.all([listComments(id), listActivities(id)])
-        this.comments = comments
-        this.activities = activities
-      }
+      await taskUseCases.addComment(this, id, payload)
     },
     async deleteTask(id: number) {
-      await deleteTask(id)
-      await this.loadTasks()
-      await this.loadStatistics()
-      await this.loadProjects()
-      if (this.selectedTask?.id === id) {
-        this.selectedTask = null
-        this.comments = []
-        this.activities = []
-      }
+      await taskUseCases.deleteTask(this, id)
     },
   },
 })
