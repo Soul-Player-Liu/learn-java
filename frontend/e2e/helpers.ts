@@ -1,7 +1,15 @@
 import { expect, type Page } from '@playwright/test'
 
+const frontendOrigin = `http://127.0.0.1:${process.env.E2E_FRONTEND_PORT ?? '15173'}`
+
 export function uniqueName(prefix: string) {
   return `${prefix} ${Date.now()} ${Math.random().toString(16).slice(2, 8)}`
+}
+
+async function postJson(page: Page, url: string, data: unknown) {
+  const response = await page.request.post(new URL(url, frontendOrigin).href, { data })
+  expect(response.ok()).toBeTruthy()
+  return response.json()
 }
 
 export async function createProject(page: Page, options: { name?: string; description?: string } = {}) {
@@ -17,6 +25,16 @@ export async function createProject(page: Page, options: { name?: string; descri
   await expect(page.getByRole('row').filter({ hasText: name })).toBeVisible()
 
   return { name, description }
+}
+
+export async function apiCreateProject(
+  page: Page,
+  options: { name?: string; description?: string } = {},
+) {
+  const name = options.name ?? uniqueName('E2E project')
+  const description = options.description ?? 'Created by Playwright'
+  const response = await postJson(page, '/api/projects', { name, description })
+  return response.data as { id: number; name: string; description?: string }
 }
 
 export async function createTask(
@@ -57,6 +75,29 @@ export async function createTask(
   return { title, description, tags: tagNames }
 }
 
+export async function apiCreateTask(
+  page: Page,
+  options: {
+    projectId?: number
+    title?: string
+    description?: string
+    dueDate?: string
+    tagNames?: string[]
+  } = {},
+) {
+  const title = options.title ?? uniqueName('E2E task')
+  const description = options.description ?? 'Created by Playwright'
+  const tagNames = options.tagNames ?? []
+  const response = await postJson(page, '/api/tasks', {
+    projectId: options.projectId,
+    title,
+    description,
+    dueDate: options.dueDate,
+    tagNames,
+  })
+  return response.data as { id: number; title: string }
+}
+
 export async function openTaskDetail(page: Page, title: string) {
   await page.goto('/tasks')
   const row = page.getByRole('row').filter({ hasText: title })
@@ -65,4 +106,3 @@ export async function openTaskDetail(page: Page, title: string) {
   await expect(page.getByRole('heading', { name: title })).toBeVisible()
   return row
 }
-
