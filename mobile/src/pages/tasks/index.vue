@@ -83,38 +83,17 @@ onShow(loadTasks);
           @confirm="loadTasks"
         />
       </view>
-      <wd-segmented
-        v-model:value="statusValue"
-        class="status-filter"
-        size="large"
-        :options="statusOptions"
-        @change="selectStatus($event.value as TaskStatus | 'ALL')"
-      >
-        <template #label="{ option }">
-          {{ typeof option === "string" ? option : option.label }}
-        </template>
-      </wd-segmented>
-      <view class="tag-row">
-        <wd-button
-          data-testid="mobile-filter-all"
-          size="small"
-          type="info"
-          plain
-          @click="selectStatus('ALL')"
+      <view class="status-filter" data-testid="mobile-status-filter">
+        <wd-segmented
+          v-model:value="statusValue"
+          size="large"
+          :options="statusOptions"
+          @change="selectStatus($event.value as TaskStatus | 'ALL')"
         >
-          全部
-        </wd-button>
-        <wd-button
-          v-for="item in taskStatusOptions"
-          :key="item.value"
-          :data-testid="`mobile-filter-${item.value}`"
-          size="small"
-          type="info"
-          plain
-          @click="selectStatus(item.value)"
-        >
-          {{ item.label }}
-        </wd-button>
+          <template #label="{ option }">
+            {{ typeof option === "string" ? option : option.label }}
+          </template>
+        </wd-segmented>
       </view>
     </view>
 
