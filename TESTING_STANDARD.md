@@ -21,13 +21,13 @@
 
 推荐把测试分成五层。
 
-| 层级 | 目标 | 典型工具 | 运行频率 |
-| --- | --- | --- | --- |
-| 静态检查 | 类型、格式、语法、基础代码规范 | ESLint、Prettier、vue-tsc、Maven compile | 每次提交 |
-| 单元测试 | 验证纯业务规则和轻量编排逻辑 | JUnit、AssertJ、Vitest | 本地高频、CI 必跑 |
-| 集成测试 | 验证数据库、Mapper、Flyway、Spring 上下文、HTTP API | Failsafe、MyBatis Test、SpringBootTest、真实 MySQL | CI 必跑、本地按需 |
-| 契约测试 | 验证后端 OpenAPI 与前端 SDK 一致 | OpenAPI 生成器、SDK drift check | CI 必跑 |
-| 端到端测试 | 验证关键用户路径真实可用 | Playwright | CI 必跑，数量克制 |
+| 层级       | 目标                                                | 典型工具                                           | 运行频率          |
+| ---------- | --------------------------------------------------- | -------------------------------------------------- | ----------------- |
+| 静态检查   | 类型、格式、语法、基础代码规范                      | ESLint、Prettier、vue-tsc、Maven compile           | 每次提交          |
+| 单元测试   | 验证纯业务规则和轻量编排逻辑                        | JUnit、AssertJ、Vitest                             | 本地高频、CI 必跑 |
+| 集成测试   | 验证数据库、Mapper、Flyway、Spring 上下文、HTTP API | Failsafe、MyBatis Test、SpringBootTest、真实 MySQL | CI 必跑、本地按需 |
+| 契约测试   | 验证后端 OpenAPI 与前端 SDK 一致                    | OpenAPI 生成器、SDK drift check                    | CI 必跑           |
+| 端到端测试 | 验证关键用户路径真实可用                            | Playwright                                         | CI 必跑，数量克制 |
 
 不要把所有问题都交给 E2E。E2E 昂贵且更容易受 UI 细节影响，应只覆盖最关键的 1 到 5 条业务主链路。
 
@@ -158,6 +158,13 @@ E2E 应覆盖真实用户路径，而不是组件内部实现。
 - 删除或撤销。
 - 关键异常路径，如表单校验失败、权限不足、重复提交。
 
+跨浏览器和移动端覆盖建议采用分层策略，而不是把所有用例无差别乘以所有浏览器：
+
+- 主浏览器全量回归：用 Chromium 跑完整 E2E 主流程。
+- 桌面兼容 smoke：用 Firefox 和 WebKit 只跑 `@smoke`，覆盖路由、创建、状态流转、详情等关键路径。
+- 移动端核心路径：用 Mobile Chromium 和 Mobile WebKit 只跑 `@mobile`，重点验证小屏布局、表格操作、弹窗、详情页输入和触屏点击。
+- 数量控制：移动端和跨浏览器测试优先发现兼容性问题，不应承担所有业务分支验证。
+
 E2E locator 规则：
 
 - 优先使用 `getByRole`、`getByLabel`、`getByPlaceholder`、可见文本。
@@ -165,7 +172,7 @@ E2E locator 规则：
 - 避免依赖 `.el-dialog`、`.el-select`、`.ant-table` 这类组件库内部 CSS 结构。
 - 不用 `nth(2)` 定位业务含义明确的控件，除非没有更稳定选择。
 
-本项目示例中，任务表单和标签筛选使用 `data-testid`，避免 Playwright 直接绑定 Element Plus 内部 DOM。
+本项目示例中，任务表单、任务状态入口、分页区域和标签筛选使用 `data-testid`，避免 Playwright 直接绑定 Element Plus 内部 DOM。当前 Playwright 配置中 Chromium 跑全量，Firefox/WebKit 跑 `@smoke`，Mobile Chromium/Mobile WebKit 跑 `@mobile`。
 
 ### Storybook
 
@@ -237,14 +244,14 @@ npm run sdk:check
 
 真实项目可以参考这个起步值：
 
-| 区域 | 初始建议 |
-| --- | --- |
-| 全局后端 | 50% 到 60% |
-| 核心领域/规则 | 75% 到 85% |
-| 应用服务 | 65% 到 80% |
-| Mapper/Controller | 以集成测试覆盖主路径和异常路径为主 |
-| 前端 API wrapper/store | 80% 以上 |
-| 页面组件 | 先覆盖复杂交互，不强行全量纳入 |
+| 区域                   | 初始建议                           |
+| ---------------------- | ---------------------------------- |
+| 全局后端               | 50% 到 60%                         |
+| 核心领域/规则          | 75% 到 85%                         |
+| 应用服务               | 65% 到 80%                         |
+| Mapper/Controller      | 以集成测试覆盖主路径和异常路径为主 |
+| 前端 API wrapper/store | 80% 以上                           |
+| 页面组件               | 先覆盖复杂交互，不强行全量纳入     |
 
 ## CI 门禁规范
 
@@ -254,7 +261,7 @@ GitLab CI 推荐拆成这些 job：
 - `backend_integration`：真实数据库集成测试，上传 Failsafe JUnit 和 JaCoCo。
 - `frontend_check`：lint、format、typecheck、Vitest、build、coverage、Storybook build。
 - `sdk_check`：启动后端，重新生成前端 SDK，检查生成代码是否漂移。
-- `e2e`：启动真实前后端和测试数据库，跑 Playwright，上传 report 和 trace。
+- `e2e`：启动真实前后端和测试数据库，按 Chromium 全量、Firefox/WebKit smoke、Mobile Chromium/Mobile WebKit mobile 的策略跑 Playwright，上传 report 和 trace。
 
 拆分 job 的好处：
 

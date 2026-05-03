@@ -213,14 +213,20 @@ onMounted(async () => {
       <el-select v-model="filters.tag" clearable filterable placeholder="标签" data-testid="task-filter-tag">
         <el-option v-for="tag in tags" :key="tag.id" :label="tag.name" :value="tag.name" />
       </el-select>
-      <el-checkbox v-model="filters.overdueOnly">只看逾期</el-checkbox>
+      <el-checkbox v-model="filters.overdueOnly" data-testid="task-filter-overdue">只看逾期</el-checkbox>
       <el-button type="primary" @click="searchTasks">查询</el-button>
       <el-button @click="resetFilters">重置</el-button>
     </section>
 
     <section class="content">
       <el-table v-loading="loading" :data="tasks" row-key="id" height="calc(100vh - 270px)">
-        <el-table-column prop="title" label="任务" min-width="180" />
+        <el-table-column prop="title" label="任务" min-width="180">
+          <template #default="{ row }">
+            <el-button link type="primary" @click="router.push(`/tasks/${row.id}`)">
+              {{ row.title }}
+            </el-button>
+          </template>
+        </el-table-column>
         <el-table-column prop="projectName" label="项目" min-width="150">
           <template #default="{ row }">
             {{ row.projectName || '-' }}
@@ -238,7 +244,9 @@ onMounted(async () => {
         <el-table-column label="状态" width="110">
           <template #default="{ row }">
             <el-dropdown trigger="click" @command="handleStatusCommand">
-              <el-tag class="status-tag" :type="statusType(row.status)">{{ statusLabel(row.status) }}</el-tag>
+              <el-tag class="status-tag" :type="statusType(row.status)" data-testid="task-status-menu">
+                {{ statusLabel(row.status) }}
+              </el-tag>
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item
@@ -254,7 +262,7 @@ onMounted(async () => {
           </template>
         </el-table-column>
         <el-table-column prop="dueDate" label="截止日期" width="130" />
-        <el-table-column label="操作" width="180" fixed="right">
+        <el-table-column label="操作" width="180">
           <template #default="{ row }">
             <el-button :icon="View" circle title="详情" @click="router.push(`/tasks/${row.id}`)" />
             <el-button :icon="Edit" circle title="编辑" @click="openEditDialog(row)" />
@@ -262,7 +270,7 @@ onMounted(async () => {
           </template>
         </el-table-column>
       </el-table>
-      <div class="pagination-bar">
+      <div class="pagination-bar" data-testid="task-pagination">
         <el-pagination
           background
           layout="total, sizes, prev, pager, next, jumper"
@@ -307,7 +315,12 @@ onMounted(async () => {
           />
         </el-form-item>
         <el-form-item label="截止日期">
-          <el-date-picker v-model="form.dueDate" value-format="YYYY-MM-DD" type="date" />
+          <el-date-picker
+            v-model="form.dueDate"
+            value-format="YYYY-MM-DD"
+            type="date"
+            data-testid="task-form-due-date"
+          />
         </el-form-item>
         <el-form-item label="标签">
           <el-input

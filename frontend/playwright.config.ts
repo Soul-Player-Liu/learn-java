@@ -13,6 +13,7 @@ export default defineConfig({
     timeout: 10_000,
   },
   fullyParallel: false,
+  workers: 1,
   retries: isCi ? 1 : 0,
   reporter: isCi
     ? [['list'], ['junit', { outputFile: 'test-results/playwright-junit.xml' }], ['html', { open: 'never' }]]
@@ -39,6 +40,26 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'firefox',
+      grep: /@smoke/,
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit',
+      grep: /@smoke/,
+      use: { ...devices['Desktop Safari'] },
+    },
+    {
+      name: 'mobile-chromium',
+      grep: /@mobile/,
+      use: { ...devices['Pixel 7'] },
+    },
+    {
+      name: 'mobile-webkit',
+      grep: /@mobile/,
+      use: { ...devices['iPhone 15'] },
     },
   ],
 })

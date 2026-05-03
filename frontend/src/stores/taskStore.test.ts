@@ -94,9 +94,7 @@ describe('task store', () => {
   it('loads task detail with comments and activities', async () => {
     api.getTask.mockResolvedValue(task(1, 'Detail', 'TODO'))
     api.listComments.mockResolvedValue([comment(2, 1, 'Ready')])
-    api.listActivities.mockResolvedValue([
-      activity(3, 1, 'TASK_CREATED', 'Task created'),
-    ])
+    api.listActivities.mockResolvedValue([activity(3, 1, 'TASK_CREATED', 'Task created')])
 
     const store = useTaskStore()
     await store.loadTask(1)
@@ -163,9 +161,7 @@ describe('task store', () => {
 
   it('refreshes comments and activities when adding a comment to the selected task', async () => {
     api.listComments.mockResolvedValue([comment(2, 1, 'Follow up')])
-    api.listActivities.mockResolvedValue([
-      activity(3, 1, 'COMMENT_ADDED', 'Comment added'),
-    ])
+    api.listActivities.mockResolvedValue([activity(3, 1, 'COMMENT_ADDED', 'Comment added')])
 
     const store = useTaskStore()
     store.selectedTask = task(1, 'Selected', 'TODO')

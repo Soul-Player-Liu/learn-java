@@ -111,7 +111,7 @@ npm run generate:sdk
 - 静态检查：`npm run lint`、`npm run format:check`、`npm run typecheck`。
 - 单元测试：`npm run test:unit`，使用 Vitest，当前覆盖 API wrapper 和 Pinia store。
 - 覆盖率检查：`npm run test:coverage`，使用 Vitest V8 coverage。当前采用“全局基础门槛 + 核心 API/store 文件更高门槛”的策略。
-- 端到端测试：`npm run test:e2e`，使用 Playwright，当前覆盖创建项目、创建带项目和标签的任务、评论、活动日志、状态流转、标签筛选和删除的完整用户路径。脚本会用 MySQL admin 账号直连数据库，为每次运行创建随机 MySQL database，测试结束后删除，避免污染 `learn_java`。
+- 端到端测试：`npm run test:e2e`，使用 Playwright，Chromium 跑完整主流程，Firefox/WebKit 跑 `@smoke` 兼容主链路，Mobile Chromium/Mobile WebKit 跑 `@mobile` 小屏核心路径。当前覆盖创建项目、创建带项目和标签的任务、Dashboard 统计、评论、活动日志、状态流转、状态/项目/逾期/标签筛选、分页和删除。脚本会用 MySQL admin 账号直连数据库，为每次运行创建随机 MySQL database，测试结束后删除，避免污染 `learn_java`。
 - SDK 一致性检查：`npm run sdk:check`，重新从后端 OpenAPI 生成 SDK，并检查 `src/api/generated` 是否有未提交变化。
 - 离线页面构建：`npm run build:mock` 和 `npm run build:storybook`，用于确认 MSW mock mode 和 Storybook 不是只能在开发机临时启动。
 
@@ -123,7 +123,7 @@ npm run check
 npm run test:e2e
 ```
 
-`npm run test:e2e` 会先创建临时 database，再通过 Playwright 自动启动后端和前端；仍然需要先确保 MySQL 可连接。E2E 默认使用后端 `18080`、前端 `15173`，避免和本地开发后端 `8080` 或 SDK 检查进程抢端口。默认连接本地 MySQL，也可以通过 `TEST_MYSQL_HOST`、`TEST_MYSQL_PORT`、`TEST_MYSQL_ADMIN_USERNAME`、`TEST_MYSQL_ADMIN_PASSWORD`、`TEST_MYSQL_APP_USERNAME`、`TEST_MYSQL_APP_PASSWORD` 指向其他测试数据库；如需调整 E2E 服务端口，可设置 `E2E_BACKEND_PORT` 和 `E2E_FRONTEND_PORT`。
+`npm run test:e2e` 会先创建临时 database，再通过 Playwright 自动启动后端和前端；仍然需要先确保 MySQL 可连接。E2E 默认使用后端 `18080`、前端 `15173`，避免和本地开发后端 `8080` 或 SDK 检查进程抢端口。默认连接本地 MySQL，也可以通过 `TEST_MYSQL_HOST`、`TEST_MYSQL_PORT`、`TEST_MYSQL_ADMIN_USERNAME`、`TEST_MYSQL_ADMIN_PASSWORD`、`TEST_MYSQL_APP_USERNAME`、`TEST_MYSQL_APP_PASSWORD` 指向其他测试数据库；如需调整 E2E 服务端口，可设置 `E2E_BACKEND_PORT` 和 `E2E_FRONTEND_PORT`。如只想本地快速验证完整业务逻辑，可以执行 `npm run test:e2e -- --project=chromium`；如只想看移动端核心路径，可以执行 `npm run test:e2e -- --project=mobile-webkit`。
 
 ## 后端阅读路线
 

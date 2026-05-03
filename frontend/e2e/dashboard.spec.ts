@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('dashboard renders the main overview and routes to tasks and projects', async ({ page }) => {
+test('dashboard renders the main overview and routes to tasks and projects @smoke', async ({ page }) => {
   await page.goto('/')
 
   await expect(page.getByRole('heading', { name: '学习概览' })).toBeVisible()

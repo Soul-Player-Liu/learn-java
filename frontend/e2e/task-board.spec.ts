@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 import { createProject, createTask, uniqueName } from './helpers'
 
-test('task board supports create, edit, filter, and delete flows', async ({ page }) => {
+test('task board supports create, edit, filter, and delete flows @smoke', async ({ page }) => {
   const project = await createProject(page, {
     name: uniqueName('E2E project board'),
     description: 'Task board coverage',
@@ -41,4 +41,3 @@ test('task board supports create, edit, filter, and delete flows', async ({ page
   await page.getByLabel('确认删除').getByRole('button', { name: '删除' }).click()
   await expect(updatedRow).toBeHidden()
 })
-

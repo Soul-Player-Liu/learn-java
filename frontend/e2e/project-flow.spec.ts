@@ -2,7 +2,9 @@ import { expect, test } from '@playwright/test'
 
 import { createProject, createTask, uniqueName } from './helpers'
 
-test('project list opens the filtered task board and preserves the project scope', async ({ page }) => {
+test('project list opens the filtered task board and preserves the project scope @smoke', async ({
+  page,
+}) => {
   const project = await createProject(page, {
     name: uniqueName('E2E project scope'),
     description: 'Project scope coverage',

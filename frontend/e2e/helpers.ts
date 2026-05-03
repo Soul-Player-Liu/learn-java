@@ -12,6 +12,24 @@ async function postJson(page: Page, url: string, data: unknown) {
   return response.json()
 }
 
+async function getJson(page: Page, url: string) {
+  const response = await page.request.get(new URL(url, frontendOrigin).href)
+  expect(response.ok()).toBeTruthy()
+  return response.json()
+}
+
+async function patchJson(page: Page, url: string, data: unknown) {
+  const response = await page.request.patch(new URL(url, frontendOrigin).href, { data })
+  expect(response.ok()).toBeTruthy()
+  return response.json()
+}
+
+export function isoDate(offsetDays: number) {
+  const date = new Date()
+  date.setDate(date.getDate() + offsetDays)
+  return date.toISOString().slice(0, 10)
+}
+
 export async function createProject(page: Page, options: { name?: string; description?: string } = {}) {
   const name = options.name ?? uniqueName('E2E project')
   const description = options.description ?? 'Created by Playwright'
@@ -27,10 +45,7 @@ export async function createProject(page: Page, options: { name?: string; descri
   return { name, description }
 }
 
-export async function apiCreateProject(
-  page: Page,
-  options: { name?: string; description?: string } = {},
-) {
+export async function apiCreateProject(page: Page, options: { name?: string; description?: string } = {}) {
   const name = options.name ?? uniqueName('E2E project')
   const description = options.description ?? 'Created by Playwright'
   const response = await postJson(page, '/api/projects', { name, description })
@@ -96,6 +111,23 @@ export async function apiCreateTask(
     tagNames,
   })
   return response.data as { id: number; title: string }
+}
+
+export async function apiChangeTaskStatus(page: Page, taskId: number, status: 'TODO' | 'DOING' | 'DONE') {
+  const response = await patchJson(page, `/api/tasks/${taskId}/status`, { status })
+  return response.data as { id: number; title: string; status: string }
+}
+
+export async function apiGetTaskStatistics(page: Page) {
+  const response = await getJson(page, '/api/tasks/statistics')
+  return response.data as {
+    total: number
+    todo: number
+    doing: number
+    done: number
+    overdue: number
+    dueSoon: number
+  }
 }
 
 export async function openTaskDetail(page: Page, title: string) {
