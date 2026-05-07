@@ -123,6 +123,42 @@ README 不应该承载：
 
 当一个标准文件开始混入另一个主题的细节时，应优先拆出专项文档，并在上层文档中保留短引用。
 
+## 链接和锚点
+
+文档之间应使用相对链接串成可导航网络，而不是只写文件名或让读者自行搜索。
+
+推荐写法：
+
+- 链接到文档：[../INDEX.md](../INDEX.md)。
+- 链接到章节：[testing.md#契约和-schema](testing.md#契约和-schema)。
+- 链接到相关专项标准：[mock.md#storybook](mock.md#storybook)。
+- 链接到仓库证据：[../schema/current.sql](../schema/current.sql)。
+
+规则：
+
+- 总入口优先链接 [../INDEX.md](../INDEX.md)，不要在 README 里复制完整文档清单。
+- `AGENTS.md` 应链接到具体任务章节，例如 `docs/INDEX.md#任务到文档映射`。
+- 标准文档之间只保留短链接和边界说明，不复制对方的完整内容。
+- 新增、删除、重命名标题时，应检查所有指向该标题的锚点链接。
+- 中文标题可以作为锚点，但标题应稳定，避免为了文案小改破坏已有链接。
+- 机器生成产物应链接到生成脚本和检查脚本，而不是手写解释其全部内容。
+
+## 联动更新
+
+文档修改要跟代码和证据一起维护。下面是常见联动关系：
+
+| 变化 | 必须检查 |
+| --- | --- |
+| 新增或重命名文档 | `docs/INDEX.md`、`AGENTS.md`、相关标准文档的反向链接。 |
+| 修改启动、端口、脚本 | `README.md`、`docs/INDEX.md#验证入口`、相关 runbook 或标准。 |
+| 修改测试、覆盖率、CI | `docs/standards/testing.md`、`ci.sh`、`.gitlab-ci.yml`、`AGENTS.md` 任务路由。 |
+| 修改 mock、Storybook、离线预览 | `docs/standards/mock.md`、`docs/standards/testing.md` 中相关测试入口。 |
+| 修改后端外部依赖替换方式 | `docs/standards/backend-mock.md`、`docs/standards/testing.md#后端测试`。 |
+| 修改 OpenAPI SDK 生成或 schema drift | `docs/ARCHITECTURE.md#契约流`、`docs/standards/testing.md#契约和-schema`、`docs/INDEX.md#任务到文档映射`。 |
+| 修改文档体系本身 | 本文、`docs/INDEX.md`、`AGENTS.md`、`README.md`。 |
+
+如果一个改动需要同步三处以上文档，优先把细节收敛到一份 canonical 文档，其他位置只保留链接。
+
 ## Harness 文档
 
 当项目开始使用智能体长期改代码时，应考虑建立 `docs/harness/`：

@@ -4,10 +4,10 @@
 
 ## 首读路线
 
-1. `README.md`：确认项目定位、启动和常用验证。
-2. `docs/INDEX.md`：确认文档体系和标准文档位置。
-3. `docs/ARCHITECTURE.md`：确认模块边界。
-4. `docs/standards/`：按任务读取 Monorepo、测试或 mock 标准。
+1. [README.md](README.md)：确认项目定位和最短启动路径。
+2. [docs/INDEX.md](docs/INDEX.md)：确认文档地图、任务路由和验证入口。
+3. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)：确认后端、Web、移动端和共享包边界。
+4. 按任务进入 [docs/INDEX.md#任务到文档映射](docs/INDEX.md#任务到文档映射) 指向的专项文档。
 
 ## 修改原则
 
@@ -18,39 +18,28 @@
 - 改脚本、CI、mock、测试、端口或目录结构时，同步更新 `docs/` 中对应文档。
 - 标准文档写成可迁移规范，不要把本示例的临时选择写成所有项目的硬性要求。
 
-## 常用验证
+## 任务路由
 
-后端：
+| 任务类型 | 必读文档 | 联动更新 |
+| --- | --- | --- |
+| 模块边界、共享包、跨端复用 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)、[docs/standards/monorepo.md](docs/standards/monorepo.md) | README 或架构图涉及的入口说明 |
+| 后端测试、集成测试、覆盖率、CI | [docs/standards/testing.md](docs/standards/testing.md) | `ci.sh`、`.gitlab-ci.yml`、相关测试说明 |
+| 后端外部系统替换 | [docs/standards/backend-mock.md](docs/standards/backend-mock.md) | [docs/standards/testing.md#后端测试](docs/standards/testing.md#后端测试) |
+| Web/移动端 mock、Storybook、离线预览 | [docs/standards/mock.md](docs/standards/mock.md) | [docs/standards/testing.md#web-测试](docs/standards/testing.md#web-测试)、[docs/standards/testing.md#移动端测试](docs/standards/testing.md#移动端测试) |
+| OpenAPI SDK、schema drift、生成产物 | [docs/ARCHITECTURE.md#契约流](docs/ARCHITECTURE.md#契约流)、[docs/standards/testing.md#契约和-schema](docs/standards/testing.md#契约和-schema) | [docs/schema/current.sql](docs/schema/current.sql)、生成 SDK、CI drift check |
+| 文档结构、重命名、索引关系 | [docs/standards/documentation.md](docs/standards/documentation.md)、[docs/INDEX.md](docs/INDEX.md) | 所有受影响的入口链接和反向引用 |
 
-```bash
-cd backend
-../scripts/with-java-17.sh ./mvnw test
-../scripts/with-java-17.sh ./mvnw verify -Pintegration-test,coverage
-```
+更完整的路由表见 [docs/INDEX.md#任务到文档映射](docs/INDEX.md#任务到文档映射)。
 
-Web：
+## 验证策略
 
-```bash
-cd frontend
-npm run check
-npm run build:mock
-npm run build:storybook
-npm run test:e2e
-```
+根据改动范围选择验证，不需要每次都跑全部命令。涉及共享包、契约、CI、测试基础设施、mock 或 schema 时，应扩大验证范围。
 
-移动端：
-
-```bash
-cd mobile
-npm run check
-npm run test:e2e:h5
-```
-
-仓库级：
+常用入口：
 
 ```bash
 ./scripts/check-schema.sh
 ./ci.sh
 ```
 
-根据改动范围选择验证，不需要每次都跑全部命令；但涉及共享包、契约、CI 或测试基础设施时，应扩大验证范围。
+分层命令见 [docs/INDEX.md#验证入口](docs/INDEX.md#验证入口) 和 [docs/standards/testing.md](docs/standards/testing.md)。

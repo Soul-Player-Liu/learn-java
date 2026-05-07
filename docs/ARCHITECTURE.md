@@ -73,16 +73,11 @@ Mock 分成共享数据和端侧适配：
 
 ## 质量门禁
 
-当前仓库把关键工程约束落成这些可执行检查：
+当前仓库把关键工程约束落成可执行检查，形成工程 harness：
 
-- 后端单元测试和 ArchUnit：`backend` 的 `mvnw test`。
-- 后端集成测试和覆盖率：`mvnw verify -Pintegration-test,coverage`。
-- Web 静态检查、单测、构建：`frontend npm run check`。
-- Web mock 和 Storybook 构建：`npm run build:mock`、`npm run build:storybook`。
-- Web E2E：`npm run test:e2e`。
-- 移动端检查：`mobile npm run check`。
-- 移动端 H5 E2E：`npm run test:e2e:h5`。
-- SDK 漂移：`frontend npm run sdk:check`。
-- schema 漂移：`scripts/check-schema.sh`。
+- 后端边界由单元测试、架构测试和真实 MySQL 集成测试保护。
+- 前端和移动端由静态检查、单测、构建、mock build、Storybook 和 E2E 保护。
+- OpenAPI SDK 和数据库 schema 通过 drift check 防止生成产物过期。
+- CI 按失败来源拆分，避免一个总脚本掩盖具体问题。
 
-这些检查共同构成本仓库的工程 harness。修改代码或规范后，应优先让对应 harness 通过，而不是只靠人工阅读判断。
+具体命令和 CI 分层见 [INDEX.md#验证入口](INDEX.md#验证入口) 与 [standards/testing.md](standards/testing.md)。修改代码或规范后，应优先让对应 harness 通过，而不是只靠人工阅读判断。
