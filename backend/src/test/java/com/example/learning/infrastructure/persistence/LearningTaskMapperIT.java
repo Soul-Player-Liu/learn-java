@@ -2,6 +2,7 @@ package com.example.learning.infrastructure.persistence;
 
 import com.example.learning.domain.model.TaskStatus;
 import com.example.learning.support.MysqlTestSchema;
+import com.example.learning.support.TestDatabaseCleaner;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mybatis.spring.boot.test.autoconfigure.MybatisTest;
@@ -39,12 +40,7 @@ class LearningTaskMapperIT {
 
     @BeforeEach
     void cleanDatabase() {
-        jdbcTemplate.update("delete from task_activity");
-        jdbcTemplate.update("delete from task_comment");
-        jdbcTemplate.update("delete from learning_task_tag");
-        jdbcTemplate.update("delete from learning_task");
-        jdbcTemplate.update("delete from learning_tag");
-        jdbcTemplate.update("delete from learning_project");
+        TestDatabaseCleaner.cleanLearningTaskTables(jdbcTemplate);
     }
 
     @Test
