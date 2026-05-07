@@ -1,8 +1,8 @@
-# Mock 与离线预览标准
+# 前端 Mock 与离线预览标准
 
-本文是给大型业务项目复用的 mock 标准。`learn-java` 中 Web 使用 MSW 和 Storybook，移动端使用共享 mock API 和 H5 mock mode，两端复用 `packages/mock-data` 的场景数据。
+本文是给大型业务项目复用的前端和客户端 mock 标准。`learn-java` 中 Web 使用 MSW 和 Storybook，移动端使用共享 mock API 和 H5 mock mode，两端复用 `packages/mock-data` 的场景数据。
 
-Mock 的目标不是重写后端，而是在后端不可用、接口未完成、数据难构造时，仍然能稳定评审页面、验证交互和跑关键离线测试。
+前端 mock 的目标不是重写后端，而是在后端不可用、接口未完成、数据难构造时，仍然能稳定评审页面、验证交互和跑关键离线测试。后端集成测试中的外部依赖替换见 [backend-mock.md](backend-mock.md)。
 
 ## 核心目标
 
@@ -24,7 +24,6 @@ Mock 的目标不是重写后端，而是在后端不可用、接口未完成、
 | Web HTTP mock | 在 HTTP 边界模拟后端 | `frontend/src/mocks/handlers/*.handlers.ts` |
 | Storybook | 展示页面和组件状态 | `frontend/src/views/*.stories.ts` |
 | 移动端 mock | 不依赖 Service Worker，直接消费共享 mock API | `packages/task-api/src/mockApi.ts` |
-| 后端外部依赖 mock | 在 Spring 容器中替换外部系统端口 | `backend/src/test/java/com/example/learning/support/E2eMockExternalConfig.java` |
 | E2E mock | 启动真实移动端 H5 mock mode | `mobile/playwright.h5.config.ts` |
 
 ## 场景标准
@@ -150,23 +149,6 @@ npm run test:e2e:h5
 - 和后端实现强绑定的复杂业务分支。
 
 如果 handler 需要大量条件分支和跨业务域更新，通常说明它应该降级为返回指定场景数据，而不是继续扩成小后端。
-
-## 后端外部依赖 Mock
-
-后端业务代码应先定义应用端口，再由基础设施层接真实外部系统。测试时替换端口，而不是让集成测试真实调用外部 HTTP、MQ、SDK 或第三方服务。
-
-本仓库示例：
-
-- `TaskNotificationClient`：应用层端口，表示“任务创建后通知外部系统”。
-- `LoggingTaskNotificationClient`：默认实现，只记录日志，不真实访问外部系统。
-- `E2eMockExternalConfig`：测试配置，使用 `@TestConfiguration` 和 `@Primary` 提供公共 Mockito mock。
-- `LearningTaskControllerIT`：HTTP 集成测试复用公共 mock，并只断言当前链路是否触发了通知。
-
-规则：
-
-- 公共 mock 放在测试支持配置中，避免每个测试类重复声明。
-- 单个测试可以对公共 mock 做当前场景的 `when(...)` 或 `verify(...)`。
-- 复杂外部行为应封装成业务端口，例如 `PaymentClient`、`MessagePublisher`、`FileGateway`，不要在业务服务里散落具体 SDK 调用。
 
 ## 数据管理
 

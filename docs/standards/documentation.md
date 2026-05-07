@@ -25,6 +25,7 @@
     ├── standards/
     │   ├── monorepo.md
     │   ├── testing.md
+    │   ├── backend-mock.md
     │   ├── mock.md
     │   └── documentation.md
     ├── decisions/
@@ -112,6 +113,16 @@ README 不应该承载：
 - 不把一个小项目的规模误写成所有项目必须维护的文档清单。
 - 不用“必须维护这些文件”这类机械说法；改成“推荐结构”和“按规模选择”。
 
+标准文档之间应有清晰边界：
+
+- `testing.md` 负责测试分层、质量门禁和验证命令，并链接到相关专项标准。
+- `backend-mock.md` 负责后端集成测试和 E2E 中的外部依赖替换。
+- `mock.md` 负责前端、移动端、Storybook 和离线预览 mock。
+- `monorepo.md` 负责仓库组织、共享包和跨端协作。
+- `documentation.md` 负责文档地图、分层和更新规则。
+
+当一个标准文件开始混入另一个主题的细节时，应优先拆出专项文档，并在上层文档中保留短引用。
+
 ## Harness 文档
 
 当项目开始使用智能体长期改代码时，应考虑建立 `docs/harness/`：
@@ -130,6 +141,7 @@ README 不应该承载：
 - README 是否仍然短。
 - AGENTS 是否是地图而不是百科全书。
 - 新规范是否放在 `docs/standards/`。
+- 新增、拆分或重命名标准文档后，`docs/INDEX.md` 和相关标准之间的链接是否同步。
 - 架构事实是否有代码或测试证据。
 - 命令是否真实存在。
 - 文件路径是否正确。

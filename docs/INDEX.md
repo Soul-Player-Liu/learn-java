@@ -14,9 +14,10 @@
 2. [ARCHITECTURE.md](ARCHITECTURE.md)：后端、Web、移动端、共享包的边界。
 3. [standards/monorepo.md](standards/monorepo.md)：Monorepo 建设标准。
 4. [standards/testing.md](standards/testing.md)：测试和质量门禁标准。
-5. [standards/mock.md](standards/mock.md)：mock、离线预览和场景数据标准。
-6. [standards/documentation.md](standards/documentation.md)：文档体系标准。
-7. [schema/current.sql](schema/current.sql)：由迁移脚本生成的当前数据库结构快照。
+5. [standards/backend-mock.md](standards/backend-mock.md)：后端外部依赖 mock 标准。
+6. [standards/mock.md](standards/mock.md)：前端、移动端 mock、离线预览和场景数据标准。
+7. [standards/documentation.md](standards/documentation.md)：文档体系标准。
+8. [schema/current.sql](schema/current.sql)：由迁移脚本生成的当前数据库结构快照。
 
 ## 文档分层
 

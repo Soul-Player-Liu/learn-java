@@ -4,6 +4,11 @@
 
 测试体系的目标不是堆数量，而是把关键行为变成可重复执行的 harness，让团队和智能体都能用同一套证据判断修改是否正确。
 
+相关标准：
+
+- [backend-mock.md](backend-mock.md)：后端集成测试和 E2E 中如何替换外部系统依赖。
+- [mock.md](mock.md)：前端、移动端、Storybook 和离线预览 mock 标准。
+
 ## 分层模型
 
 | 层级 | 目标 | 典型工具 | 运行频率 |
@@ -62,6 +67,8 @@ cd backend
 - `infrastructure` 提供默认实现；本仓库示例为 `TaskNotificationClient` 和 `LoggingTaskNotificationClient`。
 - E2E 或集成测试里的公共外部依赖 mock 放在测试支持配置中；本仓库示例为 `E2eMockExternalConfig`。
 - 单个测试只覆盖当前场景的返回值或调用断言，不重复声明所有公共 mock。
+
+详细规范见 [backend-mock.md](backend-mock.md)。
 
 ## 架构测试
 

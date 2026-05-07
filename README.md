@@ -18,7 +18,8 @@
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)：本仓库的架构边界和可执行工程决策。
 - [docs/standards/monorepo.md](docs/standards/monorepo.md)：后端、Web、移动端 Monorepo 标准。
 - [docs/standards/testing.md](docs/standards/testing.md)：测试体系标准。
-- [docs/standards/mock.md](docs/standards/mock.md)：mock 与离线预览标准。
+- [docs/standards/backend-mock.md](docs/standards/backend-mock.md)：后端外部依赖 mock 标准。
+- [docs/standards/mock.md](docs/standards/mock.md)：前端、移动端 mock 与离线预览标准。
 - [docs/standards/documentation.md](docs/standards/documentation.md)：文档体系标准。
 - [AGENTS.md](AGENTS.md)：给智能体和新接手工程师的工作导航。
 
