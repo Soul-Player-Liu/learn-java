@@ -14,6 +14,7 @@ import com.example.learning.application.dto.TaskCommentDto;
 import com.example.learning.application.dto.TaskTagDto;
 import com.example.learning.application.port.LearningTaskQueryRepository;
 import com.example.learning.application.port.LearningWorkspaceRepository;
+import com.example.learning.application.port.TaskNotificationClient;
 import com.example.learning.domain.model.LearningTask;
 import com.example.learning.domain.model.TaskStatus;
 import com.example.learning.domain.repository.LearningTaskRepository;
@@ -32,19 +33,23 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 class LearningTaskApplicationServiceTest {
 
     private FakeLearningTaskRepository repository;
     private FakeLearningWorkspaceRepository workspaceRepository;
+    private TaskNotificationClient taskNotificationClient;
     private LearningTaskApplicationService service;
 
     @BeforeEach
     void setUp() {
         workspaceRepository = new FakeLearningWorkspaceRepository();
         repository = new FakeLearningTaskRepository(workspaceRepository);
+        taskNotificationClient = mock(TaskNotificationClient.class);
         service = new LearningTaskApplicationService(repository, new FakeLearningTaskQueryRepository(repository, workspaceRepository),
-                workspaceRepository);
+                workspaceRepository, taskNotificationClient);
     }
 
     @Test
@@ -59,6 +64,7 @@ class LearningTaskApplicationServiceTest {
         assertThat(task.title()).isEqualTo("Learn service layer");
         assertThat(task.status()).isEqualTo(TaskStatus.TODO);
         assertThat(repository.findById(task.id())).isPresent();
+        verify(taskNotificationClient).taskCreated(task.id(), "Learn service layer");
     }
 
     @Test

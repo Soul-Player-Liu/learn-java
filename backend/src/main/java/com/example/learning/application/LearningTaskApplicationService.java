@@ -15,6 +15,7 @@ import com.example.learning.application.dto.TaskStatisticsDto;
 import com.example.learning.application.dto.TaskTagDto;
 import com.example.learning.application.port.LearningTaskQueryRepository;
 import com.example.learning.application.port.LearningWorkspaceRepository;
+import com.example.learning.application.port.TaskNotificationClient;
 import com.example.learning.domain.model.LearningTask;
 import com.example.learning.domain.model.TaskStatus;
 import com.example.learning.domain.repository.LearningTaskRepository;
@@ -38,6 +39,7 @@ public class LearningTaskApplicationService {
     private final LearningTaskRepository taskRepository;
     private final LearningTaskQueryRepository taskQueryRepository;
     private final LearningWorkspaceRepository workspaceRepository;
+    private final TaskNotificationClient taskNotificationClient;
 
     @Transactional(readOnly = true)
     public PageResult<TaskListItemDto> listTasks(ListLearningTasksQuery query) {
@@ -129,6 +131,7 @@ public class LearningTaskApplicationService {
         LearningTask savedTask = taskRepository.save(task);
         replaceTags(savedTask.getId(), command.tagNames());
         addActivity(savedTask.getId(), "TASK_CREATED", "创建了任务");
+        taskNotificationClient.taskCreated(savedTask.getId(), savedTask.getTitle());
         log.info("Created learning task id={}", savedTask.getId());
         return toDto(savedTask);
     }

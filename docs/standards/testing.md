@@ -45,6 +45,7 @@ cd backend
 - Repository 多表读写。
 - Controller HTTP 状态码、参数校验和错误响应。
 - 真实 MySQL 字段类型、字符集、唯一约束和外键约束。
+- 外部依赖端口在测试容器中的替换是否生效，例如通过公共 `@TestConfiguration` 提供 mock bean。
 
 测试数据规则：
 
@@ -54,6 +55,13 @@ cd backend
 - 不依赖执行顺序。
 - 不使用生产数据快照作为常规测试数据。
 - 测试结束后自动清理。
+
+后端外部依赖规则：
+
+- 应用服务依赖 `application/port` 中的端口接口，不直接依赖 HTTP、MQ、SDK 等外部实现。
+- `infrastructure` 提供默认实现；本仓库示例为 `TaskNotificationClient` 和 `LoggingTaskNotificationClient`。
+- E2E 或集成测试里的公共外部依赖 mock 放在测试支持配置中；本仓库示例为 `E2eMockExternalConfig`。
+- 单个测试只覆盖当前场景的返回值或调用断言，不重复声明所有公共 mock。
 
 ## 架构测试
 

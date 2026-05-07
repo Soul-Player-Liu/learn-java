@@ -9,7 +9,10 @@ import com.example.learning.application.dto.TaskCommentDto;
 import com.example.learning.application.dto.LearningTaskDto;
 import com.example.learning.application.dto.TaskStatisticsDto;
 import com.example.learning.application.dto.TaskTagDto;
+import com.example.learning.application.port.TaskNotificationClient;
+import com.example.learning.LearningApplication;
 import com.example.learning.domain.model.TaskStatus;
+import com.example.learning.support.E2eMockExternalConfig;
 import com.example.learning.support.MysqlTestSchema;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,8 +32,12 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        classes = {LearningApplication.class, E2eMockExternalConfig.class}
+)
 class LearningTaskControllerIT {
 
     private static final MysqlTestSchema MYSQL = MysqlTestSchema.shared();
@@ -48,6 +55,9 @@ class LearningTaskControllerIT {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private TaskNotificationClient taskNotificationClient;
 
     @BeforeEach
     void cleanDatabase() {
@@ -77,6 +87,7 @@ class LearningTaskControllerIT {
         assertThat(data(getResponse).get("title").asText()).isEqualTo("Learn REST");
         assertThat(patchResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(data(patchResponse).get("status").asText()).isEqualTo(TaskStatus.DOING.name());
+        verify(taskNotificationClient).taskCreated(createdTask.id(), "Learn REST");
     }
 
     @Test
