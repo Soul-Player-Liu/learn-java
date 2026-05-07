@@ -1,4 +1,5 @@
 stages:
+  - docs
   - backend
   - frontend
   - e2e
@@ -22,6 +23,12 @@ cache:
     - .m2/repository/
     - frontend/.npm/
     - mobile/.npm/
+
+docs_check:
+  stage: docs
+  image: node:22-bookworm
+  script:
+    - node scripts/check-doc-links.mjs
 
 .mysql_service:
   services:

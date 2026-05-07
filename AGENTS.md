@@ -5,7 +5,7 @@
 ## 首读路线
 
 1. [README.md](README.md)：确认项目定位和最短启动路径。
-2. [docs/INDEX.md](docs/INDEX.md)：确认文档地图、任务路由和验证入口。
+2. [docs/INDEX.md](docs/INDEX.md)：确认文档地图和任务路由。
 3. [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)：确认后端、Web、移动端和共享包边界。
 4. 按任务进入 [docs/INDEX.md#任务到文档映射](docs/INDEX.md#任务到文档映射) 指向的专项文档。
 
@@ -20,16 +20,13 @@
 
 ## 任务路由
 
-| 任务类型 | 必读文档 | 联动更新 |
-| --- | --- | --- |
-| 模块边界、共享包、跨端复用 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)、[docs/standards/monorepo.md](docs/standards/monorepo.md) | README 或架构图涉及的入口说明 |
-| 后端测试、集成测试、覆盖率、CI | [docs/standards/testing.md](docs/standards/testing.md) | `ci.sh`、`.gitlab-ci.yml`、相关测试说明 |
-| 后端外部系统替换 | [docs/standards/backend-mock.md](docs/standards/backend-mock.md) | [docs/standards/testing.md#后端测试](docs/standards/testing.md#后端测试) |
-| Web/移动端 mock、Storybook、离线预览 | [docs/standards/mock.md](docs/standards/mock.md) | [docs/standards/testing.md#web-测试](docs/standards/testing.md#web-测试)、[docs/standards/testing.md#移动端测试](docs/standards/testing.md#移动端测试) |
-| OpenAPI SDK、schema drift、生成产物 | [docs/ARCHITECTURE.md#契约流](docs/ARCHITECTURE.md#契约流)、[docs/standards/testing.md#契约和-schema](docs/standards/testing.md#契约和-schema) | [docs/schema/current.sql](docs/schema/current.sql)、生成 SDK、CI drift check |
-| 文档结构、重命名、索引关系 | [docs/standards/documentation.md](docs/standards/documentation.md)、[docs/INDEX.md](docs/INDEX.md) | 所有受影响的入口链接和反向引用 |
+完整任务路由只维护在 [docs/INDEX.md#任务到文档映射](docs/INDEX.md#任务到文档映射)。不要在本文件复制第二份表，避免两处漂移。
 
-更完整的路由表见 [docs/INDEX.md#任务到文档映射](docs/INDEX.md#任务到文档映射)。
+高风险提醒：
+
+- 改共享包、生成 SDK 或 API wrapper 时，同时考虑 Web 和移动端。
+- 改测试、CI、mock、端口、脚本或文档结构时，同步更新 [docs/INDEX.md](docs/INDEX.md) 指向的相关文档。
+- 标准文档写成可迁移规范；本仓库当前命令和排障步骤放到 [docs/runbooks/](docs/runbooks/)。
 
 ## 验证策略
 
@@ -42,4 +39,4 @@
 ./ci.sh
 ```
 
-分层命令见 [docs/INDEX.md#验证入口](docs/INDEX.md#验证入口) 和 [docs/standards/testing.md](docs/standards/testing.md)。
+分层命令见 [docs/runbooks/validation.md](docs/runbooks/validation.md)，测试标准见 [docs/standards/testing.md](docs/standards/testing.md)。

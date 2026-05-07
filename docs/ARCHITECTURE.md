@@ -80,4 +80,4 @@ Mock 分成共享数据和端侧适配：
 - OpenAPI SDK 和数据库 schema 通过 drift check 防止生成产物过期。
 - CI 按失败来源拆分，避免一个总脚本掩盖具体问题。
 
-具体命令和 CI 分层见 [INDEX.md#验证入口](INDEX.md#验证入口) 与 [standards/testing.md](standards/testing.md)。修改代码或规范后，应优先让对应 harness 通过，而不是只靠人工阅读判断。
+具体命令见 [runbooks/validation.md](runbooks/validation.md)，测试分层和 CI 标准见 [standards/testing.md](standards/testing.md)。修改代码或规范后，应优先让对应 harness 通过，而不是只靠人工阅读判断。

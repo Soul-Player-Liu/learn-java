@@ -90,7 +90,7 @@ npm run dev:h5:mock
 ./ci.sh
 ```
 
-后端、Web、移动端和专项验证命令见 [docs/INDEX.md#验证入口](docs/INDEX.md#验证入口) 与 [docs/standards/testing.md](docs/standards/testing.md)。
+后端、Web、移动端和专项验证命令见 [docs/runbooks/validation.md](docs/runbooks/validation.md)。测试分层和质量门禁标准见 [docs/standards/testing.md](docs/standards/testing.md)。
 
 ## 契约生成
 

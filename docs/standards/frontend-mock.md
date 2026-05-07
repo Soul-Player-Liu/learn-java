@@ -1,8 +1,10 @@
-# 前端 Mock 与离线预览标准
+# 前端与移动端 Mock 标准
 
 本文是给大型业务项目复用的前端和客户端 mock 标准。`learn-java` 中 Web 使用 MSW 和 Storybook，移动端使用共享 mock API 和 H5 mock mode，两端复用 `packages/mock-data` 的场景数据。
 
 前端 mock 的目标不是重写后端，而是在后端不可用、接口未完成、数据难构造时，仍然能稳定评审页面、验证交互和跑关键离线测试。后端集成测试中的外部依赖替换见 [backend-mock.md](backend-mock.md)。
+
+本仓库当前命令见 [../runbooks/validation.md](../runbooks/validation.md)。
 
 ## 核心目标
 
@@ -75,17 +77,6 @@ frontend/src/mocks/
 - `data.ts` 可以作为兼容入口，但多端项目的数据工厂应优先放在共享包。
 - `scenarios.ts` 统一解析 `VITE_MOCK_SCENARIO`。
 
-本仓库命令：
-
-```bash
-cd frontend
-npm run dev:mock
-npm run dev:mock:empty
-npm run dev:mock:many
-npm run dev:mock:error
-npm run dev:mock:slow
-```
-
 ## Storybook
 
 Storybook 的目标是稳定展示页面和组件状态，不替代 E2E。
@@ -120,15 +111,6 @@ Storybook 应复用 MSW handlers，不在组件里写专门 mock 分支。
 - mock client 使用共享场景数据实现同一 interface。
 - `VITE_USE_MOCK=true` 时切换到 mock client。
 - 移动端 H5 E2E 启动 mock mode，测试真实 `mobile/` 应用。
-
-本仓库命令：
-
-```bash
-cd mobile
-npm run dev:h5:mock
-npm run build:h5:mock
-npm run test:e2e:h5
-```
 
 ## MSW 边界
 
@@ -176,17 +158,7 @@ npm run test:e2e:h5
 
 ## CI 标准
 
-建议加入：
-
-```bash
-cd frontend
-npm run build:mock
-npm run build:storybook
-
-cd ../mobile
-npm run build:h5:mock
-npm run test:e2e:h5
-```
+建议把 Web mock build、Storybook build、移动端 mock H5 build 和移动端 H5 E2E 纳入 CI。当前仓库命令见 [../runbooks/validation.md](../runbooks/validation.md)。
 
 后续可扩展：
 

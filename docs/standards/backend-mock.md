@@ -1,6 +1,6 @@
 # 后端外部依赖 Mock 标准
 
-本文说明后端集成测试和 E2E 测试中如何替换外部系统依赖。它和 [mock.md](mock.md) 分工不同：`mock.md` 关注前端、移动端和离线预览；本文关注 Spring 后端在测试容器里如何避免真实调用 HTTP、MQ、SDK、三方服务和跨系统依赖。
+本文说明后端集成测试和 E2E 测试中如何替换外部系统依赖。它和 [frontend-mock.md](frontend-mock.md) 分工不同：`frontend-mock.md` 关注前端、移动端和离线预览；本文关注 Spring 后端在测试容器里如何避免真实调用 HTTP、MQ、SDK、三方服务和跨系统依赖。
 
 后端 mock 的目标是让业务主链路在真实数据库、真实 Spring Web、真实 Controller/Service/Mapper 下运行，同时把不可控的外部系统替换成可预测的测试实现。
 

@@ -26,7 +26,7 @@
     │   ├── monorepo.md
     │   ├── testing.md
     │   ├── backend-mock.md
-    │   ├── mock.md
+    │   ├── frontend-mock.md
     │   └── documentation.md
     ├── decisions/
     ├── runbooks/
@@ -43,7 +43,7 @@
 - `docs/ARCHITECTURE.md` 适合有多个模块或服务时引入。
 - `docs/standards/` 用于规范模板，不要求业务项目机械复制所有文件。
 - `docs/decisions/` 用于 ADR，只有高成本或不可逆决策才需要。
-- `docs/runbooks/` 用于常见操作和故障处理。
+- `docs/runbooks/` 用于本仓库当前命令、常见操作和故障处理。
 - `docs/business/` 用于真实业务流程、状态机、术语和关键表。
 - `docs/harness/` 用于 agent task、评测用例、回归清单和自动化基准。
 - `docs/schema/` 用于可生成、可检查漂移的数据库证据。
@@ -74,7 +74,7 @@ README 不应该承载：
 
 - 首读路线。
 - 修改边界。
-- 常用验证命令。
+- 验证入口链接。
 - 高风险改动提醒。
 
 不适合包含：
@@ -117,7 +117,7 @@ README 不应该承载：
 
 - `testing.md` 负责测试分层、质量门禁和验证命令，并链接到相关专项标准。
 - `backend-mock.md` 负责后端集成测试和 E2E 中的外部依赖替换。
-- `mock.md` 负责前端、移动端、Storybook 和离线预览 mock。
+- `frontend-mock.md` 负责前端、移动端、Storybook 和离线预览 mock。
 - `monorepo.md` 负责仓库组织、共享包和跨端协作。
 - `documentation.md` 负责文档地图、分层和更新规则。
 
@@ -131,7 +131,7 @@ README 不应该承载：
 
 - 链接到文档：[../INDEX.md](../INDEX.md)。
 - 链接到章节：[testing.md#契约和-schema](testing.md#契约和-schema)。
-- 链接到相关专项标准：[mock.md#storybook](mock.md#storybook)。
+- 链接到相关专项标准：[frontend-mock.md#storybook](frontend-mock.md#storybook)。
 - 链接到仓库证据：[../schema/current.sql](../schema/current.sql)。
 
 规则：
@@ -142,6 +142,7 @@ README 不应该承载：
 - 新增、删除、重命名标题时，应检查所有指向该标题的锚点链接。
 - 中文标题可以作为锚点，但标题应稳定，避免为了文案小改破坏已有链接。
 - 机器生成产物应链接到生成脚本和检查脚本，而不是手写解释其全部内容。
+- Markdown 链接和锚点应通过 `node scripts/check-doc-links.mjs` 检查，并作为 CI 的文档门禁。
 
 ## 联动更新
 
@@ -149,10 +150,10 @@ README 不应该承载：
 
 | 变化 | 必须检查 |
 | --- | --- |
-| 新增或重命名文档 | `docs/INDEX.md`、`AGENTS.md`、相关标准文档的反向链接。 |
-| 修改启动、端口、脚本 | `README.md`、`docs/INDEX.md#验证入口`、相关 runbook 或标准。 |
+| 新增或重命名文档 | `docs/INDEX.md`、`AGENTS.md`、相关标准文档的反向链接、文档链接检查。 |
+| 修改启动、端口、脚本 | `README.md`、`docs/runbooks/validation.md`、相关 runbook 或标准。 |
 | 修改测试、覆盖率、CI | `docs/standards/testing.md`、`ci.sh`、`.gitlab-ci.yml`、`AGENTS.md` 任务路由。 |
-| 修改 mock、Storybook、离线预览 | `docs/standards/mock.md`、`docs/standards/testing.md` 中相关测试入口。 |
+| 修改 mock、Storybook、离线预览 | `docs/standards/frontend-mock.md`、`docs/standards/testing.md` 中相关测试入口。 |
 | 修改后端外部依赖替换方式 | `docs/standards/backend-mock.md`、`docs/standards/testing.md#后端测试`。 |
 | 修改 OpenAPI SDK 生成或 schema drift | `docs/ARCHITECTURE.md#契约流`、`docs/standards/testing.md#契约和-schema`、`docs/INDEX.md#任务到文档映射`。 |
 | 修改文档体系本身 | 本文、`docs/INDEX.md`、`AGENTS.md`、`README.md`。 |

@@ -4,10 +4,12 @@
 
 测试体系的目标不是堆数量，而是把关键行为变成可重复执行的 harness，让团队和智能体都能用同一套证据判断修改是否正确。
 
+本仓库当前命令见 [../runbooks/validation.md](../runbooks/validation.md)。
+
 相关标准：
 
 - [backend-mock.md](backend-mock.md)：后端集成测试和 E2E 中如何替换外部系统依赖。
-- [mock.md](mock.md)：前端、移动端、Storybook 和离线预览 mock 标准。
+- [frontend-mock.md](frontend-mock.md)：前端、移动端、Storybook 和离线预览 mock 标准。
 
 ## 分层模型
 
@@ -28,14 +30,6 @@
 
 - `*Test.java`：单元测试和架构测试，由 Surefire 执行。
 - `*IT.java`：集成测试，由 Failsafe 执行。
-
-推荐命令：
-
-```bash
-cd backend
-../scripts/with-java-17.sh ./mvnw test
-../scripts/with-java-17.sh ./mvnw verify -Pintegration-test,coverage
-```
 
 单元测试优先覆盖：
 
@@ -92,28 +86,13 @@ cd backend
 
 ## Web 测试
 
-Web 静态检查：
-
-```bash
-cd frontend
-npm run lint
-npm run format:check
-npm run typecheck
-```
-
 Web 单元测试优先覆盖：
 
 - API wrapper 的返回值归一化和异常处理。
 - Pinia store 的加载、刷新、创建、更新、删除。
 - 复杂表单和筛选逻辑。
 - 日期、金额、权限、展示文案映射等纯函数。
-
-Storybook 至少作为 build gate：
-
-```bash
-cd frontend
-npm run build:storybook
-```
+- Storybook 至少作为 build gate，确保页面和组件状态不会静态构建失败。
 
 Web E2E 应覆盖真实用户路径：
 
@@ -135,17 +114,6 @@ Web E2E 应覆盖真实用户路径：
 
 移动端是独立客户端，不能只靠 Web 的 mobile viewport 兜底。
 
-推荐命令：
-
-```bash
-cd mobile
-npm run typecheck
-npm run test:unit
-npm run build:h5
-npm run build:h5:mock
-npm run test:e2e:h5
-```
-
 本仓库中：
 
 - `npm run check` 覆盖类型检查、store 单测、真实 H5 构建和 mock H5 构建。
@@ -155,22 +123,9 @@ npm run test:e2e:h5
 
 ## 契约和 Schema
 
-契约测试：
+契约测试用于确认 OpenAPI 与生成 SDK 一致。如果失败，通常表示后端 OpenAPI 已变化但生成 SDK 没有提交，或手写类型和后端契约不一致。
 
-```bash
-cd frontend
-npm run sdk:check
-```
-
-如果失败，通常表示后端 OpenAPI 已变化但生成 SDK 没有提交，或手写类型和后端契约不一致。
-
-Schema 漂移检查：
-
-```bash
-./scripts/check-schema.sh
-```
-
-它用于确认 migration 生成的 `docs/schema/current.sql` 与仓库记录一致。
+Schema 漂移检查用于确认 migration 生成的 `docs/schema/current.sql` 与仓库记录一致。当前执行命令见 [../runbooks/validation.md#生成产物](../runbooks/validation.md#生成产物)。
 
 ## 覆盖率策略
 
@@ -197,6 +152,7 @@ Schema 漂移检查：
 
 推荐 job：
 
+- `docs_check`：Markdown 相对链接和锚点检查。
 - `backend_unit`：后端单元测试和架构测试。
 - `backend_integration`：真实数据库集成测试和后端覆盖率。
 - `frontend_check`：lint、format、typecheck、Vitest、build、coverage、Storybook build。

@@ -36,6 +36,8 @@ wait_for_url() {
 
 trap cleanup EXIT
 
+node scripts/check-doc-links.mjs
+
 docker compose up -d mysql
 
 ./scripts/check-schema.sh
