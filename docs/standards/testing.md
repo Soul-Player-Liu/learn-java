@@ -58,9 +58,10 @@
 后端外部依赖规则：
 
 - 应用服务依赖 `application/port` 中的端口接口，不直接依赖 HTTP、MQ、SDK 等外部实现。
-- `infrastructure` 提供默认实现；本仓库示例为 `TaskNotificationClient` 和 `LoggingTaskNotificationClient`。
+- `infrastructure` 提供本地可运行的默认实现；本仓库示例包括通知、风控、用户目录、事件发布、任务编号和归档端口。
 - E2E 或集成测试里的公共外部依赖 mock 放在测试支持配置中；本仓库示例为 `E2eMockExternalConfig`。
 - 单个测试只覆盖当前场景的返回值或调用断言，不重复声明所有公共 mock。
+- 常见 Mockito 场景应分层覆盖：`when(...).thenReturn(...)` 覆盖外部返回值，`doThrow(...)` 覆盖 `void` 外部失败，`ArgumentCaptor` 覆盖消息 payload，`verifyNoInteractions(...)` 覆盖短路分支没有继续调用外部系统。
 
 详细规范见 [backend-mock.md](backend-mock.md)。
 

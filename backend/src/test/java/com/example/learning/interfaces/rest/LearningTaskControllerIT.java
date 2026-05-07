@@ -9,7 +9,16 @@ import com.example.learning.application.dto.TaskCommentDto;
 import com.example.learning.application.dto.LearningTaskDto;
 import com.example.learning.application.dto.TaskStatisticsDto;
 import com.example.learning.application.dto.TaskTagDto;
+import com.example.learning.application.port.ArchivedTaskBrief;
+import com.example.learning.application.port.DomainEventPublisher;
+import com.example.learning.application.port.TaskArchiveClient;
+import com.example.learning.application.port.TaskCodeGenerator;
+import com.example.learning.application.port.TaskDomainEvent;
 import com.example.learning.application.port.TaskNotificationClient;
+import com.example.learning.application.port.TaskRiskClient;
+import com.example.learning.application.port.TaskRiskDecision;
+import com.example.learning.application.port.UserDirectoryClient;
+import com.example.learning.application.port.UserProfile;
 import com.example.learning.LearningApplication;
 import com.example.learning.domain.model.TaskStatus;
 import com.example.learning.support.E2eMockExternalConfig;
@@ -31,9 +40,16 @@ import org.springframework.test.context.DynamicPropertySource;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -60,9 +76,36 @@ class LearningTaskControllerIT {
     @Autowired
     private TaskNotificationClient taskNotificationClient;
 
+    @Autowired
+    private UserDirectoryClient userDirectoryClient;
+
+    @Autowired
+    private TaskRiskClient taskRiskClient;
+
+    @Autowired
+    private DomainEventPublisher domainEventPublisher;
+
+    @Autowired
+    private TaskCodeGenerator taskCodeGenerator;
+
+    @Autowired
+    private TaskArchiveClient taskArchiveClient;
+
     @BeforeEach
-    void cleanDatabase() {
+    void setUp() {
         TestDatabaseCleaner.cleanLearningTaskTables(jdbcTemplate);
+        reset(taskNotificationClient, userDirectoryClient, taskRiskClient, domainEventPublisher, taskCodeGenerator,
+                taskArchiveClient);
+        when(taskRiskClient.reviewTaskCreation(anyString(), any())).thenReturn(TaskRiskDecision.approved());
+        when(taskCodeGenerator.nextTaskCode()).thenReturn("TASK-IT-0001");
+        when(taskArchiveClient.archiveTaskBrief(any(), anyString(), any()))
+                .thenAnswer(invocation -> new ArchivedTaskBrief(
+                        "archive-" + invocation.getArgument(0),
+                        "local://archive-" + invocation.getArgument(0)
+                ));
+        when(userDirectoryClient.findByUsername(anyString()))
+                .thenAnswer(invocation -> Optional.of(new UserProfile(
+                        invocation.getArgument(0), invocation.getArgument(0), "integration-test")));
     }
 
     @Test
@@ -83,7 +126,30 @@ class LearningTaskControllerIT {
         assertThat(data(getResponse).get("title").asText()).isEqualTo("Learn REST");
         assertThat(patchResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(data(patchResponse).get("status").asText()).isEqualTo(TaskStatus.DOING.name());
-        verify(taskNotificationClient).taskCreated(createdTask.id(), "Learn REST");
+        verify(taskNotificationClient).taskCreated(createdTask.id(), "Learn REST", "TASK-IT-0001");
+        verify(domainEventPublisher).publish(TaskDomainEvent.taskStatusChanged(createdTask.id(), TaskStatus.DOING.name()));
+    }
+
+    @Test
+    void externalRiskRejectionUsesMockedBeanAndStopsOutboundCalls() {
+        when(taskRiskClient.reviewTaskCreation(eq("Blocked by risk"), any()))
+                .thenReturn(TaskRiskDecision.rejected("training policy"));
+
+        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
+                "/api/tasks",
+                Map.of(
+                        "title", "Blocked by risk",
+                        "description", "Risk branch",
+                        "dueDate", LocalDate.now().plusDays(1).toString()
+                ),
+                JsonNode.class
+        );
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().get("code").asText()).isEqualTo("BAD_REQUEST");
+        assertThat(response.getBody().get("message").asText()).contains("training policy");
+        verifyNoInteractions(taskArchiveClient, taskNotificationClient, domainEventPublisher);
     }
 
     @Test

@@ -13,9 +13,18 @@ import com.example.learning.application.dto.TaskCommentDto;
 import com.example.learning.application.dto.TaskListItemDto;
 import com.example.learning.application.dto.TaskStatisticsDto;
 import com.example.learning.application.dto.TaskTagDto;
+import com.example.learning.application.port.ArchivedTaskBrief;
+import com.example.learning.application.port.DomainEventPublisher;
 import com.example.learning.application.port.LearningTaskQueryRepository;
 import com.example.learning.application.port.LearningWorkspaceRepository;
+import com.example.learning.application.port.TaskArchiveClient;
+import com.example.learning.application.port.TaskCodeGenerator;
+import com.example.learning.application.port.TaskDomainEvent;
 import com.example.learning.application.port.TaskNotificationClient;
+import com.example.learning.application.port.TaskRiskClient;
+import com.example.learning.application.port.TaskRiskDecision;
+import com.example.learning.application.port.UserDirectoryClient;
+import com.example.learning.application.port.UserProfile;
 import com.example.learning.domain.model.LearningTask;
 import com.example.learning.domain.model.TaskStatus;
 import com.example.learning.domain.repository.LearningTaskRepository;
@@ -40,6 +49,11 @@ public class LearningTaskApplicationService {
     private final LearningTaskQueryRepository taskQueryRepository;
     private final LearningWorkspaceRepository workspaceRepository;
     private final TaskNotificationClient taskNotificationClient;
+    private final UserDirectoryClient userDirectoryClient;
+    private final TaskRiskClient taskRiskClient;
+    private final DomainEventPublisher domainEventPublisher;
+    private final TaskCodeGenerator taskCodeGenerator;
+    private final TaskArchiveClient taskArchiveClient;
 
     @Transactional(readOnly = true)
     public PageResult<TaskListItemDto> listTasks(ListLearningTasksQuery query) {
@@ -89,13 +103,15 @@ public class LearningTaskApplicationService {
     @Transactional
     public TaskCommentDto addComment(Long taskId, CreateTaskCommentCommand command) {
         requireTask(taskId);
+        UserProfile author = requireKnownCommentAuthor(command.author());
         TaskCommentDto comment = workspaceRepository.createComment(
                 taskId,
                 requireText(command.content(), "Comment content", 1000),
-                requireText(command.author() == null ? "产品经理" : command.author(), "Comment author", 50),
+                author.displayName(),
                 LocalDateTime.now()
         );
         addActivity(taskId, "COMMENT_ADDED", comment.author() + " 评论了任务");
+        domainEventPublisher.publish(TaskDomainEvent.taskCommentAdded(taskId, comment.author()));
         return comment;
     }
 
@@ -127,11 +143,21 @@ public class LearningTaskApplicationService {
     public LearningTaskDto createTask(CreateLearningTaskCommand command) {
         log.info("Creating learning task title={}", command.title());
         requireProjectIfPresent(command.projectId());
+        TaskRiskDecision riskDecision = taskRiskClient.reviewTaskCreation(command.title(), command.dueDate());
+        if (riskDecision.rejected()) {
+            throw new IllegalArgumentException("Task rejected by external risk check: " + riskDecision.reason());
+        }
+        String taskCode = taskCodeGenerator.nextTaskCode();
         LearningTask task = LearningTask.create(command.projectId(), command.title(), command.description(), command.dueDate());
         LearningTask savedTask = taskRepository.save(task);
         replaceTags(savedTask.getId(), command.tagNames());
-        addActivity(savedTask.getId(), "TASK_CREATED", "创建了任务");
-        taskNotificationClient.taskCreated(savedTask.getId(), savedTask.getTitle());
+        ArchivedTaskBrief archive = taskArchiveClient.archiveTaskBrief(
+                savedTask.getId(), savedTask.getTitle(), savedTask.getDescription());
+        addActivity(savedTask.getId(), "TASK_CREATED", "创建了任务 " + taskCode);
+        addActivity(savedTask.getId(), "TASK_ARCHIVED", "归档位置 " + archive.location());
+        taskNotificationClient.taskCreated(savedTask.getId(), savedTask.getTitle(), taskCode);
+        domainEventPublisher.publish(TaskDomainEvent.taskCreated(
+                savedTask.getId(), taskCode, savedTask.getTitle(), archive.archiveId()));
         log.info("Created learning task id={}", savedTask.getId());
         return toDto(savedTask);
     }
@@ -162,6 +188,7 @@ public class LearningTaskApplicationService {
         task.changeStatus(command.status());
         LearningTask savedTask = taskRepository.save(task);
         addActivity(id, "STATUS_CHANGED", "状态更新为 " + command.status());
+        domainEventPublisher.publish(TaskDomainEvent.taskStatusChanged(id, command.status().name()));
         log.info("Changed learning task status id={}", savedTask.getId());
         return toDto(savedTask);
     }
@@ -203,6 +230,12 @@ public class LearningTaskApplicationService {
         if (projectId != null) {
             requireProject(projectId);
         }
+    }
+
+    private UserProfile requireKnownCommentAuthor(String author) {
+        String normalizedAuthor = requireText(author == null ? "pm" : author, "Comment author", 50);
+        return userDirectoryClient.findByUsername(normalizedAuthor)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown comment author: " + normalizedAuthor));
     }
 
     private LearningTaskDto toDto(LearningTask task) {

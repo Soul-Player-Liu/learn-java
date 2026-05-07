@@ -12,15 +12,26 @@ import com.example.learning.application.dto.TaskStatisticsDto;
 import com.example.learning.application.dto.TaskActivityDto;
 import com.example.learning.application.dto.TaskCommentDto;
 import com.example.learning.application.dto.TaskTagDto;
+import com.example.learning.application.port.ArchivedTaskBrief;
+import com.example.learning.application.port.DomainEventPublisher;
 import com.example.learning.application.port.LearningTaskQueryRepository;
 import com.example.learning.application.port.LearningWorkspaceRepository;
+import com.example.learning.application.port.TaskArchiveClient;
+import com.example.learning.application.port.TaskCodeGenerator;
+import com.example.learning.application.port.TaskDomainEvent;
 import com.example.learning.application.port.TaskNotificationClient;
+import com.example.learning.application.port.TaskRiskClient;
+import com.example.learning.application.port.TaskRiskDecision;
+import com.example.learning.application.port.UserDirectoryClient;
+import com.example.learning.application.port.UserProfile;
 import com.example.learning.domain.model.LearningTask;
 import com.example.learning.domain.model.TaskStatus;
 import com.example.learning.domain.repository.LearningTaskRepository;
 import com.example.learning.domain.repository.LearningTaskSearchCriteria;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -33,14 +44,26 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 class LearningTaskApplicationServiceTest {
 
     private FakeLearningTaskRepository repository;
     private FakeLearningWorkspaceRepository workspaceRepository;
     private TaskNotificationClient taskNotificationClient;
+    private UserDirectoryClient userDirectoryClient;
+    private TaskRiskClient taskRiskClient;
+    private DomainEventPublisher domainEventPublisher;
+    private TaskCodeGenerator taskCodeGenerator;
+    private TaskArchiveClient taskArchiveClient;
     private LearningTaskApplicationService service;
 
     @BeforeEach
@@ -48,8 +71,21 @@ class LearningTaskApplicationServiceTest {
         workspaceRepository = new FakeLearningWorkspaceRepository();
         repository = new FakeLearningTaskRepository(workspaceRepository);
         taskNotificationClient = mock(TaskNotificationClient.class);
+        userDirectoryClient = mock(UserDirectoryClient.class);
+        taskRiskClient = mock(TaskRiskClient.class);
+        domainEventPublisher = mock(DomainEventPublisher.class);
+        taskCodeGenerator = mock(TaskCodeGenerator.class);
+        taskArchiveClient = mock(TaskArchiveClient.class);
+        when(taskRiskClient.reviewTaskCreation(anyString(), any())).thenReturn(TaskRiskDecision.approved());
+        when(taskCodeGenerator.nextTaskCode()).thenReturn("TASK-TEST-0001");
+        when(taskArchiveClient.archiveTaskBrief(any(), anyString(), any()))
+                .thenReturn(new ArchivedTaskBrief("archive-1", "local://archive-1"));
+        when(userDirectoryClient.findByUsername(anyString()))
+                .thenAnswer(invocation -> Optional.of(new UserProfile(
+                        invocation.getArgument(0), invocation.getArgument(0), "test")));
         service = new LearningTaskApplicationService(repository, new FakeLearningTaskQueryRepository(repository, workspaceRepository),
-                workspaceRepository, taskNotificationClient);
+                workspaceRepository, taskNotificationClient, userDirectoryClient, taskRiskClient, domainEventPublisher,
+                taskCodeGenerator, taskArchiveClient);
     }
 
     @Test
@@ -64,7 +100,7 @@ class LearningTaskApplicationServiceTest {
         assertThat(task.title()).isEqualTo("Learn service layer");
         assertThat(task.status()).isEqualTo(TaskStatus.TODO);
         assertThat(repository.findById(task.id())).isPresent();
-        verify(taskNotificationClient).taskCreated(task.id(), "Learn service layer");
+        verify(taskNotificationClient).taskCreated(task.id(), "Learn service layer", "TASK-TEST-0001");
     }
 
     @Test
@@ -77,6 +113,7 @@ class LearningTaskApplicationServiceTest {
         assertThat(service.listActivities(task.id()))
                 .extracting(activity -> activity.type())
                 .contains("STATUS_CHANGED");
+        verify(domainEventPublisher).publish(TaskDomainEvent.taskStatusChanged(task.id(), TaskStatus.DOING.name()));
     }
 
     @Test
@@ -124,6 +161,84 @@ class LearningTaskApplicationServiceTest {
         assertThat(service.listActivities(task.id()))
                 .extracting(activity -> activity.type())
                 .contains("COMMENT_ADDED");
+        verify(userDirectoryClient).findByUsername("Alex");
+        verify(domainEventPublisher).publish(TaskDomainEvent.taskCommentAdded(task.id(), "Alex"));
+    }
+
+    @Nested
+    class ExternalDependencyMockExamples {
+
+        @Test
+        void riskClientReturnValueCanRejectCreateTaskBeforePersistence() {
+            when(taskRiskClient.reviewTaskCreation(eq("Blocked task"), any()))
+                    .thenReturn(TaskRiskDecision.rejected("blocked by policy"));
+
+            assertThatThrownBy(() -> service.createTask(new CreateLearningTaskCommand(
+                    "Blocked task",
+                    "Should not be saved",
+                    LocalDate.now().plusDays(1)
+            )))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("blocked by policy");
+
+            assertThat(repository.findAll(new LearningTaskSearchCriteria(null, null, null, false, null))).isEmpty();
+            verifyNoInteractions(taskArchiveClient, taskNotificationClient, domainEventPublisher);
+        }
+
+        @Test
+        void userDirectoryEmptyResultCanDriveValidationBranch() {
+            LearningTaskDto task = service.createTask(new CreateLearningTaskCommand("Learn comments", null, null));
+            when(userDirectoryClient.findByUsername("ghost")).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> service.addComment(task.id(), new CreateTaskCommentCommand("Need owner", "ghost")))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessageContaining("Unknown comment author");
+        }
+
+        @Test
+        void archiveClientReturnValueAndGeneratedCodeArePassedToOutboundCalls() {
+            when(taskCodeGenerator.nextTaskCode()).thenReturn("TASK-FIXED-0007");
+            when(taskArchiveClient.archiveTaskBrief(any(), eq("Archive me"), any()))
+                    .thenReturn(new ArchivedTaskBrief("archive-777", "local://archive-777"));
+
+            LearningTaskDto task = service.createTask(new CreateLearningTaskCommand(
+                    "Archive me",
+                    "Capture archive",
+                    LocalDate.now().plusDays(1)
+            ));
+
+            verify(taskNotificationClient).taskCreated(task.id(), "Archive me", "TASK-FIXED-0007");
+            ArgumentCaptor<TaskDomainEvent> eventCaptor = ArgumentCaptor.forClass(TaskDomainEvent.class);
+            verify(domainEventPublisher).publish(eventCaptor.capture());
+            assertThat(eventCaptor.getValue().type()).isEqualTo("TASK_CREATED");
+            assertThat(eventCaptor.getValue().taskCode()).isEqualTo("TASK-FIXED-0007");
+            assertThat(eventCaptor.getValue().attributes()).containsEntry("archiveId", "archive-777");
+        }
+
+        @Test
+        void voidPublisherFailureCanBeSimulatedWithDoThrow() {
+            LearningTaskDto task = service.createTask(new CreateLearningTaskCommand("Learn status", null, null));
+            doThrow(new IllegalStateException("publisher unavailable"))
+                    .when(domainEventPublisher)
+                    .publish(TaskDomainEvent.taskStatusChanged(task.id(), TaskStatus.DONE.name()));
+
+            assertThatThrownBy(() -> service.changeTaskStatus(task.id(), new ChangeTaskStatusCommand(TaskStatus.DONE)))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("publisher unavailable");
+        }
+
+        @Test
+        void argumentCaptorCanInspectPublishedStatusEvent() {
+            LearningTaskDto task = service.createTask(new CreateLearningTaskCommand("Capture event", null, null));
+            clearInvocations(domainEventPublisher);
+
+            service.changeTaskStatus(task.id(), new ChangeTaskStatusCommand(TaskStatus.DOING));
+
+            ArgumentCaptor<TaskDomainEvent> eventCaptor = ArgumentCaptor.forClass(TaskDomainEvent.class);
+            verify(domainEventPublisher).publish(eventCaptor.capture());
+            assertThat(eventCaptor.getValue().type()).isEqualTo("TASK_STATUS_CHANGED");
+            assertThat(eventCaptor.getValue().attributes()).containsEntry("status", TaskStatus.DOING.name());
+        }
     }
 
     @Test

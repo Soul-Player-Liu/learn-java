@@ -16,10 +16,10 @@
 
 | 层级 | 目标 | 本仓库示例 |
 | --- | --- | --- |
-| 应用端口 | 定义业务需要的外部能力 | `TaskNotificationClient` |
-| 默认实现 | 开发或生产环境中的基础设施实现 | `LoggingTaskNotificationClient` |
+| 应用端口 | 定义业务需要的外部能力 | `TaskRiskClient`、`UserDirectoryClient`、`TaskNotificationClient`、`DomainEventPublisher`、`TaskCodeGenerator`、`TaskArchiveClient` |
+| 默认实现 | 开发或生产环境中的基础设施实现 | `LocalTaskRiskClient`、`InMemoryUserDirectoryClient`、`LoggingTaskNotificationClient`、`LoggingDomainEventPublisher`、`LocalTaskCodeGenerator`、`LoggingTaskArchiveClient` |
 | 公共测试配置 | 在 Spring 测试容器中替换外部依赖 | `E2eMockExternalConfig` |
-| 场景断言 | 每个测试只声明当前场景行为 | `LearningTaskControllerIT` 中的 `verify(...)` |
+| 场景断言 | 每个测试只声明当前场景行为 | `LearningTaskApplicationServiceTest` 和 `LearningTaskControllerIT` 中的 `when(...)`、`doThrow(...)`、`verify(...)`、`ArgumentCaptor` |
 
 ## 推荐目录
 
@@ -27,8 +27,18 @@
 backend/src/main/java/com/example/learning/
   application/port/
     TaskNotificationClient.java
+    TaskRiskClient.java
+    UserDirectoryClient.java
+    DomainEventPublisher.java
+    TaskCodeGenerator.java
+    TaskArchiveClient.java
   infrastructure/external/
     LoggingTaskNotificationClient.java
+    LocalTaskRiskClient.java
+    InMemoryUserDirectoryClient.java
+    LoggingDomainEventPublisher.java
+    LocalTaskCodeGenerator.java
+    LoggingTaskArchiveClient.java
 
 backend/src/test/java/com/example/learning/
   support/
@@ -66,6 +76,12 @@ public class E2eMockExternalConfig {
     public TaskNotificationClient taskNotificationClient() {
         return Mockito.mock(TaskNotificationClient.class);
     }
+
+    @Bean
+    @Primary
+    public TaskRiskClient taskRiskClient() {
+        return Mockito.mock(TaskRiskClient.class);
+    }
 }
 ```
 
@@ -93,6 +109,34 @@ void createTaskNotifiesExternalSystem() {
 }
 ```
 
+公共 mock bean 是 Spring 容器里的单例。如果同一个 `@SpringBootTest` 类里有多个测试方法，应在 `@BeforeEach` 中 `reset(...)` 并重新设置默认行为，避免调用记录或 stub 在测试之间串场：
+
+```java
+@BeforeEach
+void setUp() {
+    reset(taskNotificationClient, taskRiskClient);
+    when(taskRiskClient.reviewTaskCreation(anyString(), any()))
+            .thenReturn(TaskRiskDecision.approved());
+}
+```
+
+## 常见 Mock 场景
+
+本仓库用本地默认实现“假装有外部依赖”，因此可以独立运行；测试中再通过 Mockito 替换应用端口，覆盖真实大项目常见情况。
+
+| 场景 | 端口示例 | Mockito 写法 | 关注点 |
+| --- | --- | --- | --- |
+| 只确认外部动作发生 | `TaskNotificationClient` | `verify(...)` | 创建任务后是否通知外部系统 |
+| 外部返回值驱动业务分支 | `TaskRiskClient` | `when(...).thenReturn(...)` | 风控通过或拒绝时，业务是否保存或中断 |
+| 外部查无数据 | `UserDirectoryClient` | `thenReturn(Optional.empty())` | 用户中心无用户时，业务是否返回明确错误 |
+| 固定随机/流水号 | `TaskCodeGenerator` | `thenReturn("TASK-FIXED-0007")` | 测试不依赖当前时间、随机数或序列 |
+| 外部归档或文件服务返回值 | `TaskArchiveClient` | `when(...).thenReturn(...)` | 返回的 `archiveId` 是否进入后续事件或消息 |
+| `void` 外部调用失败 | `DomainEventPublisher` | `doThrow(...).when(...).publish(...)` | MQ 或事件发布失败时业务如何暴露或补偿 |
+| 检查消息内容 | `DomainEventPublisher` | `ArgumentCaptor` | 领域事件 payload 是否包含正确业务字段 |
+| 拒绝后不应继续外部调用 | 多个端口组合 | `verifyNoInteractions(...)` | 分支短路后不归档、不通知、不发布事件 |
+
+单元测试通常直接 `mock(...)` 并手动 new application service；Spring 集成测试则通过 `E2eMockExternalConfig` 替换容器里的外部端口 bean。
+
 ## 什么时候用 Mock
 
 适合 mock：
@@ -117,6 +161,8 @@ void createTaskNotifiesExternalSystem() {
 - 发号器返回可预测 ID。
 - 文件服务返回固定测试文件信息。
 - 分布式锁默认获取成功。
+- 用户目录默认返回存在的测试用户。
+- 风控或规则中心默认放行。
 
 场景 mock 放单个测试：
 
@@ -125,6 +171,7 @@ void createTaskNotifiesExternalSystem() {
 - 用户中心返回无权限。
 - 文件服务返回不存在。
 - MQ 发送失败后业务应如何处理。
+- 事件 payload 是否包含正确业务字段。
 
 这样可以避免每个测试都重复搭一整套外部环境，同时保留场景表达力。
 

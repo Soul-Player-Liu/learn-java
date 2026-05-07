@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 public class LoggingTaskNotificationClient implements TaskNotificationClient {
 
     @Override
-    public void taskCreated(Long taskId, String title) {
-        log.info("External task notification taskId={} title={}", taskId, title);
+    public void taskCreated(Long taskId, String title, String taskCode) {
+        log.info("External task notification taskId={} title={} taskCode={}", taskId, title, taskCode);
     }
 }

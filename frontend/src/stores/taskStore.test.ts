@@ -69,6 +69,33 @@ describe('task store', () => {
     expect(store.taskPage).toEqual({ total: 23, page: 1, size: 20, totalPages: 2 })
   })
 
+  it('loads tasks with existing filters and refreshes standalone reference data', async () => {
+    api.listTasks.mockResolvedValue(page([task(5, 'Filtered', 'DOING')]))
+    api.getTaskStatistics.mockResolvedValue({
+      total: 5,
+      todo: 1,
+      doing: 3,
+      done: 1,
+      overdue: 0,
+      dueSoon: 2,
+    })
+    api.listProjects.mockResolvedValue([project(9, 'Backend')])
+    api.listTags.mockResolvedValue([{ id: 7, name: 'mock', color: 'blue' }])
+
+    const store = useTaskStore()
+    store.filters = { keyword: 'Filtered', status: 'DOING' }
+    await store.loadTasks()
+    await store.loadStatistics()
+    await store.loadProjects()
+    await store.loadTags()
+
+    expect(api.listTasks).toHaveBeenCalledWith({ keyword: 'Filtered', status: 'DOING' })
+    expect(store.tasks).toEqual([task(5, 'Filtered', 'DOING')])
+    expect(store.statistics?.dueSoon).toBe(2)
+    expect(store.projects).toEqual([project(9, 'Backend')])
+    expect(store.tags).toEqual([{ id: 7, name: 'mock', color: 'blue' }])
+  })
+
   it('refreshes list and statistics after creating a task', async () => {
     api.createTask.mockResolvedValue(task(1, 'Created', 'TODO'))
     api.listTasks.mockResolvedValue(page([task(1, 'Created', 'TODO')]))
