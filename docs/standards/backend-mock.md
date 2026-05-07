@@ -134,8 +134,28 @@ void setUp() {
 | `void` 外部调用失败 | `DomainEventPublisher` | `doThrow(...).when(...).publish(...)` | MQ 或事件发布失败时业务如何暴露或补偿 |
 | 检查消息内容 | `DomainEventPublisher` | `ArgumentCaptor` | 领域事件 payload 是否包含正确业务字段 |
 | 拒绝后不应继续外部调用 | 多个端口组合 | `verifyNoInteractions(...)` | 分支短路后不归档、不通知、不发布事件 |
+| 遗留类只能替换部分方法 | `LegacyPartialMockExampleTest` | `spy(...)` + `doReturn(...)` | 临时绕开类内部的外部调用 |
 
 单元测试通常直接 `mock(...)` 并手动 new application service；Spring 集成测试则通过 `E2eMockExternalConfig` 替换容器里的外部端口 bean。
+
+## Partial Mock 和 Spy
+
+优先不要 partial mock 业务服务。更推荐把外部调用抽成 `application/port`，再 mock 这个端口。例如当前主业务路径使用 `TaskRiskClient`、`UserDirectoryClient`、`DomainEventPublisher` 等端口，而不是 mock `LearningTaskApplicationService` 的内部方法。
+
+遗留代码里有时会遇到一个大类同时做业务编排和外部 HTTP/MQ/SDK 调用，短期内无法拆接口。此时可以用 Mockito `spy(...)` 保留真实对象的大部分方法，只替换其中一个外部调用方法：
+
+```java
+LegacyTaskImportService service = spy(new LegacyTaskImportService());
+doReturn("profile:mock-user")
+        .when(service)
+        .loadUserProfileFromExternalSystem(anyString());
+
+String summary = service.importTask("mock-user", "Learn partial mock");
+
+verify(service).loadUserProfileFromExternalSystem("mock-user");
+```
+
+这个写法见 `LegacyPartialMockExampleTest`。它只作为遗留代码教学样例，不放进主业务路径。原因是 partial mock 会让测试绑定类的内部方法名和调用顺序；以后即使业务行为没变，只要重构内部方法，测试也可能失败。
 
 ## 什么时候用 Mock
 
